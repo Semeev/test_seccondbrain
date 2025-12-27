@@ -101,7 +101,7 @@
 
 <p align="center">
 
-![Generated Image December 27, 2025 - 6_29PM](https://github.com/user-attachments/assets/83a0e140-6fbd-4fa3-a799-2b8544663ab1)
+<img width="600" alt="как это работает" src="https://github.com/user-attachments/assets/83a0e140-6fbd-4fa3-a799-2b8544663ab1">
 
 <p align="center">
 
