@@ -6,63 +6,62 @@ Curated knowledge that persists across sessions. Layer 2 of Clawdbot memory arch
 
 | Field | Value |
 |-------|-------|
-| Name | [Your name] |
-| Timezone | [Your timezone, e.g., UTC+5] |
-| Location | [City/Country] |
-| Primary language | [e.g., Russian/English] |
+| Name | Евгений Семеев |
+| Timezone | UTC+5 (Ташкент) |
+| Location | Ташкент, Узбекистан |
+| Primary language | Russian |
 
 ## Preferences
 
 ### Tech Stack
-- Languages: [e.g., Python, TypeScript]
-- Frameworks: [e.g., React, FastAPI]
-- Tools: [e.g., Cursor, Claude Code]
+- Tools: Claude Code, Telegram Bot, Todoist, Obsidian
 
 ### Communication Style
-- Preferred response language: [Russian/English/Mixed]
-- Detail level: [Brief/Detailed]
-- Code comments: [Minimal/Verbose]
+- Preferred response language: Russian
+- Detail level: Brief
+- Code comments: Minimal
 
 ### Habits
-- Morning routine: [if relevant]
-- Work hours: [e.g., 10:00-19:00]
-- Planning cadence: [weekly/daily]
+- Planning cadence: daily via Telegram bot → /process в 21:00
+- Work context: Horeca consulting, новый старт в Ташкенте
 
 ## Key Decisions
 
 | Date | Decision | Context |
 |------|----------|---------|
-| YYYY-MM-DD | Example: Use uv instead of pip | Better dependency management |
+| 2026-02-21 | Запустить второй мозг как core-систему | Новый город, новый старт, нужна система |
 
 ## Active Context
 
-### ONE Big Thing (This Week)
-<!-- From goals/3-weekly.md -->
-- [ ] [Current week's main focus]
+### ONE Big Thing (Week 8, 17–23 Feb)
+- [ ] Запустить второй мозг и убедиться что он реально работает — отправить первые заметки и получить результат
 
 ### Hot Projects
-1. [Project name] — [status/next action]
+1. **Второй мозг** — запущен, W8, тестирование бота
+2. **Telegram-канал Евгений Семеев** — не создан, Must Do W8
+3. **Первый контракт в Ташкенте** — поиск клиентов, 5 предложений
 
 ### Pipeline/Leads
-<!-- If applicable -->
-- [Lead name] — [status]
+- Horeca Ташкент — 2-3 контакта нужно установить на этой неделе
 
 ## Key People
 
 | Name | Role | Contact | Notes |
 |------|------|---------|-------|
-| [Name] | [Role] | [Telegram/Email] | [Context] |
+| Евгений Семеев | Пользователь | — | Horeca-консультант, Ташкент |
 
 ## Learnings
 
 ### What Worked
-- [Pattern/approach that was successful]
+- Второй мозг запущен 21 февраля 2026 — первые тесты прошли
 
 ### What Didn't Work
-- [Anti-pattern to avoid]
+- MCP Todoist tools не зарегистрированы в Claude Code сессии (2026-02-21)
 
 ### Rules to Remember
-- [Important rule discovered during work]
+- Записи "Не сохраняй" — пропускать без обработки
+- Приветственные/тестовые сообщения — не создавать задачи
+- MCP tools нужно регистрировать в ~/.claude/settings.json → mcpServers
 
 ## Quick Links
 
@@ -72,4 +71,4 @@ Curated knowledge that persists across sessions. Layer 2 of Clawdbot memory arch
 
 ---
 
-*Last updated: YYYY-MM-DD*
+*Last updated: 2026-02-21*
