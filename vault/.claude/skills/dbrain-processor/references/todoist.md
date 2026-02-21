@@ -1,16 +1,23 @@
 # Todoist Integration
 
-<!--
-╔══════════════════════════════════════════════════════════════════╗
-║  КАК НАСТРОИТЬ ЭТОТ ФАЙЛ                                         ║
-╠══════════════════════════════════════════════════════════════════╣
-║  1. Замените [Your Clients] на имена ваших клиентов              ║
-║  2. Замените [Your Company] на название вашей компании           ║
-║  3. Замените [@your_channel] на ваш Telegram-канал               ║
-║  4. Измените примеры задач на релевантные для вас                ║
-║  5. Удалите этот комментарий после настройки                     ║
-╚══════════════════════════════════════════════════════════════════╝
--->
+## Контекст пользователя
+
+Евгений Семеев только начинает использовать Todoist (зарегистрировался в феврале 2026).
+Базовая структура проектов создаётся с нуля.
+
+## Рекомендуемая структура проектов
+
+| Проект | Для чего |
+|--------|----------|
+| **Клиенты Horeca** | все задачи по заведениям и клиентам |
+| **Личный бренд** | контент, лекции, канал, выступления |
+| **Деньги** | контракты, платежи, финансы |
+| **Дом & Ремонт** | задачи по ремонту и хозяйству |
+| **Обучение** | профайлинг, английский, курсы |
+| **Личное** | семья, здоровье, личные дела |
+| **Inbox** | всё остальное по умолчанию |
+
+---
 
 ## Available MCP Tools
 
@@ -37,74 +44,56 @@ find-tasks-by-date:
   limit: 50
 ```
 
-Build workload map:
-```
-Mon: 2 tasks
-Tue: 4 tasks  ← overloaded
-Wed: 1 task
-Thu: 3 tasks  ← at limit
-Fri: 2 tasks
-Sat: 0 tasks
-Sun: 0 tasks
-```
-
 ### 2. Check Duplicates (REQUIRED)
 
 ```
 find-tasks:
-  searchText: "key words from new task"
+  searchText: "ключевые слова новой задачи"
 ```
-
-If similar exists → mark as duplicate, don't create.
 
 ---
 
 ## Priority by Domain
 
-Based on user's work context (see [ABOUT.md](ABOUT.md)):
-
-| Domain | Default Priority | Override |
-|--------|-----------------|----------|
-| Client Work | p1-p2 | — |
-| Agency Ops (urgent) | p2 | — |
-| Agency Ops (regular) | p3 | — |
-| Content (with deadline) | p2-p3 | — |
-| Product/R&D | p4 | масштабируемость → p3 |
-| AI & Tech | p4 | автоматизация → p3 |
+| Domain | Default Priority |
+|--------|-----------------|
+| Клиент Horeca (дедлайн) | p1-p2 |
+| Деньги / контракт (срочно) | p2 |
+| Личный бренд (с дедлайном) | p2-p3 |
+| Операционное (надо сделать) | p3 |
+| Обучение / рост | p4 |
 
 ### Priority Keywords
 
-| Keywords in text | Priority |
-|-----------------|----------|
-| срочно, критично, дедлайн клиента | p1 |
-| важно, приоритет, до конца недели | p2 |
+| Keywords в тексте | Priority |
+|------------------|----------|
+| срочно, критично, дедлайн, клиент ждёт | p1 |
+| важно, до конца недели, деньги | p2 |
 | нужно, надо, не забыть | p3 |
-| (strategic, R&D, long-term) | p4 |
+| изучить, разобраться, долгосрочно | p4 |
 
-### Apply Decision Filters for Priority Boost
-
-If entry matches 2+ filters → boost priority by 1 level:
-- Это масштабируется?
-- Это можно автоматизировать?
-- Это усиливает экспертизу/бренд?
-- Это приближает к продукту/SaaS?
+### Буст приоритета (если 2+ фильтра совпадают)
+- Строит личный бренд Евгений Семеев?
+- Принесёт реальные деньги?
+- Масштабируется?
+- Интуиция говорит «да»?
 
 ---
 
 ## Date Mapping
 
-| Context | dueString |
+| Контекст | dueString |
 |---------|-----------|
-| **Client deadline** | exact date |
-| **Urgent ops** | today / tomorrow |
-| **This week** | friday |
-| **Next week** | next monday |
-| **Strategic/R&D** | in 7 days |
-| **Not specified** | in 3 days |
+| Клиентский дедлайн | exact date |
+| Срочно | today / tomorrow |
+| На этой неделе | friday |
+| На следующей неделе | next monday |
+| Стратегическое | in 7 days |
+| Не указано | in 3 days |
 
-### Russian → dueString
+### Русский → dueString
 
-| Russian | dueString |
+| Русский | dueString |
 |---------|-----------|
 | сегодня | today |
 | завтра | tomorrow |
@@ -114,7 +103,6 @@ If entry matches 2+ filters → boost priority by 1 level:
 | на этой неделе | friday |
 | на следующей неделе | next monday |
 | через неделю | in 7 days |
-| 15 января | January 15 |
 
 ---
 
@@ -124,62 +112,38 @@ If entry matches 2+ filters → boost priority by 1 level:
 add-tasks:
   tasks:
     - content: "Task title"
-      dueString: "friday"  # MANDATORY
-      priority: "p4"       # based on domain
-      projectId: "..."     # if known
+      dueString: "friday"
+      priority: "p3"
+      projectId: "..."
 ```
 
-### Task Title Style
+### Task Title Style для Евгения
 
-User prefers: прямота, ясность, конкретика
+Прямо, конкретно — никакой воды:
 
-<!-- Замените примеры на релевантные для вас -->
 ✅ Good:
-- "Отправить презентацию клиенту"
-- "Созвон с командой по проекту"
-- "Написать пост про [тема]"
+- "Позвонить управляющему кофейни [название]"
+- "Отправить КП клиенту до пятницы"
+- "Написать пост про стандарты сервиса"
+- "Получить 3 сметы от подрядчиков"
 
 ❌ Bad:
-- "Подумать о презентации"
-- "Что-то с клиентом"
-- "Разобраться с AI"
+- "Подумать о клиенте"
+- "Разобраться с ремонтом"
+- "Что-то по Horeca"
 
-### Workload Balancing
-
-If target day has 3+ tasks:
-1. Find next day with < 3 tasks
-2. Use that day instead
-3. Mention in report: "сдвинуто на {day} (перегрузка)"
-
----
-
-## Project Detection
-
-<!--
-Настройте под свои проекты в Todoist.
-Замените примеры клиентов и название канала.
--->
-
-| Keywords | Project |
-|----------|---------|
-| [Your Client Names], клиент, бренд | Client Work |
-| [Your Company], команда, найм, процессы | Company Ops |
-| продукт, SaaS, MVP | Product |
-| пост, [@your_channel], контент | Content |
-
-If unclear → use Inbox (no projectId).
+**СДВГ-правило:** Задача должна быть настолько конкретной, чтобы можно было начать делать прямо сейчас, не думая.
 
 ---
 
 ## Anti-Patterns (НЕ СОЗДАВАТЬ)
 
-Based on user preferences:
-
-- ❌ "Подумать о..." → конкретизируй действие
+- ❌ "Подумать о..." → конкретизировать
 - ❌ "Разобраться с..." → что именно сделать?
-- ❌ Абстрактные задачи без Next Action
+- ❌ Абстрактные задачи без действия
 - ❌ Дубликаты существующих задач
 - ❌ Задачи без дат
+- ❌ Размытые формулировки — Евгений с СДВГ, ему нужна чёткость
 
 ---
 
@@ -191,10 +155,3 @@ If `add-tasks` fails:
 1. Include EXACT error message in report
 2. Continue with next entry
 3. Don't mark as processed
-4. User will see error and can debug
-
-WRONG output:
-  "Не удалось добавить (MCP недоступен). Добавь вручную: Task title"
-
-CORRECT output:
-  "Ошибка создания задачи: [exact error from MCP tool]"

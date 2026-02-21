@@ -1,58 +1,51 @@
 # Entry Classification
 
-<!--
-╔══════════════════════════════════════════════════════════════════╗
-║  КАК НАСТРОИТЬ ЭТОТ ФАЙЛ                                         ║
-╠══════════════════════════════════════════════════════════════════╣
-║  1. Замените [Your Client Names] на имена ваших клиентов        ║
-║  2. Замените [Your Company] на название вашей компании          ║
-║  3. Замените [@your_channel] на ваш Telegram-канал              ║
-║  4. Добавьте свои домены работы, если они отличаются            ║
-║  5. Удалите этот комментарий после настройки                    ║
-╚══════════════════════════════════════════════════════════════════╝
--->
-
 ## Work Domains → Categories
 
-Based on user's work context (see [ABOUT.md](ABOUT.md)):
+Based on user context (see [about.md](about.md)):
+Евгений Семеев — эксперт Horeca в Ташкенте. Клиенты: кофейни, рестораны, ночные заведения, сетки с высоким чеком.
 
-### Client Work
-Брифы, стратегии, креатив, кампании, KPI, предложения
+### Клиентские проекты Horeca
+Управление, сервис, персонал, тренинги, консалтинг, заведения
 
-<!-- Добавьте имена ваших клиентов через запятую -->
-**Keywords:** [Your Client Names], клиент, бриф, презентация, дедлайн, KPI
+**Keywords:** кофейня, ресторан, бар, ночной клуб, заведение, гости, персонал, управляющий, сервис, клиентский, чек, бриф, дедлайн, клиент, презентация, KPI, стандарты
 
 **→ Category:** task (p1-p2) → Todoist
 
-### AI & Tech
-Инструменты, модели, промпты, пайплайны, агенты
+### Личный бренд & Контент
+Telegram-канал, лекции, выступления, контент, узнаваемость
 
-**Keywords:** GPT, Claude, модель, агент, API, пайплайн, автоматизация, интеграция
+**Keywords:** канал, пост, лекция, выступление, тренинг, контент, аудитория, подписчики, личный бренд, Семеев, репутация, статья, тезис
 
-**→ Category:** learning или project → thoughts/
+**→ Category:** idea или task (если с дедлайном) → thoughts/ideas/ или Todoist
 
-### Product
-Идеи, гипотезы, MVP, юнит-экономика
+### AI & Технологии
+Второй мозг, инструменты, автоматизация
 
-**Keywords:** продукт, SaaS, MVP, гипотеза, монетизация, юнит-экономика, стартап
+**Keywords:** Claude, GPT, бот, агент, автоматизация, второй мозг, инструмент, API, промпт, Todoist
 
-**→ Category:** idea или project → thoughts/
+**→ Category:** learning или project → thoughts/learnings/
 
-### Company Ops
-Команда, процессы, автоматизация, найм, управление, финансы
+### Деньги & Инвестиции
+Доход, контракты, партнёрства, инвестиции, ремонт
 
-<!-- Замените [Your Company] на название вашей компании/проекта -->
-**Keywords:** команда, найм, процесс, HR, финансы, [Your Company]
+**Keywords:** деньги, доход, контракт, оплата, партнёрство, инвестиция, ремонт, бюджет, смета, финансы
 
-**→ Category:** task или project (depends on urgency)
+**→ Category:** task (p2-p3) → Todoist
 
-### Content
-Посты, идеи, тезисы для Telegram и LinkedIn
+### Обучение & Рост
+Профайлинг, психотипы, английский, навыки
 
-<!-- Замените [@your_channel] на ваш Telegram-канал или удалите если не нужно -->
-**Keywords:** пост, [@your_channel], LinkedIn, контент, тезис, статья
+**Keywords:** профайлер, психотип, английский, курс, книга, навык, изучить, разобраться, понял, узнал
 
-**→ Category:** idea → thoughts/ideas/ или task если с дедлайном
+**→ Category:** learning → thoughts/learnings/
+
+### Личное
+Семья, отдых, здоровье, дом
+
+**Keywords:** Мадина, Селин, семья, PUBG, байк, дом, ремонт, здоровье, отдых, личное
+
+**→ Category:** reflection или task (если требует действия) → thoughts/reflections/
 
 ---
 
@@ -61,37 +54,39 @@ Based on user's work context (see [ABOUT.md](ABOUT.md)):
 ```
 Entry text contains...
 │
-├─ Client brand or deadline? ────────────────────> TASK (p1-p2)
-│  ([Your Clients], клиент, дедлайн, презентация)
+├─ Заведение / клиент / персонал / дедлайн? ────> TASK (p1-p2) → Todoist
+│  (кофейня, ресторан, гости, сервис, KPI)
 │
-├─ Operational/urgent? ──────────────────────────> TASK (p2-p3)
-│  (нужно сделать, не забыть, позвонить, встреча)
+├─ Деньги / контракт / ремонт? ─────────────────> TASK (p2-p3) → Todoist
+│  (доход, оплата, смета, бюджет)
 │
-├─ AI/tech learning? ────────────────────────────> LEARNING
-│  (узнал, модель, агент, интеграция)
+├─ Личный бренд / контент с дедлайном? ─────────> TASK (p2-p3) → Todoist
+│  (пост до пятницы, лекция, выступление)
 │
-├─ Product/SaaS idea? ───────────────────────────> IDEA или PROJECT
-│  (продукт, MVP, гипотеза, SaaS)
+├─ Идея для канала / контент без дедлайна? ──────> IDEA → thoughts/ideas/
+│  (пост, тезис, тема для выступления)
 │
-├─ Strategic thinking? ──────────────────────────> PROJECT
-│  (стратегия, план, R&D, долгосрочно)
+├─ Что-то узнал / инсайт? ───────────────────────> LEARNING → thoughts/learnings/
+│  (понял, узнал, профайлинг, инструмент)
 │
-├─ Personal insight? ────────────────────────────> REFLECTION
-│  (понял, осознал, философия)
+├─ Личное размышление? ──────────────────────────> REFLECTION → thoughts/reflections/
+│  (осознал, семья, цели, философия)
 │
-└─ Content idea? ────────────────────────────────> IDEA
-   (пост, тезис, контент)
+└─ Операционная задача? ─────────────────────────> TASK (p3) → Todoist
+   (позвонить, написать, договориться)
 ```
 
-## Apply Decision Filters
+## Decision Filters для Евгения
 
 Перед сохранением спроси:
+- Это строит личный бренд Евгений Семеев?
+- Это принесёт реальные деньги?
 - Это масштабируется?
-- Это можно автоматизировать?
-- Это усиливает экспертизу или бренд?
-- Это приближает к продукту или SaaS?
+- Интуиция говорит «да»?
 
 Если да на 2+ вопроса → повысить приоритет.
+
+**СДВГ-правило:** Любую большую задачу разбивать на конкретные шаги. Никаких "разобраться с..." или "подумать о..."
 
 ---
 
@@ -101,9 +96,9 @@ For `[photo]` entries:
 
 1. Analyze image content via vision
 2. Determine domain:
-   - Screenshot клиентского материала → Client Work
-   - Схема/диаграмма → AI & Tech или Product
-   - Текст/статья → Learning
+   - Скриншот из заведения / меню / интерьер → Horeca проект
+   - Схема / диаграмма → AI & Tech или проект
+   - Текст / статья → Learning
 3. Add description to daily file
 
 ---
@@ -112,9 +107,10 @@ For `[photo]` entries:
 
 | Category | Destination | Priority |
 |----------|-------------|----------|
-| task (client) | Todoist | p1-p2 |
-| task (ops) | Todoist | p2-p3 |
-| task (content) | Todoist | p3-p4 |
+| task (клиент/Horeca) | Todoist | p1-p2 |
+| task (деньги/контракт) | Todoist | p2-p3 |
+| task (личный бренд с дедлайном) | Todoist | p2-p3 |
+| task (операционное) | Todoist | p3 |
 | idea | thoughts/ideas/ | — |
 | reflection | thoughts/reflections/ | — |
 | project | thoughts/projects/ | — |
@@ -130,22 +126,20 @@ thoughts/{category}/{YYYY-MM-DD}-short-title.md
 
 Examples:
 ```
-thoughts/ideas/2024-12-16-saas-pricing-model.md
-thoughts/projects/2024-12-16-ai-agents-pipeline.md
-thoughts/learnings/2024-12-16-claude-mcp-setup.md
+thoughts/ideas/2026-02-21-telegram-channel-content-plan.md
+thoughts/learnings/2026-02-21-profliling-insight.md
+thoughts/reflections/2026-02-21-tashkent-fresh-start.md
 ```
 
 ---
 
 ## Thought Structure
 
-Use preferred format:
-
 ```markdown
 ---
 date: {YYYY-MM-DD}
 type: {category}
-domain: {Client Work|AI & Tech|Product|Agency Ops|Content}
+domain: {Horeca|Личный бренд|Деньги|Обучение|Личное}
 tags: [tag1, tag2]
 ---
 
@@ -156,8 +150,7 @@ tags: [tag1, tag2]
 [Ключевая идея]
 
 ## Implication
-<!-- Замените [Your Company] на название вашей компании -->
-[Что это значит для [Your Company]/продукта/стратегии]
+[Что это значит для бренда Евгений Семеев / дохода / роста]
 
 ## Next Action
 [Конкретный шаг — не абстрактный]
@@ -167,27 +160,19 @@ tags: [tag1, tag2]
 
 ## Anti-Patterns (ИЗБЕГАТЬ)
 
-При создании мыслей НЕ делать:
-- Абстрактные рассуждения без Next Action
-- Академическая теория без применения к вашему проекту/продукту
-- Повторы без синтеза (кластеризуй похожие!)
-- Хаотичные списки без приоритетов
-- Задачи типа "подумать о..." (конкретизируй!)
+- "Подумать о..." → конкретизировать немедленно
+- "Разобраться с..." → что конкретно сделать?
+- Абстрактные задачи без Next Action
+- Задачи без дат
+- Игнорировать СДВГ-контекст — всегда дробить на шаги
 
 ---
 
-## MOC Updates
+### AI & Digital Content (добавлено)
+YouTube, видеогенерация, страшные истории, экранизации книг
 
-After creating thought file, add link to:
-```
-MOC/MOC-{category}s.md
-```
+**Keywords:** YouTube, видео, генерация, Runway, Sora, Midjourney, страшная история, экранизация, книга, AI-контент, монетизация канала, подписчики
 
-Group by domain when relevant:
-```markdown
-## AI & Tech
-- [[2024-12-16-claude-mcp-setup]] - MCP integration
+**→ Category:** idea или project → thoughts/ideas/ или thoughts/projects/
 
-## Product
-- [[2024-12-16-saas-pricing-model]] - Pricing research
-```
+**Логика:** Если идея для видео — сохранить в ideas. Если это конкретный проект с шагами — в projects.

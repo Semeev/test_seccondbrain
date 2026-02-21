@@ -1,25 +1,23 @@
 ---
 type: weekly
-week: YYYY-WWW
-updated: YYYY-MM-DD
+week: 2026-W08
+updated: 2026-02-21
 ---
 
-# Weekly Focus
+# Weekly Focus — Неделя 8, 2026 (17-23 февраля)
 
 ## ONE Big Thing
 
 > **If I accomplish nothing else, I will:**
-> [Single most important outcome for this week]
-
-<!-- This is read by the bot during daily processing -->
+> Запустить второй мозг и убедиться что он реально работает — отправить первые заметки и получить результат
 
 ---
 
 ## Week at a Glance
 
-**Week:** [X] of 52
-**Energy Level:** [High/Medium/Low]
-**Available Hours:** [X] hours focused work
+**Week:** 8 из 52
+**Energy Level:** High — новый город, новый старт, высокая мотивация
+**Available Hours:** фокус на системе + первые шаги в Ташкенте
 
 ---
 
@@ -27,101 +25,37 @@ updated: YYYY-MM-DD
 
 ### Must Do (Non-negotiable)
 
-- [ ] Task 1 — Связь: [[1-yearly-2025#Goal]]
-- [ ] Task 2
-- [ ] Task 3
+- [ ] Запустить бота в Telegram и протестировать — [[1-yearly-2025#Личный бренд]]
+- [ ] Отправить 5+ голосовых/текстовых заметок через бота
+- [ ] Создать Telegram-канал Евгений Семеев
 
 ### Should Do (Important)
 
-- [ ] Task 1
-- [ ] Task 2
+- [ ] Написать первый пост для канала
+- [ ] Связаться с 2-3 потенциальными клиентами в Ташкенте
 
 ### Could Do (If time permits)
 
-- [ ] Task 1
-- [ ] Task 2
-
----
-
-## Daily Plan
-
-### Monday
-
-- [ ] Task 1
-- [ ] Task 2
-
-### Tuesday
-
-- [ ] Task 1
-- [ ] Task 2
-
-### Wednesday
-
-- [ ] Task 1
-- [ ] Task 2
-
-### Thursday
-
-- [ ] Task 1
-- [ ] Task 2
-
-### Friday
-
-- [ ] Task 1
-- [ ] Task 2
-
-### Weekend
-
-- [ ] Rest / Family time
-- [ ] Optional task
-
----
-
-## Key Meetings & Events
-
-| Day | Time | Event | Prep |
-|-----|------|-------|------|
-| Mon | | | |
-| Tue | | | |
+- [ ] Набросать смету на ремонт (первый черновик)
+- [ ] 30 минут английского
 
 ---
 
 ## Habits Tracker
 
-| Habit | Mon | Tue | Wed | Thu | Fri | Sat | Sun |
-|-------|-----|-----|-----|-----|-----|-----|-----|
-| [Habit 1] | | | | | | | |
-| [Habit 2] | | | | | | | |
-| [Habit 3] | | | | | | | |
-
----
-
-## End of Week Review
-
-### What Worked
-
--
-
-### What Didn't Work
-
--
-
-### Lessons Learned
-
--
-
-### Next Week Focus
-
->
+| Habit | Пн | Вт | Ср | Чт | Пт | Сб | Вс |
+|-------|----|----|----|----|----|----|-----|
+| Заметка в бота | | | | | | | |
+| Без соцсетей до 10:00 | | | | | | | |
+| PUBG только после 21:00 | | | | | | | |
 
 ---
 
 ## Links
 
-- [[2-monthly]] - Monthly priorities
-- [[1-yearly-2025]] - Yearly goals
-- Previous: [[3-weekly-YYYY-WXX]]
+- [[2-monthly]] - Приоритеты февраля
+- [[1-yearly-2025]] - Годовые цели
 
 ---
 
-*Week Started: YYYY-MM-DD*
+*Week Started: 2026-02-21*

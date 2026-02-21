@@ -1,59 +1,58 @@
 ---
 type: monthly
-period: YYYY-MM
-updated: YYYY-MM-DD
+period: 2026-02
+updated: 2026-02-21
 ---
 
-# Monthly Focus
+# Monthly Focus — Февраль 2026
 
 ## Top 3 Priorities
 
-### Priority 1: [Your Top Priority]
-<!-- What MUST happen this month? -->
+### Priority 1: Узнаваемость и доверие в Ташкенте
 
-**Why it matters:** [connection to yearly goal]
+**Why it matters:** Без узнаваемости нет клиентов, без доверия — нет денег. Это фундамент всего.
 
 **Key Actions:**
-- [ ] Action 1
-- [ ] Action 2
-- [ ] Action 3
+- [ ] Запустить второй мозг (СДЕЛАНО ✅)
+- [ ] Создать Telegram-канал Евгений Семеев
+- [ ] Написать первые 3 экспертных поста про Horeca
+- [ ] Познакомиться с 5 ключевыми людьми из Horeca Ташкента
 
-**Definition of Done:** [clear outcome]
+**Definition of Done:** Канал создан, первые 50 подписчиков, система второго мозга работает.
 
 ---
 
-### Priority 2: [Second Priority]
+### Priority 2: Деньги — закрыть первый контракт
 
-**Why it matters:** [connection to yearly goal]
+**Why it matters:** Ремонт ждёт, финансовая подушка нужна, семья рядом.
 
 **Key Actions:**
-- [ ] Action 1
-- [ ] Action 2
-- [ ] Action 3
+- [ ] Определить 3 конкретных источника дохода в Ташкенте
+- [ ] Сделать 5 конкретных предложений потенциальным клиентам
+- [ ] Оцифровать: сколько нужно денег и к какому сроку
 
-**Definition of Done:** [clear outcome]
+**Definition of Done:** Минимум один договор подписан или предоплата получена.
 
 ---
 
-### Priority 3: [Third Priority]
+### Priority 3: Ремонт — составить план и смету
 
-**Why it matters:** [connection to yearly goal]
+**Why it matters:** Дом куплен, семье нужен нормальный дом — это базовая ответственность.
 
 **Key Actions:**
-- [ ] Action 1
-- [ ] Action 2
-- [ ] Action 3
+- [ ] Обойти дом и определить приоритетные зоны
+- [ ] Получить 3 сметы от подрядчиков
+- [ ] Найти схему финансирования (рассрочка, кредит, заработать)
 
-**Definition of Done:** [clear outcome]
+**Definition of Done:** Смета на руках, план финансирования понятен, дата старта определена.
 
 ---
 
 ## NOT Doing This Month
 
-<!-- What are you consciously saying NO to? -->
--
--
--
+- Распыляться на проекты вне Horeca
+- Браться за низкооплачиваемые задачи "пока нет лучшего"
+- Игнорировать второй мозг — использовать его каждый день
 
 ---
 
@@ -61,35 +60,19 @@ updated: YYYY-MM-DD
 
 | Week | Progress | Blockers | Adjustments |
 |------|----------|----------|-------------|
-| W1 | | | |
-| W2 | | | |
-| W3 | | | |
-| W4 | | | |
-
----
-
-## End of Month Review
-
-**What worked:**
--
-
-**What didn't work:**
--
-
-**Key learnings:**
--
-
-**Next month focus:**
--
+| W8 | Второй мозг запущен | — | — |
+| W9 | | | |
+| W10 | | | |
+| W11 | | | |
 
 ---
 
 ## Links
 
-- [[0-vision-3y]] - 3-year vision
-- [[1-yearly-2025]] - Annual goals
-- [[3-weekly]] - This week's plan
+- [[0-vision-3y]] - 3-летняя визия
+- [[1-yearly-2025]] - Годовые цели 2026
+- [[3-weekly]] - План на неделю
 
 ---
 
-*Next Review: End of month*
+*Next Review: 1 марта 2026*

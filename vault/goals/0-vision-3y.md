@@ -1,16 +1,15 @@
 ---
 type: vision
 horizon: 3-years
-period: 2025-2027
-updated: YYYY-MM-DD
+period: 2026-2028
+updated: 2026-02-21
 ---
 
-# Vision 2025-2027
+# Vision 2026-2028
 
 ## Life Mission
 
-<!-- Your life direction in one sentence -->
-<!-- Example: "Build meaningful technology while maintaining balance across health, relationships, and personal growth." -->
+Быть полезным и нужным — доносить сложное простыми словами через лекции, обучение и личный пример. Достигать признания и статуса за счёт реальной экспертизы, а не слов.
 
 ---
 
@@ -19,90 +18,103 @@ updated: YYYY-MM-DD
 ### Career & Business
 
 **3-Year Vision:**
-<!-- Where do you want to be professionally in 3 years? -->
+Признанный эксперт №1 по клиентскому сервису в Horeca в Ташкенте и СНГ. Меня приглашают руководить и консультировать топовые заведения. Личный бренд «Евгений Семеев» — синоним спасения проектов Horeca.
 
 **Key Milestones:**
-- [ ] Milestone 1
-- [ ] Milestone 2
-- [ ] Milestone 3
+- [ ] Создать Telegram-канал и набрать 10 000 подписчиков
+- [ ] Провести 20+ платных лекций и тренингов
+- [ ] Стать управляющим партнёром в 2+ знаковых проектах Ташкента
 
 ---
 
 ### Health & Energy
 
 **3-Year Vision:**
-<!-- What does your ideal health look like? -->
+Управляемый СДВГ через системы (второй мозг, рутины, фокус). Достаточно энергии для семьи, работы и роста одновременно.
 
 **Key Milestones:**
-- [ ] Milestone 1
-- [ ] Milestone 2
-- [ ] Milestone 3
+- [ ] Выстроить стабильную утреннюю рутину
+- [ ] Найти баланс: PUBG как осознанный отдых, а не побег
+- [ ] Разговорный английский — минимум уровень B1
 
 ---
 
 ### Relationships & Family
 
 **3-Year Vision:**
-<!-- How do you want your relationships to evolve? -->
+Быть достойным своей семьи — Мадины и Селин. Обеспечить им комфорт, стабильность и присутствие. Завершить ремонт дома — дать семье настоящий дом.
 
 **Key Milestones:**
-- [ ] Milestone 1
-- [ ] Milestone 2
-- [ ] Milestone 3
+- [ ] Завершить ремонт собственного дома
+- [ ] Обеспечить семью стабильным высоким доходом
+- [ ] Выделять время для семьи каждую неделю — осознанно
 
 ---
 
 ### Personal Growth
 
 **3-Year Vision:**
-<!-- What skills, habits, or mindset changes do you want? -->
+Сертифицированный профайлер. Разговорный английский. Понимает инвестиционные инструменты и управляет деньгами осознанно, а не интуитивно.
 
 **Key Milestones:**
-- [ ] Milestone 1
-- [ ] Milestone 2
-- [ ] Milestone 3
+- [ ] Завершить обучение на профайлера и получить сертификат
+- [ ] Достичь уровня B1 в английском
+- [ ] Запустить первую осознанную инвестицию
 
 ---
 
 ### Financial
 
 **3-Year Vision:**
-<!-- What does financial security look like for you? -->
+Высокий стабильный доход через экспертизу, консалтинг и инвестиции. Ремонт дома закрыт. Финансовая подушка сформирована. Деньги работают, а не только зарабатываются.
 
 **Key Milestones:**
-- [ ] Milestone 1
-- [ ] Milestone 2
-- [ ] Milestone 3
+- [ ] Завершить ремонт дома (финансирование найдено)
+- [ ] Выйти на стабильный высокий ежемесячный доход
+- [ ] Сформировать первый инвестиционный портфель
 
 ---
 
 ### Creativity & Joy
 
 **3-Year Vision:**
-<!-- What brings you joy? How will you nurture it? -->
+PUBG — осознанный инструмент отдыха. Возможно, вернуться к байкам когда позволят финансы. Творческая реализация через контент и лекции.
 
 **Key Milestones:**
-- [ ] Milestone 1
-- [ ] Milestone 2
-- [ ] Milestone 3
+- [ ] Разграничить рабочее время и время на себя
+- [ ] Купить байк (долгосрочная мечта)
+- [ ] Создать контент, которым гордишься
 
 ---
 
 ## Quarterly Review Questions
 
-1. Which goals still align with my values?
-2. What has changed that affects these goals?
-3. What am I willing to sacrifice to achieve these?
-4. Who can help me?
+1. Это строит мой личный бренд?
+2. Это приближает к признанию и статусу?
+3. Это принесёт реальные деньги?
+4. Моя интуиция говорит «да»?
 
 ---
 
 ## Links
 
-- [[1-yearly-2025]] - This year's goals
-- [[2-monthly]] - Current month focus
-- [[3-weekly]] - This week's plan
+- [[1-yearly-2025]] - Цели на 2026 год
+- [[2-monthly]] - Фокус на месяц
+- [[3-weekly]] - План на неделю
 
 ---
 
-*Next Review: Q1 2025*
+*Next Review: Q2 2026*
+
+---
+
+### AI & Digital Content
+
+**3-Year Vision:**
+Освоить AI-инструменты для создания контента. Запустить YouTube-канал (страшные истории или экранизации книг через AI-видео) с монетизацией. Стать человеком, который умеет работать на стыке AI + контент + экспертиза Horeca.
+
+**Key Milestones:**
+- [ ] Освоить базовые AI-инструменты для генерации видео и изображений
+- [ ] Запустить YouTube-канал и выпустить первые 10 видео
+- [ ] Выйти на монетизацию YouTube (1000 подписчиков + 4000 часов)
+- [ ] Понять, какое направление AI-контента ближе: страшные истории vs экранизации книг
