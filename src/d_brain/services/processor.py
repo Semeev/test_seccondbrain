@@ -124,6 +124,23 @@ week: {year}-W{week:02d}
                 moc_path.write_text(content)
                 logger.info("Updated MOC-weekly.md with link to %s", summary_path.stem)
 
+    def _update_graph(self) -> None:
+        """Run graph builder to add wiki-links after processing."""
+        script = self.vault_path / ".claude/skills/graph-builder/scripts/add_links.py"
+        if not script.exists():
+            return
+        try:
+            subprocess.run(
+                ["uv", "run", str(script), "--apply"],
+                cwd=self.vault_path.parent,
+                capture_output=True,
+                timeout=60,
+                check=False,
+            )
+            logger.info("Graph updated successfully")
+        except Exception as e:
+            logger.warning("Graph update failed: %s", e)
+
     def process_daily(self, day: date | None = None) -> dict[str, Any]:
         """Process daily file with Claude.
 
@@ -199,6 +216,9 @@ CRITICAL OUTPUT FORMAT:
                     "error": result.stderr or "Claude processing failed",
                     "processed_entries": 0,
                 }
+
+            # Update graph after processing
+            self._update_graph()
 
             # Return human-readable output
             output = result.stdout.strip()
@@ -388,6 +408,9 @@ CRITICAL OUTPUT FORMAT:
                 self._update_weekly_moc(summary_path)
             except Exception as e:
                 logger.warning("Failed to save weekly summary: %s", e)
+
+            # Update graph after weekly digest
+            self._update_graph()
 
             return {
                 "report": output,
