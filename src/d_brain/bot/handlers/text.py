@@ -1,5 +1,6 @@
 """Text message handler."""
 
+import asyncio
 import logging
 from datetime import datetime
 
@@ -7,6 +8,7 @@ from aiogram import Router
 from aiogram.types import Message
 
 from d_brain.config import get_settings
+from d_brain.services.git import VaultGit
 from d_brain.services.session import SessionStore
 from d_brain.services.storage import VaultStorage
 
@@ -34,6 +36,10 @@ async def handle_text(message: Message) -> None:
         text=message.text,
         msg_id=message.message_id,
     )
+
+    # Push to GitHub in background
+    git = VaultGit(settings.vault_path)
+    asyncio.create_task(asyncio.to_thread(git.commit_and_push, "chore: add text entry"))
 
     await message.answer("✓ Сохранено")
     logger.info("Text message saved: %d chars", len(message.text))

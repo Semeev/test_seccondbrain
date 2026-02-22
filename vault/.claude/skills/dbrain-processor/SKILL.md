@@ -183,8 +183,12 @@ Types: [voice], [text], [forward from: Name], [photo]
 
 ## Classification
 
-task → Todoist (see references/todoist.md)
+task → Todoist + thoughts/tasks/ (see references/todoist.md, references/classification.md)
 idea/reflection/learning → thoughts/ (see references/classification.md)
+
+**ВАЖНО: Каждая задача сохраняется в ОБА места:**
+1. Создать задачу в Todoist через mcp__todoist__*
+2. Сохранить заметку в thoughts/tasks/{YYYY-MM-DD}-{slug}.md (используй Task Structure из classification.md)
 
 ## Priority Rules
 

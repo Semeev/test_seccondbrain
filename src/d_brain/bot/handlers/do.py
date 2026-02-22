@@ -11,6 +11,7 @@ from aiogram.types import Message
 from d_brain.bot.formatters import format_process_report
 from d_brain.bot.states import DoCommandState
 from d_brain.config import get_settings
+from d_brain.services.git import VaultGit
 from d_brain.services.processor import ClaudeProcessor
 from d_brain.services.transcription import DeepgramTranscriber
 
@@ -113,6 +114,10 @@ async def process_request(message: Message, prompt: str, user_id: int = 0) -> No
         return await task
 
     report = await run_with_progress()
+
+    # Commit and push any changes Claude made to vault
+    git = VaultGit(settings.vault_path)
+    await asyncio.to_thread(git.commit_and_push, "chore: do command vault update")
 
     formatted = format_process_report(report)
     try:
