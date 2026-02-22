@@ -77,10 +77,32 @@ mcp__todoist__find-tasks-by-date — Check workload
 3. **Check process goals** — find-tasks with labels: ["process-goal"]
 4. Read daily — daily/YYYY-MM-DD.md
 5. Process entries — Classify → task or thought
-6. Build links — Connect notes with [[wiki-links]]
-7. **Log actions to daily** — append action log entry
-8. **Evolve MEMORY.md** — update long-term memory if needed
-9. Generate HTML report — RAW HTML for Telegram
+6. **ОБЯЗАТЕЛЬНО сохрани в Obsidian** — каждая запись → файл в vault (см. ниже)
+7. Build links — Connect notes with [[wiki-links]]
+8. **Log actions to daily** — append action log entry
+9. **Evolve MEMORY.md** — update long-term memory if needed
+10. Generate HTML report — RAW HTML for Telegram
+
+## КРИТИЧНО: Сохранение в Obsidian (Шаг 6)
+
+**КАЖДАЯ запись ОБЯЗАНА быть сохранена в vault. Без исключений.**
+
+| Тип записи | Todoist | Obsidian файл |
+|------------|---------|---------------|
+| Задача (любая) | ✅ создать | ✅ thoughts/tasks/YYYY-MM-DD-slug.md |
+| Идея | ❌ | ✅ thoughts/ideas/YYYY-MM-DD-slug.md |
+| Мысль/Рефлексия | ❌ | ✅ thoughts/reflections/YYYY-MM-DD-slug.md |
+| Инсайт/Обучение | ❌ | ✅ thoughts/learnings/YYYY-MM-DD-slug.md |
+| Цитата | ❌ | ✅ thoughts/learnings/YYYY-MM-DD-slug.md |
+| Проект | ❌ | ✅ thoughts/projects/YYYY-MM-DD-slug.md |
+
+**ЗАПРЕЩЕНО:**
+- ❌ Создать задачу в Todoist но НЕ сохранить в thoughts/tasks/
+- ❌ Пропустить запись со словами "тестовая" или "команда"
+- ❌ Сохранить только в daily/ без thoughts/ файла
+
+**Шаблон для tasks:** см. references/classification.md → Task Structure
+**Шаблон для thoughts:** см. references/classification.md → Thought Structure
 
 ## Process Goals Check (Step 3)
 
