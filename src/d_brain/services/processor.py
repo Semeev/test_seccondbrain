@@ -179,6 +179,15 @@ CRITICAL MCP RULE:
 - Для задач: вызови mcp__todoist__add-tasks tool
 - Если tool вернул ошибку — покажи ТОЧНУЮ ошибку в отчёте
 
+CRITICAL OBSIDIAN RULE (ЖЕЛЕЗНОЕ ПРАВИЛО — БЕЗ ИСКЛЮЧЕНИЙ):
+- КАЖДАЯ запись из daily/ ОБЯЗАНА быть сохранена как файл в vault/thoughts/
+- Задача → Todoist И thoughts/tasks/YYYY-MM-DD-название.md
+- Идея → thoughts/ideas/YYYY-MM-DD-название.md
+- Мысль/цитата/инсайт → thoughts/learnings/ или thoughts/reflections/
+- ЗАПРЕЩЕНО создать задачу в Todoist без файла в thoughts/tasks/
+- ЗАПРЕЩЕНО пропустить запись — любой контент должен стать файлом в vault
+- Перед отправкой отчёта: проверь что для каждой записи создан файл
+
 CRITICAL OUTPUT FORMAT:
 - Return ONLY raw HTML for Telegram (parse_mode=HTML)
 - NO markdown: no **, no ## , no ```, no tables
