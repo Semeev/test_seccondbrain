@@ -130,3 +130,7 @@ Discovery problem - возможность. Кто внутри компании
 - [Claude Projects](https://support.anthropic.com/en/articles/9517075-what-are-projects)
 - [OpenAI Custom GPTs](https://openai.com/index/introducing-gpts/)
 - [WeChat Mini Programs](https://developers.weixin.qq.com/miniprogram/en/dev/)
+
+## Related
+
+- [[index]]

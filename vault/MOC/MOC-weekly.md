@@ -15,3 +15,7 @@ Map of Content for weekly summaries.
 ---
 
 *Updated automatically by the processor*
+
+## Related
+
+- [[2026-W08-summary]]

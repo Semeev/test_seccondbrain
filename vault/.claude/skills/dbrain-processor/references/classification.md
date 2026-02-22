@@ -107,14 +107,18 @@ For `[photo]` entries:
 
 | Category | Destination | Priority |
 |----------|-------------|----------|
-| task (клиент/Horeca) | Todoist | p1-p2 |
-| task (деньги/контракт) | Todoist | p2-p3 |
-| task (личный бренд с дедлайном) | Todoist | p2-p3 |
-| task (операционное) | Todoist | p3 |
+| task (клиент/Horeca) | Todoist + thoughts/tasks/ | p1-p2 |
+| task (деньги/контракт) | Todoist + thoughts/tasks/ | p2-p3 |
+| task (личный бренд с дедлайном) | Todoist + thoughts/tasks/ | p2-p3 |
+| task (операционное) | Todoist + thoughts/tasks/ | p3 |
 | idea | thoughts/ideas/ | — |
 | reflection | thoughts/reflections/ | — |
 | project | thoughts/projects/ | — |
 | learning | thoughts/learnings/ | — |
+
+**ВАЖНО:** Каждая задача сохраняется В ДВУХ МЕСТАХ:
+1. Todoist — для выполнения и напоминаний
+2. thoughts/tasks/ — для графа знаний в Obsidian (связи, контекст, история)
 
 ---
 
@@ -154,6 +158,34 @@ tags: [tag1, tag2]
 
 ## Next Action
 [Конкретный шаг — не абстрактный]
+```
+
+## Task Structure (thoughts/tasks/)
+
+```markdown
+---
+date: {YYYY-MM-DD}
+type: task
+domain: {Horeca|Личный бренд|Деньги|Обучение|Личное}
+priority: {p1|p2|p3|p4}
+due: {YYYY-MM-DD или пусто}
+todoist_id: {id}
+status: open
+tags: [tag1, tag2]
+---
+
+## Задача
+{Название задачи}
+
+## Контекст
+[Откуда пришла задача — голосовое, текст, какая цель]
+
+## Шаги
+- [ ] {конкретный шаг 1}
+- [ ] {конкретный шаг 2}
+
+## Связи
+[[goals/3-weekly]] или другие связанные заметки
 ```
 
 ---
