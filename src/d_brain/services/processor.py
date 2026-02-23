@@ -165,35 +165,12 @@ week: {year}-W{week:02d}
         # Load skill content directly (@ references don't work in --print mode)
         skill_content = self._load_skill_content()
 
-        prompt = f"""Сегодня {day}. Выполни ежедневную обработку.
+        prompt = f"""Сегодня {day}. Выполни ежедневную обработку daily/{day}.md.
 
-=== SKILL INSTRUCTIONS ===
 {skill_content}
-=== END SKILL ===
 
-ПЕРВЫМ ДЕЛОМ: вызови mcp__todoist__user-info чтобы убедиться что MCP работает.
-
-CRITICAL MCP RULE:
-- ТЫ ИМЕЕШЬ ДОСТУП к mcp__todoist__* tools — ВЫЗЫВАЙ ИХ НАПРЯМУЮ
-- НИКОГДА не пиши "MCP недоступен" или "добавь вручную"
-- Для задач: вызови mcp__todoist__add-tasks tool
-- Если tool вернул ошибку — покажи ТОЧНУЮ ошибку в отчёте
-
-CRITICAL OBSIDIAN RULE (ЖЕЛЕЗНОЕ ПРАВИЛО — БЕЗ ИСКЛЮЧЕНИЙ):
-- КАЖДАЯ запись из daily/ ОБЯЗАНА быть сохранена как файл в vault/thoughts/
-- Задача → Todoist И thoughts/tasks/YYYY-MM-DD-название.md
-- Идея → thoughts/ideas/YYYY-MM-DD-название.md
-- Мысль/цитата/инсайт → thoughts/learnings/ или thoughts/reflections/
-- ЗАПРЕЩЕНО создать задачу в Todoist без файла в thoughts/tasks/
-- ЗАПРЕЩЕНО пропустить запись — любой контент должен стать файлом в vault
-- Перед отправкой отчёта: проверь что для каждой записи создан файл
-
-CRITICAL OUTPUT FORMAT:
-- Return ONLY raw HTML for Telegram (parse_mode=HTML)
-- NO markdown: no **, no ## , no ```, no tables
-- Start directly with 📊 <b>Обработка за {day}</b>
-- Allowed tags: <b>, <i>, <code>, <s>, <u>
-- If entries already processed, return status report in same HTML format"""
+Vault: {self.vault_path}
+Вызывай mcp__todoist__* напрямую. Возвращай только RAW HTML."""
 
         try:
             # Pass TODOIST_API_KEY to Claude subprocess
@@ -271,37 +248,11 @@ CRITICAL OUTPUT FORMAT:
         todoist_ref = self._load_todoist_reference()
         session_context = self._get_session_context(user_id)
 
-        prompt = f"""Ты - персональный ассистент d-brain.
+        prompt = f"""Дата: {today}. Vault: {self.vault_path}
+{session_context}
+Запрос: {user_prompt}
 
-CONTEXT:
-- Текущая дата: {today}
-- Vault path: {self.vault_path}
-
-{session_context}=== TODOIST REFERENCE ===
-{todoist_ref}
-=== END REFERENCE ===
-
-ПЕРВЫМ ДЕЛОМ: вызови mcp__todoist__user-info чтобы убедиться что MCP работает.
-
-CRITICAL MCP RULE:
-- ТЫ ИМЕЕШЬ ДОСТУП к mcp__todoist__* tools — ВЫЗЫВАЙ ИХ НАПРЯМУЮ
-- НИКОГДА не пиши "MCP недоступен" или "добавь вручную"
-- Если tool вернул ошибку — покажи ТОЧНУЮ ошибку в отчёте
-
-USER REQUEST:
-{user_prompt}
-
-CRITICAL OUTPUT FORMAT:
-- Return ONLY raw HTML for Telegram (parse_mode=HTML)
-- NO markdown: no **, no ##, no ```, no tables, no -
-- Start with emoji and <b>header</b>
-- Allowed tags: <b>, <i>, <code>, <s>, <u>
-- Be concise - Telegram has 4096 char limit
-
-EXECUTION:
-1. Analyze the request
-2. Call MCP tools directly (mcp__todoist__*, read/write files)
-3. Return HTML status report with results"""
+Вызывай mcp__todoist__* напрямую. Возвращай только RAW HTML для Telegram (теги: b, i, code, s, u). Максимум 4096 символов."""
 
         try:
             env = os.environ.copy()
@@ -356,28 +307,14 @@ EXECUTION:
         """
         today = date.today()
 
-        prompt = f"""Сегодня {today}. Сгенерируй недельный дайджест.
+        prompt = f"""Сегодня {today}. Vault: {self.vault_path}
+Сгенерируй недельный дайджест.
 
-ПЕРВЫМ ДЕЛОМ: вызови mcp__todoist__user-info чтобы убедиться что MCP работает.
+1. Прочитай daily/ файлы за неделю
+2. Проверь прогресс по goals/3-weekly.md
+3. Выполненные задачи — через mcp__todoist__get-completed-tasks
 
-CRITICAL MCP RULE:
-- ТЫ ИМЕЕШЬ ДОСТУП к mcp__todoist__* tools — ВЫЗЫВАЙ ИХ НАПРЯМУЮ
-- НИКОГДА не пиши "MCP недоступен" или "добавь вручную"
-- Для выполненных задач: вызови mcp__todoist__find-completed-tasks tool
-- Если tool вернул ошибку — покажи ТОЧНУЮ ошибку в отчёте
-
-WORKFLOW:
-1. Собери данные за неделю (daily файлы в vault/daily/, completed tasks через MCP)
-2. Проанализируй прогресс по целям (goals/3-weekly.md)
-3. Определи победы и вызовы
-4. Сгенерируй HTML отчёт
-
-CRITICAL OUTPUT FORMAT:
-- Return ONLY raw HTML for Telegram (parse_mode=HTML)
-- NO markdown: no **, no ##, no ```, no tables
-- Start with 📅 <b>Недельный дайджест</b>
-- Allowed tags: <b>, <i>, <code>, <s>, <u>
-- Be concise - Telegram has 4096 char limit"""
+Возвращай только RAW HTML для Telegram. Начни с 📅 <b>Недельный дайджест</b>. Теги: b, i, code. Максимум 4096 символов."""
 
         try:
             env = os.environ.copy()

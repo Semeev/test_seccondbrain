@@ -1,0 +1,213 @@
+{
+  "main": {
+    "id": "0435c5a9f471c4a8",
+    "type": "split",
+    "children": [
+      {
+        "id": "4d82b36a409e9e4b",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "27ac30c039f19d0c",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Граф"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "7444f7ec6a769035",
+    "type": "split",
+    "children": [
+      {
+        "id": "45728fb2b4350913",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "6c88a8766b830907",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Файловый менеджер"
+            }
+          },
+          {
+            "id": "4acd67443f68822d",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Поиск"
+            }
+          },
+          {
+            "id": "475a7909d063765b",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Закладки"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 200
+  },
+  "right": {
+    "id": "b70a092ea7806dfa",
+    "type": "split",
+    "children": [
+      {
+        "id": "476212a849181460",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "6f68a8bc9f582b4e",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Обратные ссылки"
+            }
+          },
+          {
+            "id": "7f693d7e87e73821",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Исходящие ссылки"
+            }
+          },
+          {
+            "id": "a27f00afa66b52bd",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Теги"
+            }
+          },
+          {
+            "id": "6ecd089417ca6f49",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "Все свойства"
+            }
+          },
+          {
+            "id": "2277bcc6ced24082",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Структура"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Меню быстрого перехода": false,
+      "graph:Граф": false,
+      "canvas:Создать новый холст": false,
+      "daily-notes:Сегодняшняя заметка": false,
+      "templates:Вставить шаблон": false,
+      "command-palette:Открыть палитру команд": false,
+      "bases:Создать новую базу": false
+    }
+  },
+  "active": "27ac30c039f19d0c",
+  "lastOpenFiles": [
+    "thoughts/projects/scheta-ip-iqolek.md",
+    "references/about.md",
+    "references",
+    "summaries/2026-W09-summary.md",
+    "thoughts/reflections/2026-02-23-otkrytost-s-zhenoy.md",
+    "thoughts/projects/land-rover-l322.md",
+    "blog/2026-01-08-consumer-ai-2030-predictions.md",
+    "blog/2025-01-10-vibe-coding-guide.md",
+    "daily/2026-02-21.md",
+    "daily/2026-02-22.md",
+    "daily/2026-02-23.md",
+    "goals/0-vision-3y.md",
+    "MOC/MOC-weekly.md",
+    "MOC/MOC-reflections.md",
+    "MOC/MOC-projects.md",
+    "MOC/MOC-learnings.md",
+    "MOC/MOC-ideas.md",
+    "MOC/index.md",
+    "summaries/2026-W08-summary.md",
+    "templates/daily-template.md",
+    "Профиль.md",
+    "MEMORY.md",
+    "2026-02-22.md",
+    "thoughts/tasks/2026-03-07-kolco-madina-8-marta.md",
+    "thoughts/tasks/2026-02-23-zabrat-kota-almaty.md",
+    "thoughts/tasks/2026-03-02-vylet-rustam-termez.md",
+    "thoughts/learnings/команда-которая-ведёт.md",
+    "Без названия.base",
+    "Без названия.canvas",
+    "Без названия 1",
+    "Без названия"
+  ]
+}
