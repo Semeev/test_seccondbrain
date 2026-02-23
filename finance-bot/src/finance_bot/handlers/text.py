@@ -2,7 +2,7 @@
 
 import logging
 from aiogram import Router, F
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, BufferedInputFile
 
 from finance_bot.config import ALLOWED_USERS, ADMIN_USERS
 from finance_bot.storage import FinanceStorage
@@ -16,6 +16,7 @@ MAIN_KEYBOARD = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="📊 Сегодня"), KeyboardButton(text="📋 Последние")],
         [KeyboardButton(text="📅 Неделя"), KeyboardButton(text="🗓 Месяц")],
+        [KeyboardButton(text="📈 График недели"), KeyboardButton(text="📈 График месяца")],
     ],
     resize_keyboard=True,
     persistent=True,
@@ -86,6 +87,38 @@ async def cmd_month(message: Message, storage: FinanceStorage) -> None:
         return
     records = storage.get_monthly(message.from_user.id)
     await message.answer(format_report(records, "Расходы за месяц"), parse_mode="HTML", reply_markup=MAIN_KEYBOARD)
+
+
+@router.message(F.text.startswith("/chart_week") | F.text == "📈 График недели")
+async def cmd_chart_week(message: Message, storage: FinanceStorage) -> None:
+    if not _check_access(message.from_user.id):
+        return
+    from finance_bot.charts import generate_chart
+    records = storage.get_weekly(message.from_user.id)
+    buf = generate_chart(records, "Расходы за неделю")
+    if not buf:
+        await message.answer("Нет данных за неделю.", reply_markup=MAIN_KEYBOARD)
+        return
+    await message.answer_photo(
+        BufferedInputFile(buf.read(), filename="chart.png"),
+        reply_markup=MAIN_KEYBOARD,
+    )
+
+
+@router.message(F.text.startswith("/chart_month") | F.text == "📈 График месяца")
+async def cmd_chart_month(message: Message, storage: FinanceStorage) -> None:
+    if not _check_access(message.from_user.id):
+        return
+    from finance_bot.charts import generate_chart
+    records = storage.get_monthly(message.from_user.id)
+    buf = generate_chart(records, "Расходы за месяц")
+    if not buf:
+        await message.answer("Нет данных за месяц.", reply_markup=MAIN_KEYBOARD)
+        return
+    await message.answer_photo(
+        BufferedInputFile(buf.read(), filename="chart.png"),
+        reply_markup=MAIN_KEYBOARD,
+    )
 
 
 @router.message(F.text)
