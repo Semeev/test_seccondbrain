@@ -1,0 +1,14 @@
+[Unit]
+Description=Finance Bot for Madina
+After=network.target
+
+[Service]
+User=dbrain
+WorkingDirectory=/home/dbrain/finance-bot
+EnvironmentFile=/home/dbrain/finance-bot/.env
+ExecStart=/home/dbrain/.local/bin/uv run python -m finance_bot.bot
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
