@@ -95,14 +95,11 @@ async def cmd_chart_week(message: Message, storage: FinanceStorage) -> None:
         return
     from finance_bot.charts import generate_chart
     records = storage.get_weekly(message.from_user.id)
-    buf = generate_chart(records, "Расходы за неделю")
-    if not buf:
+    text = generate_chart(records, "📈 Расходы за неделю")
+    if not text:
         await message.answer("Нет данных за неделю.", reply_markup=MAIN_KEYBOARD)
         return
-    await message.answer_photo(
-        BufferedInputFile(buf.read(), filename="chart.png"),
-        reply_markup=MAIN_KEYBOARD,
-    )
+    await message.answer(text, parse_mode="HTML", reply_markup=MAIN_KEYBOARD)
 
 
 @router.message(F.text.startswith("/chart_month") | F.text == "📈 График месяца")
@@ -111,14 +108,11 @@ async def cmd_chart_month(message: Message, storage: FinanceStorage) -> None:
         return
     from finance_bot.charts import generate_chart
     records = storage.get_monthly(message.from_user.id)
-    buf = generate_chart(records, "Расходы за месяц")
-    if not buf:
+    text = generate_chart(records, "📈 Расходы за месяц")
+    if not text:
         await message.answer("Нет данных за месяц.", reply_markup=MAIN_KEYBOARD)
         return
-    await message.answer_photo(
-        BufferedInputFile(buf.read(), filename="chart.png"),
-        reply_markup=MAIN_KEYBOARD,
-    )
+    await message.answer(text, parse_mode="HTML", reply_markup=MAIN_KEYBOARD)
 
 
 @router.message(F.text)
