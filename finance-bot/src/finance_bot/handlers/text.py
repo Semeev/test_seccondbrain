@@ -103,25 +103,34 @@ async def cmd_today(message: Message, storage: FinanceStorage) -> None:
     if not _check_access(message.from_user.id):
         return
     records = storage.get_today(message.from_user.id)
-    await message.answer(format_report(records, "Расходы сегодня"), parse_mode="HTML", reply_markup=MAIN_KEYBOARD)
+    all_records = storage.get_all_records(message.from_user.id)
+    await message.answer(format_report(records, "Расходы сегодня", all_records), parse_mode="HTML", reply_markup=MAIN_KEYBOARD)
 
 
 @router.message(F.text.startswith("/last") | F.text == "📋 Последние")
 async def cmd_last(message: Message, storage: FinanceStorage) -> None:
     if not _check_access(message.from_user.id):
         return
+    from finance_bot.categories import CATEGORIES
+    from finance_bot.currency import fmt, to_kzt
+    from finance_bot.reports import format_balance_line
     records = storage.get_today(message.from_user.id)
     if not records:
         records = storage.get_weekly(message.from_user.id)
+    all_records = storage.get_all_records(message.from_user.id)
+    balance_line = format_balance_line(all_records)
     if not records:
-        await message.answer("Записей пока нет.", reply_markup=MAIN_KEYBOARD)
+        await message.answer(f"{balance_line}\n\nЗаписей пока нет.", parse_mode="HTML", reply_markup=MAIN_KEYBOARD)
         return
-    from finance_bot.categories import CATEGORIES
-    lines = ["📋 <b>Последние записи:</b>\n"]
+    lines = [balance_line, "─────────────────", "📋 <b>Последние записи:</b>\n"]
     for r in records[:10]:
         time = r["created_at"][11:16]
         cat = CATEGORIES.get(r["category"], r["category"])
-        lines.append(f"{time} {cat} — <b>{r['amount']:,.0f} тг</b>")
+        currency = r.get("currency", "KZT")
+        amount_str = fmt(r["amount"], currency)
+        if currency != "KZT":
+            amount_str += f" ≈ {to_kzt(r['amount'], currency):,.0f} тг"
+        lines.append(f"{time} {cat} — <b>{amount_str}</b>")
     await message.answer("\n".join(lines), parse_mode="HTML", reply_markup=MAIN_KEYBOARD)
 
 
@@ -130,7 +139,8 @@ async def cmd_week(message: Message, storage: FinanceStorage) -> None:
     if not _check_access(message.from_user.id):
         return
     records = storage.get_weekly(message.from_user.id)
-    await message.answer(format_report(records, "Расходы за неделю"), parse_mode="HTML", reply_markup=MAIN_KEYBOARD)
+    all_records = storage.get_all_records(message.from_user.id)
+    await message.answer(format_report(records, "Расходы за неделю", all_records), parse_mode="HTML", reply_markup=MAIN_KEYBOARD)
 
 
 @router.message(F.text.startswith("/month") | F.text == "🗓 Месяц")
@@ -138,7 +148,8 @@ async def cmd_month(message: Message, storage: FinanceStorage) -> None:
     if not _check_access(message.from_user.id):
         return
     records = storage.get_monthly(message.from_user.id)
-    await message.answer(format_report(records, "Расходы за месяц"), parse_mode="HTML", reply_markup=MAIN_KEYBOARD)
+    all_records = storage.get_all_records(message.from_user.id)
+    await message.answer(format_report(records, "Расходы за месяц", all_records), parse_mode="HTML", reply_markup=MAIN_KEYBOARD)
 
 
 @router.message(F.text == "↩️ Отменить последнее")
@@ -224,6 +235,7 @@ async def handle_text(message: Message, storage: FinanceStorage, parser: Expense
 
     from finance_bot.categories import CATEGORIES, INCOME_CATEGORIES
     from finance_bot.currency import to_kzt, fmt
+    from finance_bot.reports import format_balance_line
     is_income = result["type"] == "income"
     all_cats = {**CATEGORIES, **INCOME_CATEGORIES}
     cat_label = all_cats.get(result["category"], result["category"])
@@ -235,10 +247,14 @@ async def handle_text(message: Message, storage: FinanceStorage, parser: Expense
         kzt_amount = to_kzt(result["amount"], currency)
         amount_str += f" ≈ {kzt_amount:,.0f} тг"
 
+    all_records = storage.get_all_records(message.from_user.id)
+    balance_line = format_balance_line(all_records)
+
     await message.answer(
         f"{icon} Сохранено #{record_id}\n"
         f"{cat_label}\n"
-        f"<b>{sign}{amount_str}</b> — {result['description']}",
+        f"<b>{sign}{amount_str}</b> — {result['description']}\n\n"
+        f"{balance_line}",
         parse_mode="HTML",
         reply_markup=MAIN_KEYBOARD,
     )

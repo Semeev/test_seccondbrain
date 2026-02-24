@@ -9,7 +9,28 @@ def _kzt(r: dict) -> float:
     return to_kzt(r["amount"], r.get("currency", "KZT"))
 
 
-def format_report(records: list[dict], title: str) -> str:
+def calc_balance(all_records: list[dict]) -> float:
+    """Баланс на руках: все доходы - все расходы в тенге."""
+    total = 0.0
+    for r in all_records:
+        kzt = _kzt(r)
+        if r.get("type") == "income":
+            total += kzt
+        else:
+            total -= kzt
+    return total
+
+
+def format_balance_line(all_records: list[dict]) -> str:
+    """Строка с балансом на руках для показа в отчётах и после транзакций."""
+    balance = calc_balance(all_records)
+    if balance >= 0:
+        return f"💰 <b>На руках: {balance:,.0f} тг</b>"
+    else:
+        return f"⚠️ <b>На руках: {balance:,.0f} тг</b> (минус!)"
+
+
+def format_report(records: list[dict], title: str, all_records: list[dict] | None = None) -> str:
     if not records:
         return f"📊 <b>{title}</b>\n\nЗаписей нет."
 
@@ -21,6 +42,11 @@ def format_report(records: list[dict], title: str) -> str:
     balance = total_income - total_expense
 
     lines = [f"📊 <b>{title}</b>\n"]
+
+    # Баланс на руках — всегда вверху если есть все записи
+    if all_records is not None:
+        lines.append(format_balance_line(all_records))
+        lines.append("─────────────────")
 
     # Balance — главное вверху
     if total_income > 0:

@@ -102,6 +102,16 @@ class FinanceStorage:
                 return dict(row)
         return None
 
+    def get_all_records(self, user_id: int) -> list[dict[str, Any]]:
+        """Все записи за всё время — для расчёта баланса на руках."""
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute(
+                "SELECT * FROM expenses WHERE user_id = ? ORDER BY created_at DESC",
+                (user_id,),
+            ).fetchall()
+        return [dict(r) for r in rows]
+
     def get_total_by_category(self, records: list[dict]) -> dict[str, float]:
         totals: dict[str, float] = {}
         for r in records:
