@@ -17,10 +17,62 @@ MAIN_KEYBOARD = ReplyKeyboardMarkup(
         [KeyboardButton(text="📊 Сегодня"), KeyboardButton(text="📋 Последние")],
         [KeyboardButton(text="📅 Неделя"), KeyboardButton(text="🗓 Месяц")],
         [KeyboardButton(text="📈 График недели"), KeyboardButton(text="📈 График месяца")],
+        [KeyboardButton(text="↩️ Отменить последнее"), KeyboardButton(text="📖 Категории")],
     ],
     resize_keyboard=True,
     persistent=True,
 )
+
+CATEGORIES_HELP = """📖 <b>Как записывать расходы:</b>
+
+Просто напиши <b>сумму + что</b>, например:
+<i>«15 000 на такси»</i> или <i>«8 000 стики»</i>
+
+<b>💆 Бьюти</b>
+• косметолог, ногти, ресницы, волосы
+• макияж, лазер, массаж, процедура
+
+<b>🧴 Косметика</b>
+• тушь, помада, тональный, пудра (декор)
+• крем, сыворотка, уходовая (уход)
+
+<b>🛒 Покупки</b>
+• продукты, базар — еда домой
+• вещи, одежда, обувь
+• для дома, посуда
+• техника, телефон, гаджет
+• золото, украшение, кольцо
+
+<b>👶 Селин</b>
+• вещи для Селин, игрушка
+• няня, садик, курсы Селин
+
+<b>🏠 Дом</b>
+• аренда, за квартиру
+• ремонт
+• коммуналка, свет, вода, интернет
+
+<b>🚗 Транспорт</b>
+• бензин, заправила, зарядка машины
+• такси, доехала на такси, на дорогу
+
+<b>🚬 Айкос</b>
+• стики, heets, айкос
+
+<b>🍽 Еда вне дома</b>
+• кафе, ресторан, кофейня, бизнес-ланч
+• пицца, суши, бургер, доставка еды
+
+<b>🎉 Прочее</b>
+• тусовка, отпуск, путешествие
+• книга, курс (саморазвитие)
+• для Джона, маме
+• собака, кот
+• благотворительность, садака
+
+<b>📈 Доходы</b>
+• дал муж, подарок, возврат долга
+• за услуги, фриланс"""
 
 
 def _check_access(user_id: int) -> bool:
@@ -89,6 +141,33 @@ async def cmd_month(message: Message, storage: FinanceStorage) -> None:
     await message.answer(format_report(records, "Расходы за месяц"), parse_mode="HTML", reply_markup=MAIN_KEYBOARD)
 
 
+@router.message(F.text == "↩️ Отменить последнее")
+async def cmd_undo(message: Message, storage: FinanceStorage) -> None:
+    if not _check_access(message.from_user.id):
+        return
+    record = storage.delete_last(message.from_user.id)
+    if not record:
+        await message.answer("Нечего отменять.", reply_markup=MAIN_KEYBOARD)
+        return
+    from finance_bot.categories import CATEGORIES, INCOME_CATEGORIES
+    all_cats = {**CATEGORIES, **INCOME_CATEGORIES}
+    cat_label = all_cats.get(record["category"], record["category"])
+    rtype = record.get("type", "expense")
+    icon = "📈" if rtype == "income" else "📉"
+    await message.answer(
+        f"↩️ Удалено #{record['id']}\n{icon} {cat_label} — <b>{record['amount']:,.0f} тг</b>",
+        parse_mode="HTML",
+        reply_markup=MAIN_KEYBOARD,
+    )
+
+
+@router.message(F.text == "📖 Категории")
+async def cmd_categories(message: Message) -> None:
+    if not _check_access(message.from_user.id):
+        return
+    await message.answer(CATEGORIES_HELP, parse_mode="HTML", reply_markup=MAIN_KEYBOARD)
+
+
 @router.message(F.text.startswith("/chart_week") | F.text == "📈 График недели")
 async def cmd_chart_week(message: Message, storage: FinanceStorage) -> None:
     if not _check_access(message.from_user.id):
@@ -128,22 +207,29 @@ async def handle_text(message: Message, storage: FinanceStorage, parser: Expense
 
     result = parser.parse(text)
     if not result:
-        await message.answer("Не похоже на расход. Напиши как-то так: «потратила 3000 на еду»")
+        await message.answer("Не похоже на финансовую операцию. Напиши как-то так: «потратила 3000 на еду» или «получила зарплату 150000»")
         return
 
-    expense_id = storage.add_expense(
+    record_id = storage.add_record(
         user_id=message.from_user.id,
+        record_type=result["type"],
         amount=result["amount"],
         category=result["category"],
         description=result["description"],
         raw_text=text,
     )
 
-    from finance_bot.categories import CATEGORIES
-    cat_label = CATEGORIES.get(result["category"], result["category"])
+    from finance_bot.categories import CATEGORIES, INCOME_CATEGORIES
+    is_income = result["type"] == "income"
+    all_cats = {**CATEGORIES, **INCOME_CATEGORIES}
+    cat_label = all_cats.get(result["category"], result["category"])
+    sign = "+" if is_income else "-"
+    icon = "📈" if is_income else "📉"
+
     await message.answer(
-        f"✅ Сохранено #{expense_id}\n"
+        f"{icon} Сохранено #{record_id}\n"
         f"{cat_label}\n"
-        f"<b>{result['amount']:,.0f} тг</b> — {result['description']}",
+        f"<b>{sign}{result['amount']:,.0f} тг</b> — {result['description']}",
         parse_mode="HTML",
+        reply_markup=MAIN_KEYBOARD,
     )
