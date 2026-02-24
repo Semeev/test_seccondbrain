@@ -210,6 +210,8 @@ async def handle_text(message: Message, storage: FinanceStorage, parser: Expense
         await message.answer("Не похоже на финансовую операцию. Напиши как-то так: «потратила 3000 на еду» или «получила зарплату 150000»")
         return
 
+    currency = result.get("currency", "KZT").upper()
+
     record_id = storage.add_record(
         user_id=message.from_user.id,
         record_type=result["type"],
@@ -217,19 +219,26 @@ async def handle_text(message: Message, storage: FinanceStorage, parser: Expense
         category=result["category"],
         description=result["description"],
         raw_text=text,
+        currency=currency,
     )
 
     from finance_bot.categories import CATEGORIES, INCOME_CATEGORIES
+    from finance_bot.currency import to_kzt, fmt
     is_income = result["type"] == "income"
     all_cats = {**CATEGORIES, **INCOME_CATEGORIES}
     cat_label = all_cats.get(result["category"], result["category"])
     sign = "+" if is_income else "-"
     icon = "📈" if is_income else "📉"
 
+    amount_str = fmt(result["amount"], currency)
+    if currency != "KZT":
+        kzt_amount = to_kzt(result["amount"], currency)
+        amount_str += f" ≈ {kzt_amount:,.0f} тг"
+
     await message.answer(
         f"{icon} Сохранено #{record_id}\n"
         f"{cat_label}\n"
-        f"<b>{sign}{result['amount']:,.0f} тг</b> — {result['description']}",
+        f"<b>{sign}{amount_str}</b> — {result['description']}",
         parse_mode="HTML",
         reply_markup=MAIN_KEYBOARD,
     )
