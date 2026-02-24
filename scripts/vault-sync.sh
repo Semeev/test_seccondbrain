@@ -2,7 +2,7 @@
 # Двусторонняя синхронизация vault с GitHub
 
 REPO="/Users/zake/Documents/test_seccondbrain"
-LOG="/tmp/vault-sync.log"
+LOG="/Users/zake/Documents/test_seccondbrain/scripts/vault-sync.log"
 
 cd "$REPO" || exit 1
 

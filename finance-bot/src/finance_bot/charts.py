@@ -1,38 +1,55 @@
 """Text-based visual chart for Telegram."""
 
-from finance_bot.categories import CATEGORIES
+from finance_bot.categories import CATEGORIES, INCOME_CATEGORIES
 
-BAR_FULL = "🟩"
-BAR_EMPTY = "⬜"
 BAR_LEN = 10
 
 
-def generate_chart(records: list[dict], title: str) -> str | None:
-    """Generate beautiful text chart with emoji and progress bars."""
-    totals: dict[str, float] = {}
-    for r in records:
-        cat = r["category"]
-        totals[cat] = totals.get(cat, 0) + r["amount"]
+def _bar(filled: int, total: int, full: str, empty: str) -> str:
+    f = round(filled / total * BAR_LEN) if total else 0
+    return full * f + empty * (BAR_LEN - f)
 
-    if not totals:
+
+def generate_chart(records: list[dict], title: str) -> str | None:
+    if not records:
         return None
 
-    sorted_items = sorted(totals.items(), key=lambda x: x[1], reverse=True)[:10]
-    total_sum = sum(totals.values())
-    max_val = sorted_items[0][1]
+    expenses = [r for r in records if r.get("type", "expense") == "expense"]
+    incomes = [r for r in records if r.get("type") == "income"]
+
+    total_expense = sum(r["amount"] for r in expenses)
+    total_income = sum(r["amount"] for r in incomes)
+    balance = total_income - total_expense
+    max_val = max(total_income, total_expense, 1)
 
     lines = [f"<b>{title}</b>\n"]
 
-    for cat_key, amount in sorted_items:
-        label = CATEGORIES.get(cat_key, cat_key)
-        pct = amount / total_sum * 100
-        bar_fill = round(amount / max_val * BAR_LEN)
-        bar = BAR_FULL * bar_fill + BAR_EMPTY * (BAR_LEN - bar_fill)
+    # Баланс — крупно вверху
+    if total_income > 0:
+        sign = "+" if balance >= 0 else ""
+        emoji = "✅" if balance >= 0 else "⚠️"
+        lines.append(f"{emoji} <b>Остаток: {sign}{balance:,.0f} тг</b>\n")
 
-        lines.append(
-            f"{label}\n"
-            f"<code>{bar}</code>  <b>{amount:,.0f} тг</b>  {pct:.0f}%\n"
-        )
+        # Сравнение доход/расход
+        lines.append(f"📈 Доход   {_bar(total_income, max_val, '🟩', '⬜')}  <b>+{total_income:,.0f}</b>")
+        lines.append(f"📉 Расход  {_bar(total_expense, max_val, '🟥', '⬜')}  <b>-{total_expense:,.0f}</b>\n")
+    else:
+        lines.append(f"📉 <b>Расходы: {total_expense:,.0f} тг</b>\n")
 
-    lines.append(f"💰 <b>Итого: {total_sum:,.0f} тг</b>")
+    # Топ расходов по категориям
+    if expenses:
+        exp_totals: dict = {}
+        for r in expenses:
+            cat = r["category"]
+            exp_totals[cat] = exp_totals.get(cat, 0) + r["amount"]
+        sorted_exp = sorted(exp_totals.items(), key=lambda x: x[1], reverse=True)[:8]
+        max_exp = sorted_exp[0][1]
+
+        lines.append("— Расходы по категориям —")
+        for cat_key, amount in sorted_exp:
+            label = CATEGORIES.get(cat_key, cat_key)
+            pct = amount / total_expense * 100 if total_expense else 0
+            bar = _bar(amount, max_exp, "🟥", "⬜")
+            lines.append(f"{label}\n<code>{bar}</code> <b>{amount:,.0f}</b> · {pct:.0f}%\n")
+
     return "\n".join(lines)
