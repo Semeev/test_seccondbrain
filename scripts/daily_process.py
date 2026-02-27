@@ -9,6 +9,15 @@ home = Path.home()
 for p in [home / ".local/bin", Path("/usr/local/bin")]:
     if str(p) not in os.environ.get("PATH", ""):
         os.environ["PATH"] = str(p) + ":" + os.environ.get("PATH", "")
+
+# Load .env explicitly before Settings (pydantic-settings also searches cwd)
+_project_dir = Path(__file__).parent.parent
+try:
+    from dotenv import load_dotenv
+    load_dotenv(_project_dir / ".env", override=False)
+except ImportError:
+    pass
+
 from datetime import date
 from aiogram import Bot
 from aiogram.client.default import DefaultBotProperties
