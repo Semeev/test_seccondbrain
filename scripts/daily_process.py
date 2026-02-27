@@ -1,8 +1,14 @@
 #!/usr/bin/env python
 """Daily process script."""
-import asyncio, logging, sys
+import asyncio, logging, os, sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
+# Extend PATH so claude/uv are found when run from systemd
+home = Path.home()
+for p in [home / ".local/bin", Path("/usr/local/bin")]:
+    if str(p) not in os.environ.get("PATH", ""):
+        os.environ["PATH"] = str(p) + ":" + os.environ.get("PATH", "")
 from datetime import date
 from aiogram import Bot
 from aiogram.client.default import DefaultBotProperties

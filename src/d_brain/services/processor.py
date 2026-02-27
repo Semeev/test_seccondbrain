@@ -156,9 +156,9 @@ week: {year}-W{week:02d}
         daily_file = self.vault_path / "daily" / f"{day.isoformat()}.md"
 
         if not daily_file.exists():
-            logger.warning("No daily file for %s", day)
+            logger.info("No daily file for %s, skipping", day)
             return {
-                "error": f"No daily file for {day}",
+                "report": f"📭 <b>Нет записей за {day}</b>\n\n<i>Сегодня ничего не добавлено в дневник.</i>",
                 "processed_entries": 0,
             }
 
@@ -197,9 +197,11 @@ Vault: {self.vault_path}
             )
 
             if result.returncode != 0:
-                logger.error("Claude processing failed: %s", result.stderr)
+                stderr_snippet = (result.stderr or "").strip()[:500]
+                logger.error("Claude processing failed (rc=%d): %s", result.returncode, stderr_snippet)
+                error_msg = stderr_snippet or "Claude processing failed"
                 return {
-                    "error": result.stderr or "Claude processing failed",
+                    "error": error_msg,
                     "processed_entries": 0,
                 }
 
