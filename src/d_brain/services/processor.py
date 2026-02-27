@@ -158,7 +158,7 @@ week: {year}-W{week:02d}
         if not daily_file.exists():
             logger.info("No daily file for %s, skipping", day)
             return {
-                "report": f"📭 <b>Нет записей за {day}</b>\n\n<i>Сегодня ничего не добавлено в дневник.</i>",
+                "report": "📭 Записей нет",
                 "processed_entries": 0,
             }
 
