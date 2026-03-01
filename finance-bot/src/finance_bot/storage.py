@@ -112,6 +112,11 @@ class FinanceStorage:
             ).fetchall()
         return [dict(r) for r in rows]
 
+    def delete_all(self, user_id: int) -> int:
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.execute("DELETE FROM expenses WHERE user_id = ?", (user_id,))
+            return cursor.rowcount
+
     def update_record(self, record_id: int, user_id: int, amount: float) -> dict | None:
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row

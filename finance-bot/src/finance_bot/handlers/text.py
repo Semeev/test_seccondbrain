@@ -173,6 +173,18 @@ async def cmd_undo(message: Message, storage: FinanceStorage) -> None:
     )
 
 
+@router.message(F.text.startswith("/reset"))
+async def cmd_reset(message: Message, storage: FinanceStorage) -> None:
+    if not _check_access(message.from_user.id):
+        return
+    count = storage.delete_all(message.from_user.id)
+    await message.answer(
+        f"🗑 Удалено записей: <b>{count}</b>\nБаза очищена. Начинаем с чистого листа.",
+        parse_mode="HTML",
+        reply_markup=MAIN_KEYBOARD,
+    )
+
+
 @router.message(F.text == "📖 Категории")
 async def cmd_categories(message: Message) -> None:
     if not _check_access(message.from_user.id):
