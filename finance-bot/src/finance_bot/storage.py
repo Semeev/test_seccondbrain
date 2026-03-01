@@ -112,6 +112,21 @@ class FinanceStorage:
             ).fetchall()
         return [dict(r) for r in rows]
 
+    def update_record(self, record_id: int, user_id: int, amount: float) -> dict | None:
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            row = conn.execute(
+                "SELECT * FROM expenses WHERE id = ? AND user_id = ?",
+                (record_id, user_id)
+            ).fetchone()
+            if row:
+                conn.execute(
+                    "UPDATE expenses SET amount = ? WHERE id = ? AND user_id = ?",
+                    (amount, record_id, user_id)
+                )
+                return dict(row)
+        return None
+
     def get_total_by_category(self, records: list[dict]) -> dict[str, float]:
         totals: dict[str, float] = {}
         for r in records:

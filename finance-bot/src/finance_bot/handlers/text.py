@@ -1,6 +1,7 @@
 """Text message handler."""
 
 import logging
+import re
 from aiogram import Router, F
 from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, BufferedInputFile
 
@@ -15,9 +16,9 @@ router = Router()
 MAIN_KEYBOARD = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="📊 Сегодня"), KeyboardButton(text="📋 Последние")],
-        [KeyboardButton(text="📅 Неделя"), KeyboardButton(text="🗓 Месяц")],
         [KeyboardButton(text="📈 График недели"), KeyboardButton(text="📈 График месяца")],
-        [KeyboardButton(text="↩️ Отменить последнее"), KeyboardButton(text="📖 Категории")],
+        [KeyboardButton(text="↩️ Отменить последнее"), KeyboardButton(text="✏️ Изменить запись")],
+        [KeyboardButton(text="📖 Категории")],
     ],
     resize_keyboard=True,
     persistent=True,
@@ -203,6 +204,48 @@ async def cmd_chart_month(message: Message, storage: FinanceStorage) -> None:
         await message.answer("Нет данных за месяц.", reply_markup=MAIN_KEYBOARD)
         return
     await message.answer(text, parse_mode="HTML", reply_markup=MAIN_KEYBOARD)
+
+
+@router.message(F.text == "✏️ Изменить запись")
+async def cmd_edit(message: Message, storage: FinanceStorage) -> None:
+    if not _check_access(message.from_user.id):
+        return
+    from finance_bot.categories import CATEGORIES
+    records = storage.get_all_records(message.from_user.id)[:10]
+    if not records:
+        await message.answer("Записей нет.", reply_markup=MAIN_KEYBOARD)
+        return
+    lines = ["✏️ <b>Последние 10 записей:</b>\n",
+             "Чтобы изменить сумму, напиши: <code>#ID новая_сумма</code>",
+             "Например: <code>#42 8000</code>\n"]
+    for r in records:
+        cat = CATEGORIES.get(r["category"], r["category"])
+        sign = "+" if r.get("type") == "income" else "-"
+        lines.append(f"<code>#{r['id']}</code> {cat} {sign}{r['amount']:,.0f} тг — {r['description']}")
+    await message.answer("\n".join(lines), parse_mode="HTML", reply_markup=MAIN_KEYBOARD)
+
+
+@router.message(F.text.regexp(r'^#\d+\s+\d'))
+async def cmd_edit_apply(message: Message, storage: FinanceStorage) -> None:
+    if not _check_access(message.from_user.id):
+        return
+    m = re.match(r'^#(\d+)\s+([\d\s,.]+)', message.text.strip())
+    if not m:
+        await message.answer("Формат: <code>#42 8000</code>", parse_mode="HTML", reply_markup=MAIN_KEYBOARD)
+        return
+    record_id = int(m.group(1))
+    amount = float(m.group(2).replace(' ', '').replace(',', '.'))
+    old = storage.update_record(record_id, message.from_user.id, amount)
+    if not old:
+        await message.answer("Запись не найдена.", reply_markup=MAIN_KEYBOARD)
+        return
+    from finance_bot.categories import CATEGORIES
+    cat = CATEGORIES.get(old["category"], old["category"])
+    await message.answer(
+        f"✅ Запись #{record_id} обновлена\n{cat}\n"
+        f"<s>{old['amount']:,.0f} тг</s> → <b>{amount:,.0f} тг</b>",
+        parse_mode="HTML", reply_markup=MAIN_KEYBOARD
+    )
 
 
 @router.message(F.text)
