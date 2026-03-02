@@ -1,6 +1,11 @@
 """Text-based visual chart for Telegram."""
 
 from finance_bot.categories import CATEGORIES, INCOME_CATEGORIES
+from finance_bot.currency import to_kzt
+
+
+def _to_kzt(r: dict) -> float:
+    return to_kzt(r["amount"], r.get("currency", "KZT"))
 
 BAR_LEN = 10
 
@@ -17,8 +22,8 @@ def generate_chart(records: list[dict], title: str) -> str | None:
     expenses = [r for r in records if r.get("type", "expense") == "expense"]
     incomes = [r for r in records if r.get("type") == "income"]
 
-    total_expense = sum(r["amount"] for r in expenses)
-    total_income = sum(r["amount"] for r in incomes)
+    total_expense = sum(_to_kzt(r) for r in expenses)
+    total_income = sum(_to_kzt(r) for r in incomes)
     balance = total_income - total_expense
     max_val = max(total_income, total_expense, 1)
 
@@ -41,7 +46,7 @@ def generate_chart(records: list[dict], title: str) -> str | None:
         exp_totals: dict = {}
         for r in expenses:
             cat = r["category"]
-            exp_totals[cat] = exp_totals.get(cat, 0) + r["amount"]
+            exp_totals[cat] = exp_totals.get(cat, 0) + _to_kzt(r)
         sorted_exp = sorted(exp_totals.items(), key=lambda x: x[1], reverse=True)[:8]
         max_exp = sorted_exp[0][1]
 

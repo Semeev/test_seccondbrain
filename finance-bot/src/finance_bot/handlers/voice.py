@@ -80,18 +80,26 @@ async def handle_voice(message: Message, storage: FinanceStorage, parser: Expens
         await message.answer("Не похоже на расход. Скажи как-то так: «потратила три тысячи на еду»")
         return
 
-    expense_id = storage.add_expense(
+    from finance_bot.currency import fmt, to_kzt
+    currency = result.get("currency", "KZT").upper()
+
+    expense_id = storage.add_record(
         user_id=message.from_user.id,
+        record_type=result.get("type", "expense"),
         amount=result["amount"],
         category=result["category"],
         description=result["description"],
         raw_text=text,
+        currency=currency,
     )
 
     cat_label = CATEGORIES.get(result["category"], result["category"])
+    amount_str = fmt(result["amount"], currency)
+    if currency != "KZT":
+        amount_str += f" ≈ {to_kzt(result['amount'], currency):,.0f} тг"
     await message.answer(
         f"✅ Сохранено #{expense_id}\n"
         f"{cat_label}\n"
-        f"<b>{result['amount']:,.0f} тг</b> — {result['description']}",
+        f"<b>{amount_str}</b> — {result['description']}",
         parse_mode="HTML",
     )

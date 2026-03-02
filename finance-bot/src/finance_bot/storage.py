@@ -56,9 +56,6 @@ class FinanceStorage:
             )
             return cursor.lastrowid
 
-    def add_expense(self, user_id, amount, category, description, raw_text) -> int:
-        return self.add_record(user_id, "expense", amount, category, description, raw_text)
-
     def _get_records(self, user_id: int, since: str, record_type: str | None = None) -> list[dict]:
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
@@ -133,8 +130,9 @@ class FinanceStorage:
         return None
 
     def get_total_by_category(self, records: list[dict]) -> dict[str, float]:
+        from finance_bot.currency import to_kzt
         totals: dict[str, float] = {}
         for r in records:
             cat = r["category"]
-            totals[cat] = totals.get(cat, 0) + r["amount"]
+            totals[cat] = totals.get(cat, 0) + to_kzt(r["amount"], r.get("currency", "KZT"))
         return dict(sorted(totals.items(), key=lambda x: x[1], reverse=True))

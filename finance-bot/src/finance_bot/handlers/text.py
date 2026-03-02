@@ -168,12 +168,17 @@ async def cmd_undo(message: Message, storage: FinanceStorage) -> None:
         await message.answer("Нечего отменять.", reply_markup=MAIN_KEYBOARD)
         return
     from finance_bot.categories import CATEGORIES, INCOME_CATEGORIES
+    from finance_bot.currency import fmt, to_kzt
     all_cats = {**CATEGORIES, **INCOME_CATEGORIES}
     cat_label = all_cats.get(record["category"], record["category"])
     rtype = record.get("type", "expense")
     icon = "📈" if rtype == "income" else "📉"
+    cur = record.get("currency", "KZT")
+    amount_display = fmt(record["amount"], cur)
+    if cur != "KZT":
+        amount_display += f" ≈ {to_kzt(record['amount'], cur):,.0f} тг"
     await message.answer(
-        f"↩️ Удалено #{record['id']}\n{icon} {cat_label} — <b>{record['amount']:,.0f} тг</b>",
+        f"↩️ Удалено #{record['id']}\n{icon} {cat_label} — <b>{amount_display}</b>",
         parse_mode="HTML",
         reply_markup=MAIN_KEYBOARD,
     )
@@ -236,10 +241,12 @@ async def cmd_edit(message: Message, storage: FinanceStorage) -> None:
     lines = ["✏️ <b>Последние 10 записей:</b>\n",
              "Чтобы изменить сумму, напиши: <code>#ID новая_сумма</code>",
              "Например: <code>#42 8000</code>\n"]
+    from finance_bot.currency import fmt
     for r in records:
         cat = CATEGORIES.get(r["category"], r["category"])
         sign = "+" if r.get("type") == "income" else "-"
-        lines.append(f"<code>#{r['id']}</code> {cat} {sign}{r['amount']:,.0f} тг — {r['description']}")
+        cur = r.get("currency", "KZT")
+        lines.append(f"<code>#{r['id']}</code> {cat} {sign}{fmt(r['amount'], cur)} — {r['description']}")
     await message.answer("\n".join(lines), parse_mode="HTML", reply_markup=MAIN_KEYBOARD)
 
 
@@ -258,10 +265,12 @@ async def cmd_edit_apply(message: Message, storage: FinanceStorage) -> None:
         await message.answer("Запись не найдена.", reply_markup=MAIN_KEYBOARD)
         return
     from finance_bot.categories import CATEGORIES
+    from finance_bot.currency import fmt
     cat = CATEGORIES.get(old["category"], old["category"])
+    cur = old.get("currency", "KZT")
     await message.answer(
         f"✅ Запись #{record_id} обновлена\n{cat}\n"
-        f"<s>{old['amount']:,.0f} тг</s> → <b>{amount:,.0f} тг</b>",
+        f"<s>{fmt(old['amount'], cur)}</s> → <b>{fmt(amount, cur)}</b>",
         parse_mode="HTML", reply_markup=MAIN_KEYBOARD
     )
 
