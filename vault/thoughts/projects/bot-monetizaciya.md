@@ -127,3 +127,7 @@ users: telegram_id | paid_until | status (active/expired/trial)
 - [[bot-analitika]] — технический проект
 - [[horeca-lichniy-brend]] — основной проект
 - [[komanda]] — Руслан (таргет), Сурен (контент)
+
+## Related
+
+- [[MOC-ideas]]

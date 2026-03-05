@@ -20,4 +20,5 @@ Map of Content for weekly summaries.
 
 ## Related
 
+- [[2026-W09-summary]]
 - [[2026-W08-summary]]

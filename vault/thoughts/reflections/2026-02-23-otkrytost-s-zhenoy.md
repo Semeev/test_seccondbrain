@@ -23,3 +23,8 @@ source: voice 18:21
 
 - [[vault/references/about]] — ценности, семья
 - [[vault/daily/2026-02-23]]
+
+## Related
+
+- [[MOC-ideas]]
+- [[2026-02-23]]
