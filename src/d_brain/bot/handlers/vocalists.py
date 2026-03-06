@@ -1,9 +1,10 @@
-"""Handler for /vocalists command — sends PDF of vocalist database."""
+"""Handler for /vocalists command and text triggers — sends PDF of vocalist database."""
 
 import logging
 import os
+import re
 
-from aiogram import Router
+from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.types import BufferedInputFile, Message
 
@@ -12,8 +13,14 @@ from d_brain.config import get_settings
 router = Router(name="vocalists")
 logger = logging.getLogger(__name__)
 
+VOCALIST_TRIGGERS = re.compile(
+    r"вокалист|список вокал|база вокал|музыкант|pdf вокал|вокал.{0,10}pdf|дай.{0,20}вокал",
+    re.IGNORECASE,
+)
+
 
 @router.message(Command("vocalists"))
+@router.message(F.text.regexp(VOCALIST_TRIGGERS))
 async def cmd_vocalists(message: Message) -> None:
     """Generate and send vocalist database as PDF."""
     await message.answer("⏳ Генерирую PDF...")
