@@ -20,6 +20,10 @@ priority: p3
 | 1 | Katrynskyband | [@katrynsky15](https://www.instagram.com/katrynsky15) | — | Соло + группа @katrynskyband | — | — | Финалистка шоу Х ФАКТОР. Рек. Шадиша (PRO BUSINESS, Школа Слова) |
 | 2 | Risholate | [@risholate](https://www.instagram.com/risholate) | DM в инст | Соло + группа @rishat_band | Поп / авторская | Booking in DM | 🏆 Победитель X Factor UZ. Автор-исполнитель |
 | 3 | Prime Band | [@prime_band](https://www.instagram.com/prime_band) | +998 99 880 88 33 | Live Cover Band | Кавер / живая музыка | — | Основатель @karim_frontman. "Создаём волшебную атмосферу мероприятия" |
+| 4 | Jimi Hendrix 2207 | [@jimihendrix2207](https://www.instagram.com/jimihendrix2207) | — | Соло + бэнд @hlgns.band | — | — | Связан с HLGNS Band |
+| 5 | HLGNS Band | [@hlgns.band](https://www.instagram.com/hlgns.band) | +998 90 994 94 88 / +998 97 130 14 07 | Live Cover Band | Кавер / живая музыка | — | Два контакта для сотрудничества |
+| 6 | Шадиша | [@shadisha_](https://www.instagram.com/shadisha_/reels/) | +998 93 992 70 70 | Соло | — | — | Сама поёт. Соклубник PRO BUSINESS, основатель Школы Слова. Рекомендовала @katrynsky15 |
+| 7 | Марина Vell | — | @marinavell (TG) | Соло / соло с клавишами 🎹 | Lounge, джаз, соул + танцевальные сеты (RU/EN) | — | Два формата: фоновая атмосфера + энергичная танцевальная часть |
 
 ## Где искать
 
