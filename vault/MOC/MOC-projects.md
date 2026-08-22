@@ -4,7 +4,7 @@ Map of Content for project notes.
 
 ## Active
 
-<!-- Active project thoughts -->
+- [[arenda-kvartir-tashkent]] — Аренда квартир Ташкент
 
 ## Archive
 
