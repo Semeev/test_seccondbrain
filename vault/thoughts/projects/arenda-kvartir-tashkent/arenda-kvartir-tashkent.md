@@ -16,6 +16,7 @@ created: 2026-08-22
 ## Отчёты
 
 <!-- ссылки на reports/*.md -->
+- [[thoughts/projects/2026-08-22-partnerstvo-podozrenie-nepprozrachnost|Партнёрство: предыстория и подозрение в непрозрачности]] (2026-08-22)
 
 ## Файлы
 
