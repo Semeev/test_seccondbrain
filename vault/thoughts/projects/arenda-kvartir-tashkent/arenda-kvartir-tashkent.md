@@ -18,6 +18,7 @@ created: 2026-08-22
 <!-- ссылки на reports/*.md -->
 - [[thoughts/projects/2026-08-22-partnerstvo-podozrenie-nepprozrachnost|Партнёрство: предыстория и подозрение в непрозрачности]] (2026-08-22)
 - [[thoughts/projects/arenda-kvartir-tashkent/reports/2026-08-22-booking-svodka-yanvar-avgust|Booking: сводка броней январь-август 2026]] (2026-08-22)
+- [[thoughts/projects/arenda-kvartir-tashkent/reports/2026-08-22-airbnb-svodka-yanvar-avgust|Airbnb: сводка доходов январь-август 2026]] (2026-08-22)
 
 ## Файлы
 
@@ -26,6 +27,7 @@ created: 2026-08-22
 - [[files/Заезд_2026-08-22_2026-08-23.xls|Booking: заезды 22-23.08.2026]]
 - [[files/Отъезд_2026-08-22_2026-08-23.xls|Booking: отъезды 22-23.08.2026]]
 - [[files/Букинг_Самарканд_итоги.xlsx|Сводный Excel-отчёт по Booking]]
+- [[files/Airbnb_earnings_2026-01-01_2026-08-22.pdf|Airbnb: официальный отчёт о доходах]]
 
 ## Задачи
 
