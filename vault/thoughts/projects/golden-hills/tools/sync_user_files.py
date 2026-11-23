@@ -97,6 +97,8 @@ for path in a.files:
             raw = sup_key(r)
             sup = map_supplier(r["sheet"], raw)
             it = map_item(r["sheet"], r["item"])
+            if isinstance(it, dict) and sup in M.get("supplier_class_override", {}) and it["position"].startswith("Арматура А400"):
+                it = dict(it, position=it["position"].replace("А400", "А500С"), comment="класс уточнён по официальной КП поставщика")
             key = f'{r["sheet"]}|{raw}|{r["item"]}'
             old = snap.get(key)
             new_snap[key] = r["price"]
