@@ -71,7 +71,9 @@ for name, (cat, unit, stage, freq) in pos.items():
     direct = [x for x in day if stype.get(x[1]) in ("Завод-производитель", "Склад/дистрибьютор")]
     stats[name] = dict(cat=cat, unit=unit, stage=stage, freq=freq, n=len(v), mn=mn, avg=sum(v) / len(v), mx=max(v),
                        spread=(max(v) / min(v) - 1) if len(v) > 1 else None, chg=chg,
-                       dmn=min(direct, key=lambda x: x[0]) if direct else None, omn=omn)
+                       dmn=min(direct, key=lambda x: x[0]) if direct else None, omn=omn,
+                       dn=len(direct), davg=(sum(x[0] for x in direct) / len(direct)) if direct else None,
+                       dmx=max(x[0] for x in direct) if direct else None)
 
 KEY = [("Бетон М300 (B22,5)", "Бетон М300"), ("Бетон М350 (B25)", "Бетон М350"), ("Арматура А500С d12", "Арматура А500С d12"),
        ("Цемент ПЦ 400 Д20 (навал)", "Цемент ПЦ 400 навал"), ("Газоблок автоклавный D500 (толщина не указана)", "Газоблок D500"),
@@ -116,15 +118,17 @@ rows, cur = "", None
 for n, s in stats.items():
     g = (s["stage"], s["cat"])
     if g != cur:
-        rows += f'<tr class="grp"><td colspan="10">{e(g[0])} — {e(g[1])}</td></tr>'
+        rows += f'<tr class="grp"><td colspan="13">{e(g[0])} — {e(g[1])}</td></tr>'
         cur = g
     sp = f'{s["spread"] * 100:.0f}%' if s["spread"] is not None else "—"
     hi = " hi" if s["spread"] is not None and s["spread"] > 0.3 else ""
     dot = '<span class="d">●</span> ' if s["freq"] == "Ежедневно" else ""
-    rows += (f'<tr><td>{dot}{e(n)}</td><td>{e(s["unit"])}</td><td class="n">{s["n"]}</td><td class="n b">{f(s["mn"][0])}</td>'
-             f'<td>{e(s["mn"][1])}</td><td class="n">{f(s["avg"])}</td><td class="n">{f(s["mx"])}</td>'
-             f'<td class="n{hi}">{sp}</td><td class="n">{chg_html(s["chg"])}</td>'
-             f'<td class="n">{ours_html(s)}</td></tr>')
+    dm = s["dmn"]
+    dcells = (f'<td class="n dv">{s["dn"]}</td><td class="n b dv">{f(dm[0])}<br><span class="sm">{e(dm[1])}</span></td>'
+              f'<td class="n dv">{f(s["davg"])}</td><td class="n dv">{f(s["dmx"])}</td>') if dm else '<td class="n dv" colspan="4">нет цен заводов/складов</td>'
+    rows += (f'<tr><td>{dot}{e(n)}</td><td>{e(s["unit"])}</td><td class="n">{s["n"]}</td><td class="n b">{f(s["mn"][0])}<br><span class="sm">{e(s["mn"][1])}</span></td>'
+             f'<td class="n">{f(s["avg"])}</td><td class="n">{f(s["mx"])}</td>'
+             f'<td class="n{hi}">{sp}</td>{dcells}<td class="n">{ours_html(s)}</td><td class="n">{chg_html(s["chg"])}</td></tr>')
 
 nprice = sum(s["n"] for s in stats.values())
 doc = f"""<!doctype html><html lang="ru"><head><meta charset="utf-8"><style>
@@ -138,7 +142,7 @@ h2 {{ font-size:10.5pt; color:#1F3864; margin:12px 0 4px; }}
 table {{ width:100%; border-collapse:collapse; }} th {{ background:#1F3864; color:#fff; text-align:left; padding:4px; font-size:7.8pt; }}
 td {{ border-bottom:1px solid #e3e3e3; padding:3px 4px; vertical-align:top; }} .n {{ text-align:right; white-space:nowrap; }} .b {{ font-weight:bold; }}
 tr.grp td {{ background:#eef2f8; font-weight:bold; color:#1F3864; }} .hi {{ color:#b00020; font-weight:bold; }} .d {{ color:#d4a017; }} .sm {{ color:#666; font-size:7pt; }}
-.up {{ color:#b00020; font-weight:bold; }} .down {{ color:#1e7b34; font-weight:bold; }}
+.dv {{ background:#f1f8ec; }} th.dh {{ background:#2e6b34; }} th.c {{ text-align:center; }} .up {{ color:#b00020; font-weight:bold; }} .down {{ color:#1e7b34; font-weight:bold; }}
 ul {{ margin:4px 0 0 16px; padding:0; }} li {{ margin-bottom:3px; }} .note {{ color:#555; font-size:7.6pt; }} tr {{ page-break-inside:avoid; }}
 </style></head><body>
 <h1>Ежедневная сводка цен на стройматериалы</h1>
@@ -146,9 +150,10 @@ ul {{ margin:4px 0 0 16px; padding:0; }} li {{ margin-bottom:3px; }} .note {{ co
 <div class="tiles">{tiles}</div>
 <h2>Что важно сегодня</h2><ul>{''.join(f'<li>{n}</li>' for n in notes)}</ul>
 <h2>Цены по позициям</h2>
-<table><thead><tr><th style="width:29%">Позиция</th><th>Ед.</th><th>Цен</th><th>Мин.</th><th style="width:19%">У кого мин.</th><th>Средняя</th><th>Макс.</th><th>Разброс</th><th>Изм.</th><th style="width:15%">Наши поставщики (мин.)</th></tr></thead>
+<table><thead><tr><th rowspan="2" style="width:20%">Позиция</th><th rowspan="2">Ед.</th><th colspan="5" class="c">Все источники</th><th colspan="4" class="c dh">Заводы и склады (без перекупов)</th><th rowspan="2" style="width:13%">Наши поставщики (мин.)</th><th rowspan="2">Изм.</th></tr>
+<tr><th>Цен</th><th>Мин. / у кого</th><th>Средняя</th><th>Макс.</th><th>Разброс</th><th class="dh">Цен</th><th class="dh">Мин. / у кого</th><th class="dh">Средняя</th><th class="dh">Макс.</th></tr></thead>
 <tbody>{rows}</tbody></table>
-<p class="note">● — позиции ежедневной проверки. «Наши поставщики» — лучшая цена от поставщиков с отметкой «Работаем = Да» и насколько она выше рыночного минимума. «Изм.» — средняя цена дня к предыдущей дате, когда по позиции были цены (красный — рост больше 3%, зелёный — снижение).<br>
+<p class="note">«Заводы и склады» — только поставщики, у которых в реестре тип «Завод-производитель» или «Склад/дистрибьютор» и указано основание (адрес производства/склада, официальный прайс завода). Перекупщики и непроверенные продавцы туда не попадают. ● — позиции ежедневной проверки. «Наши поставщики» — лучшая цена от поставщиков с отметкой «Работаем = Да» и насколько она выше рыночного минимума. «Изм.» — средняя цена дня к предыдущей дате, когда по позиции были цены (красный — рост больше 3%, зелёный — снижение).<br>
 Цены из открытых объявлений и сайтов поставщиков — ориентир; для закупки нужна письменная КП.</p>
 </body></html>"""
 tmp = os.path.splitext(a.pdf)[0] + ".html"

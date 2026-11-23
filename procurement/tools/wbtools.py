@@ -110,7 +110,7 @@ def add_positions(wb, items):
             pos[f"{col}{pr}"].border = copy(pos[f"{col}{src_pr}"].border)
             pos[f"{col}{pr}"].alignment = copy(pos[f"{col}{src_pr}"].alignment)
         sr = pr + SUMMARY_OFFSET
-        for col in "ABCDEFGHIJKLMNOPQRS":
+        for col in "ABCDEFGHIJKLMNOPQRSTUV":
             src = s[f"{col}{src_sr}"]
             v = src.value
             if isinstance(v, str) and v.startswith("="):
@@ -128,7 +128,7 @@ def add_positions(wb, items):
         s.conditional_formatting.add(f"N{first_new}:N{last + SUMMARY_OFFSET}", FormulaRule(formula=[f'AND(ISNUMBER(N{first_new}),N{first_new}<-$B$6)'], fill=PatternFill("solid", fgColor="C6EFCE"), font=Font(color="006100", bold=True)))
         s.conditional_formatting.add(f"O{first_new}:O{last + SUMMARY_OFFSET}", FormulaRule(formula=[f'$O{first_new}="Ежедневно"'], fill=PatternFill("solid", fgColor="FFE699"), font=Font(bold=True)))
         add_summary_cf(s, first_new, last + SUMMARY_OFFSET)
-        s.auto_filter.ref = f"A{H}:S{last + SUMMARY_OFFSET}"
+        s.auto_filter.ref = f"A{H}:V{last + SUMMARY_OFFSET}"
         pos.auto_filter.ref = f"A1:F{last}"
     return added
 
@@ -136,7 +136,7 @@ def add_positions(wb, items):
 def upsert_supplier(wb, name, **kw):
     """kw: type, cats, addr, phone, site, checked, terms, comment, works, contact. Пустые значения не затирают имеющиеся."""
     sup = wb["Поставщики"]
-    cols = dict(type="B", cats="C", addr="D", phone="E", site="F", checked="G", terms="H", comment="I", works="J", contact="K")
+    cols = dict(type="B", cats="C", addr="D", phone="E", site="F", checked="G", terms="H", comment="I", works="J", contact="K", basis="L")
     row = None
     r = 2
     while sup[f"A{r}"].value:
@@ -151,7 +151,7 @@ def upsert_supplier(wb, name, **kw):
         if v in (None, ""):
             continue
         cell = sup[f"{cols[k]}{row}"]
-        if k in ("type", "checked", "works") and cell.value not in (None, ""):
+        if (k in ("checked", "works") or (k == "type" and v == "Не проверено")) and cell.value not in (None, ""):
             continue  # не затираем то, что пользователь уже отметил
         if k == "phone" and cell.value:
             import re as _re
@@ -166,3 +166,46 @@ def upsert_supplier(wb, name, **kw):
         else:
             cell.value = v
     return new
+
+
+def ensure_v3(wb):
+    """Колонка «Основание» у поставщиков; в сводке — кол-во/средняя/макс по заводам и складам; источник «Сайт завода/склада»."""
+    sup, s, pos, j = wb["Поставщики"], wb["Сводка"], wb["Позиции"], wb["Журнал цен"]
+    if sup["L1"].value != "Основание (почему завод/склад/перекуп)":
+        c = sup["L1"]
+        c.value = "Основание (почему завод/склад/перекуп)"
+        for attr in ("font", "fill", "alignment", "border"):
+            setattr(c, attr, copy(getattr(sup["I1"], attr)))
+        sup.column_dimensions["L"].width = 44
+        for r in range(2, 301):
+            for attr in ("font", "border", "alignment"):
+                setattr(sup[f"L{r}"], attr, copy(getattr(sup["A2"], attr)))
+    for dv in j.data_validations.dataValidation:
+        if "N2" in str(dv.sqref) and "Сайт завода" not in (dv.formula1 or ""):
+            dv.formula1 = '"Сайт завода/склада,КП (письменное),Звонок,Сайт,Объявление,Биржа UZEX,Визит"'
+    H = SUMMARY_HEADER_ROW
+    if s[f"T{H}"].value != "Цен у заводов/складов":
+        for col, title, w in (("T", "Цен у заводов/складов", 10), ("U", "Средняя заводы/склады, сум", 15), ("V", "Макс. заводы/склады, сум", 15)):
+            c = s[f"{col}{H}"]
+            c.value = title
+            for attr in ("font", "fill", "alignment", "border"):
+                setattr(c, attr, copy(getattr(s[f"G{H}"], attr)))
+            s.column_dimensions[col].width = w
+        last = last_position_row(pos)
+        for pr in range(2, last + 1):
+            write_summary_direct(s, pr + SUMMARY_OFFSET)
+        s.auto_filter.ref = f"A{H}:V{last + SUMMARY_OFFSET}"
+        s.conditional_formatting.add(f"T{H + 1}:V{last + SUMMARY_OFFSET}", FormulaRule(formula=[f'$T{H + 1}>0'], fill=PatternFill("solid", fgColor="E2EFDA")))
+
+
+def write_summary_direct(s, r):
+    JA, JB, JJ, JQ = jc("A"), jc("B"), jc("J"), jc("Q")
+    cond = f'{JB},B{r},{JA},">="&$B$5,{JA},"<="&$B$3,{JJ},">0",{JQ},"Да"'
+    s[f"T{r}"] = f"=COUNTIFS({cond})"
+    s[f"U{r}"] = f'=IF(T{r}=0,"",AVERAGEIFS({JJ},{cond}))'
+    s[f"V{r}"] = f'=IF(T{r}=0,"",_xlfn.MAXIFS({JJ},{cond}))'
+    for col in "TUV":
+        s[f"{col}{r}"].font = copy(s[f"N{r}"].font)
+        s[f"{col}{r}"].border = copy(s[f"N{r}"].border)
+    s[f"U{r}"].number_format = '#,##0;-#,##0;"-"'
+    s[f"V{r}"].number_format = '#,##0;-#,##0;"-"'
