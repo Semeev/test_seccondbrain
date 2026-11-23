@@ -70,7 +70,7 @@ def map_item(sheet, item):
     if m and "арматур" in sheet.lower():
         cls = m.group(1).upper().replace(" ", "")
         cls = {"500С": "А500С", "400": "А400", "2400": "А400", "240": "А240"}[cls.replace("C", "С")]
-        com = "В КП «А2400» — уточнить класс" if "2400" in m.group(1) else ("В КП «А1» — уточнить класс" if "А1" in item else "")
+        com = "В КП «А2400» — опечатка, считается А400" if "2400" in m.group(1) else ("В КП «А1» — уточнить класс" if "А1" in item else "")
         return {"position": f"Арматура {cls} d{m.group(2)}", "comment": com}
     return match(M["items"], sheet, item)
 
