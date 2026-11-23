@@ -151,6 +151,14 @@ def upsert_supplier(wb, name, **kw):
         if v in (None, ""):
             continue
         cell = sup[f"{cols[k]}{row}"]
+        if k in ("type", "checked", "works") and cell.value not in (None, ""):
+            continue  # не затираем то, что пользователь уже отметил
+        if k == "phone" and cell.value:
+            import re as _re
+            digits = lambda t: _re.sub(r"\D", "", str(t))
+            have = digits(cell.value)
+            if all(len(digits(p)) >= 7 and digits(p)[-9:] in have for p in _re.split(r"[;,]", str(v)) if digits(p)):
+                continue
         if k in ("comment", "phone", "cats") and cell.value and str(v) not in str(cell.value):
             cell.value = f"{cell.value}; {v}"
         elif k in ("comment", "phone", "cats") and cell.value:
