@@ -1,0 +1,162 @@
+[
+ {
+  "date": "2026-11-23",
+  "position": "ПГС (шагал) несортированный, карьерный",
+  "supplier": "Profit Stone Plus",
+  "price": 60000,
+  "unit": "м³",
+  "source": "Сайт завода/склада",
+  "link": "https://profitstoneplus.uz/",
+  "comment": "Прайс с сайта карьера (по данным поиска; 23.11 сайт не открылся), с НДС"
+ },
+ {
+  "date": "2026-11-23",
+  "position": "ПГС (шагал) несортированный, карьерный",
+  "supplier": "Profit Stone Plus",
+  "price": 70000,
+  "unit": "м³",
+  "source": "Сайт",
+  "link": "https://flagma.uz/ru/shcheben-shagal-klinec-i-gps-o2011476.html",
+  "comment": "flagma.uz 11.11.2026: «Щебень (Шагал), клинец и ГПС» от 70 000"
+ },
+ {
+  "date": "2026-11-23",
+  "position": "ПГС (шагал) несортированный, карьерный",
+  "supplier": "pesok.uz",
+  "price": 100000,
+  "unit": "м³",
+  "source": "Объявление",
+  "link": "https://glotr.uz/graviy-5-35-sm-pgs-s-dostavkoy-v-tashkent-p-400555/",
+  "comment": "Гравий 5–35 см (ПГС), с доставкой по Ташкенту, от 15 м³; карточка возможно старая (2020)"
+ },
+ {
+  "date": "2026-11-23",
+  "position": "Щебень фр. 5–20",
+  "supplier": "Profit Stone Plus",
+  "price": 90000,
+  "unit": "м³",
+  "source": "Сайт завода/склада",
+  "link": "https://profitstoneplus.uz/",
+  "comment": "Прайс с сайта карьера (по данным поиска), с НДС"
+ },
+ {
+  "date": "2026-11-23",
+  "position": "Щебень фр. 5–20",
+  "supplier": "Profit Stone Plus",
+  "price": 110000,
+  "unit": "м³",
+  "source": "Сайт",
+  "link": "https://flagma.uz/ru/shcheben-klinec-pgs-o2014815.html",
+  "comment": "flagma.uz 11.11.2026: «Щебень, клинец, ПГС» — одна цена на объявление"
+ },
+ {
+  "date": "2026-11-23",
+  "position": "Щебень фр. 5–20",
+  "supplier": "Asia Sand Blessing",
+  "price": 90000,
+  "unit": "м³",
+  "source": "Сайт",
+  "link": "flagma.uz",
+  "comment": "Щебень/песок из горной породы, Паркент; объявление от 12.05.2026"
+ },
+ {
+  "date": "2026-11-23",
+  "position": "Щебень фр. 5–20",
+  "supplier": "BASALT ENGINEERING CORP",
+  "price": 65000,
+  "unit": "м³",
+  "source": "Сайт",
+  "link": "https://stroyka.uz/offer/andezitobazaltovyi-shheben-i-klinec-ot-proizvoditelya",
+  "comment": "Андезитобазальтовый, обновлено 20.07.2026"
+ },
+ {
+  "date": "2026-11-23",
+  "position": "Щебень фр. 5–20",
+  "supplier": "Basalt Uzbekistan",
+  "price": 44275,
+  "unit": "м³",
+  "source": "Сайт",
+  "link": "flagma.uz",
+  "comment": "Базальтовый 5×20; объявление от 28.03.2025 — устаревшее, ориентир"
+ },
+ {
+  "date": "2026-11-23",
+  "position": "Щебень фр. 20–40",
+  "supplier": "Basalt Uzbekistan",
+  "price": 44275,
+  "unit": "м³",
+  "source": "Сайт",
+  "link": "https://flagma.uz/ru/bazaltovy-shcheben-bazaltovy-shcheben-frakcii-20h40-o1914382.html",
+  "comment": "Базальтовый 20×40; объявление от 21.08.2025 — устаревшее, ориентир"
+ },
+ {
+  "date": "2026-11-23",
+  "position": "Гравий (шагал) фр. 20–40 мм",
+  "supplier": "STONE MEGA PERFECT",
+  "price": 50000,
+  "unit": "м³",
+  "source": "Объявление",
+  "link": "https://stroyka.uz/offer/kamen-2040",
+  "comment": "«Камень 20/40» от 50 000, с доставкой 100 000; обновлено 10.11.2025 — ориентир"
+ },
+ {
+  "date": "2026-11-23",
+  "position": "Гравий (шагал) фр. 5–20 мм",
+  "supplier": "STONE MEGA PERFECT",
+  "price": 30000,
+  "unit": "м³",
+  "source": "Объявление",
+  "link": "https://stroyka.uz/offer/galka-neotyosannyi-kamen-510-1020",
+  "comment": "«Галька — неотёсанный камень 5/10–10/20» от 30 000, с доставкой 80 000; обновлено 10.11.2025 — ориентир"
+ },
+ {
+  "date": "2026-11-23",
+  "position": "Булыга (бут) 20–40 см",
+  "supplier": "pesok.uz",
+  "price": 95000,
+  "unit": "м³",
+  "source": "Объявление",
+  "link": "https://glotr.uz/buliga-bulijnik-kamen-s-dostavkoy-p-400552/",
+  "comment": "С доставкой по Ташкенту; карточка возможно старая (2020)"
+ },
+ {
+  "date": "2026-11-23",
+  "position": "Камень горный (бутовый) базальтовый",
+  "supplier": "Basalt Uzbekistan",
+  "price": 37950,
+  "unit": "м³",
+  "source": "Сайт",
+  "link": "flagma.uz",
+  "comment": "Базальтовый горный камень; объявление от 21.08.2025 — устаревшее, ориентир"
+ },
+ {
+  "date": "2026-11-23",
+  "position": "Клинец (отсев) 0–8 мм",
+  "supplier": "ASIA KVARTS",
+  "price": 115000,
+  "unit": "м³",
+  "source": "Объявление",
+  "link": "https://stroyka.uz/offer/klinec-2",
+  "comment": ""
+ },
+ {
+  "date": "2026-11-23",
+  "position": "Клинец (отсев) 0–8 мм",
+  "supplier": "STROY DILLER",
+  "price": 270000,
+  "unit": "м³",
+  "source": "Объявление",
+  "link": "https://stroyka.uz/offer/klinec-pgs-20-m3",
+  "comment": "«Клинец (ПГС) 20 м³» с доставкой; 6 м³ — 290 000, 9 м³ — 280 000"
+ },
+ {
+  "date": "2026-11-23",
+  "position": "Клинец (отсев) 0–8 мм",
+  "supplier": "STONE MEGA PERFECT",
+  "price": 100000,
+  "unit": "м³",
+  "source": "Объявление",
+  "link": "https://stroyka.uz/offer/klinec-07-mm",
+  "comment": "Клинец 0–7 мм, «от»"
+ }
+]
