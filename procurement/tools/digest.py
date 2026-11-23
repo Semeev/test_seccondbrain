@@ -12,7 +12,8 @@ import html
 import os
 import subprocess
 from collections import OrderedDict, defaultdict
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
+WINDOW = 30
 
 from openpyxl import load_workbook
 
@@ -26,6 +27,7 @@ a = ap.parse_args()
 wb = load_workbook(a.xlsx, data_only=True)
 pos = OrderedDict((r[1], (r[0], r[2], r[4], r[5])) for r in wb["Позиции"].iter_rows(min_row=2, values_only=True) if r[1])
 stype = {r[0]: r[1] for r in wb["Поставщики"].iter_rows(min_row=2, values_only=True) if r[0]}
+ours = {r[0] for r in wb["Поставщики"].iter_rows(min_row=2, values_only=True) if r[0] and len(r) > 9 and r[9] == "Да"}
 
 
 def as_date(v):
@@ -47,20 +49,29 @@ def f(x):
 e = html.escape
 stats = OrderedDict()
 for name, (cat, unit, stage, freq) in pos.items():
-    day = by.get(name, {}).get(D)
-    if not day:
+    hist = by.get(name, {})
+    latest = {}
+    for dt in sorted(hist):
+        if D - timedelta(days=WINDOW) <= dt <= D:
+            for price, sup in hist[dt]:
+                latest[sup] = (price, sup)
+    if not latest:
         continue
+    day = list(latest.values())
     v = [x[0] for x in day]
     mn = min(day, key=lambda x: x[0])
-    prev = [d for d in by[name] if d < D]
+    our = [x for x in day if x[1] in ours]
+    omn = min(our, key=lambda x: x[0]) if our else None
+    prev = [d for d in hist if d < D]
     chg = None
-    if prev:
-        pv = [x[0] for x in by[name][max(prev)]]
-        chg = (sum(v) / len(v)) / (sum(pv) / len(pv)) - 1
+    if D in hist and prev:
+        dv = [x[0] for x in hist[D]]
+        pv = [x[0] for x in hist[max(prev)]]
+        chg = (sum(dv) / len(dv)) / (sum(pv) / len(pv)) - 1
     direct = [x for x in day if stype.get(x[1]) in ("Завод-производитель", "Склад/дистрибьютор")]
     stats[name] = dict(cat=cat, unit=unit, stage=stage, freq=freq, n=len(v), mn=mn, avg=sum(v) / len(v), mx=max(v),
                        spread=(max(v) / min(v) - 1) if len(v) > 1 else None, chg=chg,
-                       dmn=min(direct, key=lambda x: x[0]) if direct else None)
+                       dmn=min(direct, key=lambda x: x[0]) if direct else None, omn=omn)
 
 KEY = [("Бетон М300 (B22,5)", "Бетон М300"), ("Бетон М350 (B25)", "Бетон М350"), ("Арматура А500С d12", "Арматура А500С d12"),
        ("Цемент ПЦ 400 Д20 (навал)", "Цемент ПЦ 400 навал"), ("Газоблок автоклавный D500 (толщина не указана)", "Газоблок D500"),
@@ -72,6 +83,15 @@ def chg_html(c):
         return "—"
     cls = "up" if c > 0.03 else "down" if c < -0.03 else ""
     return f'<span class="{cls}">{c * 100:+.1f}%</span>'
+
+
+def ours_html(s):
+    o = s["omn"]
+    if not o:
+        return "—"
+    d = o[0] / s["mn"][0] - 1
+    tag = f' <span class="up">+{d * 100:.0f}% к мин.</span>' if d > 0.005 else ' <span class="down">лучшая</span>'
+    return f'{f(o[0])}{tag}<br><span class="sm">{e(o[1])}</span>'
 
 
 tiles = ""
@@ -96,38 +116,39 @@ rows, cur = "", None
 for n, s in stats.items():
     g = (s["stage"], s["cat"])
     if g != cur:
-        rows += f'<tr class="grp"><td colspan="9">{e(g[0])} — {e(g[1])}</td></tr>'
+        rows += f'<tr class="grp"><td colspan="10">{e(g[0])} — {e(g[1])}</td></tr>'
         cur = g
     sp = f'{s["spread"] * 100:.0f}%' if s["spread"] is not None else "—"
     hi = " hi" if s["spread"] is not None and s["spread"] > 0.3 else ""
     dot = '<span class="d">●</span> ' if s["freq"] == "Ежедневно" else ""
     rows += (f'<tr><td>{dot}{e(n)}</td><td>{e(s["unit"])}</td><td class="n">{s["n"]}</td><td class="n b">{f(s["mn"][0])}</td>'
              f'<td>{e(s["mn"][1])}</td><td class="n">{f(s["avg"])}</td><td class="n">{f(s["mx"])}</td>'
-             f'<td class="n{hi}">{sp}</td><td class="n">{chg_html(s["chg"])}</td></tr>')
+             f'<td class="n{hi}">{sp}</td><td class="n">{chg_html(s["chg"])}</td>'
+             f'<td class="n">{ours_html(s)}</td></tr>')
 
 nprice = sum(s["n"] for s in stats.values())
 doc = f"""<!doctype html><html lang="ru"><head><meta charset="utf-8"><style>
-@page {{ size: A4; margin: 14mm 12mm; }}
+@page {{ size: A4 landscape; margin: 12mm 12mm; }}
 body {{ font-family: 'DejaVu Sans', Arial, sans-serif; color:#1a1a1a; font-size:8.6pt; }}
 h1 {{ font-size:16pt; margin:0; color:#1F3864; }} .sub {{ color:#555; margin:2px 0 10px; }}
-.tiles {{ display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:10px; }}
+.tiles {{ display:grid; grid-template-columns:repeat(6,1fr); gap:6px; margin-bottom:10px; }}
 .tile {{ border:1px solid #d0d7e2; border-radius:4px; padding:6px 8px; }} .tl {{ color:#555; font-size:8pt; }}
 .tv {{ font-size:14pt; font-weight:bold; color:#1F3864; }} .ts {{ color:#666; font-size:7.4pt; }}
 h2 {{ font-size:10.5pt; color:#1F3864; margin:12px 0 4px; }}
 table {{ width:100%; border-collapse:collapse; }} th {{ background:#1F3864; color:#fff; text-align:left; padding:4px; font-size:7.8pt; }}
 td {{ border-bottom:1px solid #e3e3e3; padding:3px 4px; vertical-align:top; }} .n {{ text-align:right; white-space:nowrap; }} .b {{ font-weight:bold; }}
-tr.grp td {{ background:#eef2f8; font-weight:bold; color:#1F3864; }} .hi {{ color:#b00020; font-weight:bold; }} .d {{ color:#d4a017; }}
+tr.grp td {{ background:#eef2f8; font-weight:bold; color:#1F3864; }} .hi {{ color:#b00020; font-weight:bold; }} .d {{ color:#d4a017; }} .sm {{ color:#666; font-size:7pt; }}
 .up {{ color:#b00020; font-weight:bold; }} .down {{ color:#1e7b34; font-weight:bold; }}
 ul {{ margin:4px 0 0 16px; padding:0; }} li {{ margin-bottom:3px; }} .note {{ color:#555; font-size:7.6pt; }} tr {{ page-break-inside:avoid; }}
 </style></head><body>
 <h1>Ежедневная сводка цен на стройматериалы</h1>
-<div class="sub">Ташкент · {D:%d.%m.%Y} · {nprice} цен по {len(stats)} позициям · все цены в сумах</div>
+<div class="sub">Ташкент · {D:%d.%m.%Y} · {nprice} цен по {len(stats)} позициям (последняя цена каждого поставщика за {WINDOW} дней) · все цены в сумах</div>
 <div class="tiles">{tiles}</div>
 <h2>Что важно сегодня</h2><ul>{''.join(f'<li>{n}</li>' for n in notes)}</ul>
 <h2>Цены по позициям</h2>
-<table><thead><tr><th style="width:29%">Позиция</th><th>Ед.</th><th>Цен</th><th>Мин.</th><th style="width:19%">У кого мин.</th><th>Средняя</th><th>Макс.</th><th>Разброс</th><th>Изм.</th></tr></thead>
+<table><thead><tr><th style="width:29%">Позиция</th><th>Ед.</th><th>Цен</th><th>Мин.</th><th style="width:19%">У кого мин.</th><th>Средняя</th><th>Макс.</th><th>Разброс</th><th>Изм.</th><th style="width:15%">Наши поставщики (мин.)</th></tr></thead>
 <tbody>{rows}</tbody></table>
-<p class="note">● — позиции ежедневной проверки. «Изм.» — средняя цена дня к предыдущей дате, когда по позиции были цены (красный — рост больше 3%, зелёный — снижение).<br>
+<p class="note">● — позиции ежедневной проверки. «Наши поставщики» — лучшая цена от поставщиков с отметкой «Работаем = Да» и насколько она выше рыночного минимума. «Изм.» — средняя цена дня к предыдущей дате, когда по позиции были цены (красный — рост больше 3%, зелёный — снижение).<br>
 Цены из открытых объявлений и сайтов поставщиков — ориентир; для закупки нужна письменная КП.</p>
 </body></html>"""
 tmp = os.path.splitext(a.pdf)[0] + ".html"
