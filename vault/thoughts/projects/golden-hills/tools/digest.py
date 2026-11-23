@@ -78,7 +78,7 @@ for name, (cat, unit, stage, freq) in pos.items():
 
 KEY = [("Бетон М300 (B22,5)", "Бетон М300"), ("Бетон М350 (B25)", "Бетон М350"), ("Арматура А500С d12", "Арматура А500С d12"),
        ("Цемент ПЦ 400 Д20 (навал)", "Цемент ПЦ 400 навал"), ("Газоблок автоклавный D500 (толщина не указана)", "Газоблок D500"),
-       ("Пеноплекс / XPS 50 мм", "XPS 50 мм")]
+       ("Пеноплекс / XPS 50 мм", "XPS 50 мм"), ("ПГС (шагал) несортированный, карьерный", "ПГС (шагал)")]
 
 
 def chg_html(c):
@@ -146,7 +146,7 @@ doc = f"""<!doctype html><html lang="ru"><head><meta charset="utf-8"><style>
 @page {{ size: A4 landscape; margin: 12mm 12mm; }}
 body {{ font-family: 'DejaVu Sans', Arial, sans-serif; color:#1a1a1a; font-size:8.6pt; }}
 h1 {{ font-size:16pt; margin:0; color:#1F3864; }} .sub {{ color:#555; margin:2px 0 10px; }}
-.tiles {{ display:grid; grid-template-columns:repeat(6,1fr); gap:6px; margin-bottom:10px; }}
+.tiles {{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-bottom:10px; }}
 .tile {{ border:1px solid #d0d7e2; border-radius:4px; padding:6px 8px; }} .tl {{ color:#555; font-size:8pt; }}
 .tv {{ font-size:14pt; font-weight:bold; color:#1F3864; }} .ts {{ color:#666; font-size:7.4pt; }}
 h2 {{ font-size:10.5pt; color:#1F3864; margin:12px 0 4px; }}
