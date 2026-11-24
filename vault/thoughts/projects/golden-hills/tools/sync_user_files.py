@@ -114,6 +114,8 @@ for path in a.files:
                 unmapped_i.add(f'{r["sheet"]} | {r["item"]} | {sup} | {r["price"]:,.0f}')
                 new_snap.pop(key, None)
                 continue
+            if isinstance(it, dict) and it.get("swap_qty_price") and isinstance(r["qty"], (int, float)) and r["price"] < r["qty"]:
+                r = dict(r, price=float(r["qty"]), qty=r["price"])  # в файле перепутаны цена и количество
             d = (r["sheet_date"].isoformat() if r["sheet_date"] else a.date)
             qty = r["qty"] if isinstance(r["qty"], (int, float)) else None
             com = "; ".join(x for x in [it.get("comment", ""), f"кол-во в запросе: {qty:g}" if qty else "",
