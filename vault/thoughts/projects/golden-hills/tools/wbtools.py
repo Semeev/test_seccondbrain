@@ -209,3 +209,23 @@ def write_summary_direct(s, r):
         s[f"{col}{r}"].border = copy(s[f"N{r}"].border)
     s[f"U{r}"].number_format = '#,##0;-#,##0;"-"'
     s[f"V{r}"].number_format = '#,##0;-#,##0;"-"'
+
+
+def delete_position(wb, name):
+    """Удаляет позицию из «Позиций» и её строку из «Сводки», формулы сводки ниже пересобираются по шаблону строки 9."""
+    from openpyxl.formula.translate import Translator
+    p, s = wb["Позиции"], wb["Сводка"]
+    pr = next((r for r in range(2, last_position_row(p) + 1) if p[f"B{r}"].value == name), None)
+    if pr is None:
+        return False
+    tmpl = {c.column_letter: c.value for c in s[9]}
+    p.delete_rows(pr)
+    s.delete_rows(pr + SUMMARY_OFFSET)
+    last = last_position_row(p)
+    for r in range(pr + SUMMARY_OFFSET, last + SUMMARY_OFFSET + 1):
+        for col, v in tmpl.items():
+            if isinstance(v, str) and v.startswith("="):
+                s[f"{col}{r}"] = Translator(v, origin=f"{col}9").translate_formula(f"{col}{r}")
+    s.auto_filter.ref = f"A8:V{last + SUMMARY_OFFSET}"
+    p.auto_filter.ref = f"A1:F{last}"
+    return True

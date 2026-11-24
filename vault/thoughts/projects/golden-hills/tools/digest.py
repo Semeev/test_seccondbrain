@@ -156,9 +156,9 @@ h1 {{ font-size:16pt; margin:0; color:#1F3864; }} .sub {{ color:#555; margin:2px
 .tile {{ border:1px solid #d0d7e2; border-radius:4px; padding:6px 8px; }} .tl {{ color:#555; font-size:8pt; }}
 .tv {{ font-size:14pt; font-weight:bold; color:#1F3864; }} .ts {{ color:#666; font-size:7.4pt; }}
 h2 {{ font-size:10.5pt; color:#1F3864; margin:12px 0 4px; }}
-table {{ width:100%; border-collapse:collapse; }} th {{ background:#1F3864; color:#fff; text-align:left; padding:4px; font-size:7.8pt; }}
-td {{ border-bottom:1px solid #e3e3e3; padding:3px 4px; vertical-align:top; }} .n {{ text-align:right; white-space:nowrap; }} .b {{ font-weight:bold; }}
-tr.grp td {{ background:#eef2f8; font-weight:bold; color:#1F3864; }} .hi {{ color:#b00020; font-weight:bold; }} .d {{ color:#d4a017; }} .sm {{ color:#666; font-size:7pt; }}
+table {{ width:100%; border-collapse:collapse; table-layout:fixed; font-size:7.6pt; }} th {{ background:#1F3864; color:#fff; text-align:left; padding:3px 2px; font-size:6.6pt; overflow-wrap:normal; word-break:normal; hyphens:none; }}
+td {{ border-bottom:1px solid #e3e3e3; padding:3px 3px; vertical-align:top; overflow-wrap:anywhere; }} .n {{ text-align:right; white-space:nowrap; }} .b {{ font-weight:bold; }}
+tr.grp td {{ background:#eef2f8; font-weight:bold; color:#1F3864; }} .hi {{ color:#b00020; font-weight:bold; }} .d {{ color:#d4a017; }} .sm {{ color:#666; font-size:6.4pt; white-space:normal; display:block; overflow-wrap:anywhere; line-height:1.15; }}
 .dv {{ background:#f1f8ec; }} .tv2 {{ background:#fdf3e7; }} th.th2 {{ background:#9a5b13; }} th.dh {{ background:#2e6b34; }} th.c {{ text-align:center; }} .up {{ color:#b00020; font-weight:bold; }} .down {{ color:#1e7b34; font-weight:bold; }}
 ul {{ margin:4px 0 0 16px; padding:0; }} li {{ margin-bottom:3px; }} .note {{ color:#555; font-size:7.6pt; }} tr {{ page-break-inside:avoid; }}
 </style></head><body>
@@ -167,7 +167,7 @@ ul {{ margin:4px 0 0 16px; padding:0; }} li {{ margin-bottom:3px; }} .note {{ co
 <div class="tiles">{tiles}</div>
 <h2>Что важно сегодня</h2><ul>{''.join(f'<li>{n}</li>' for n in notes)}</ul>
 <h2>Цены по позициям</h2>
-<table><thead><tr><th rowspan="2" style="width:17%">Позиция</th><th rowspan="2">Ед.</th><th colspan="5" class="c">Весь рынок (все продавцы)</th><th colspan="3" class="c dh">Заводы, склады, дистрибьюторы</th><th colspan="3" class="c th2">Магазины, трейдеры, прочие</th><th rowspan="2">Наценка посредников</th><th rowspan="2" style="width:11%">Наши поставщики (мин.)</th><th rowspan="2">Изм.</th></tr>
+<table><colgroup><col style="width:14%"><col style="width:3.5%"><col style="width:3%"><col style="width:9%"><col style="width:6%"><col style="width:6%"><col style="width:4.5%"><col style="width:3%"><col style="width:9%"><col style="width:6%"><col style="width:3%"><col style="width:9%"><col style="width:6%"><col style="width:5%"><col style="width:8.5%"><col style="width:4.5%"></colgroup><thead><tr><th rowspan="2">Позиция</th><th rowspan="2">Ед.</th><th colspan="5" class="c">Весь рынок (все продавцы)</th><th colspan="3" class="c dh">Заводы, склады, дистрибьюторы</th><th colspan="3" class="c th2">Магазины, трейдеры, прочие</th><th rowspan="2">Наценка посредн.</th><th rowspan="2">Наши поставщики (мин.)</th><th rowspan="2">Изм.</th></tr>
 <tr><th>Цен</th><th>Мин. / у кого</th><th>Средняя</th><th>Макс.</th><th>Разброс</th><th class="dh">Цен</th><th class="dh">Мин. / у кого</th><th class="dh">Средняя</th><th class="th2">Цен</th><th class="th2">Мин. / у кого</th><th class="th2">Средняя</th></tr></thead>
 <tbody>{rows}</tbody></table>
 <p class="note">«Весь рынок» — все продавцы: заводы, склады, дистрибьюторы, трейдеры, строительные магазины, объявления. «Заводы, склады, дистрибьюторы» — с подтверждённым основанием в реестре (адрес производства/склада, официальный прайс). «Магазины, трейдеры, прочие» — магазины, перекупщики и ещё не проверенные продавцы. «Наценка посредников» — средняя цена магазинов/трейдеров к средней цене заводов/складов. ● — позиции ежедневной проверки. «Наши поставщики» — лучшая цена от поставщиков с отметкой «Работаем = Да» и насколько она выше рыночного минимума. «Изм.» — изменение цен у тех же продавцов к их прошлой цене (только продавцы, у которых есть цена и сегодня, и раньше) (красный — рост больше 3%, зелёный — снижение).<br>
