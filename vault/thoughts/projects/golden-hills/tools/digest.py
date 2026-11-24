@@ -90,8 +90,10 @@ KEY = [("Бетон М300 (B22,5)", "Бетон М300"), ("Бетон М350 (B25
 def chg_html(c):
     if c is None:
         return "—"
+    if abs(c) < 0.0005:
+        return '<span class="no">0%</span>'
     cls = "up" if c > 0.03 else "down" if c < -0.03 else ""
-    return f'<span class="{cls}">{c * 100:+.1f}%</span>'
+    return f'<span class="{cls}" style="white-space:nowrap">{c * 100:+.1f}%</span>'
 
 
 def ours_html(s):
@@ -119,33 +121,59 @@ for n, s in moves[:6]:
     notes.append(f"<b>{e(n)}</b> {word} на {abs(s['chg']) * 100:.1f}% (средняя {f(s['avg'])} сум/{e(s['unit'])}).")
 if not any(s["chg"] is not None for s in stats.values()):
     notes.append("Это первый день ведения журнала: изменения к прошлому дню появятся со следующей сводки.")
-notes.append("Красным в колонке «Разброс» — разница между мин. и макс. ценой больше 30%: здесь торг даст больше всего.")
+notes.append("Красным в «Диапазоне» — разница между мин. и макс. больше 30%: здесь торг даст больше всего.")
+
+TYPE = {"Завод-производитель": ("завод", "tz"), "Склад/дистрибьютор": ("склад", "tsk"), "Магазин (розница)": ("магазин", "tm"),
+        "Перекупщик": ("трейдер", "tt")}
+
+
+def who(sup):
+    lab, cls = TYPE.get(stype.get(sup), ("не пров.", "tn"))
+    return f'<span class="who">{e(sup)}</span> <span class="tag {cls}">{lab}</span>'
+
+
+def fk(x):  # компактно: 8 610 тыс. / 470 тыс. / 13 600
+    return f(x)
+
+
+stage_ix = {}
+for nm, st in stats.items():
+    stage_ix.setdefault((st["stage"], st["cat"]), len(stage_ix))
+ordered = sorted(stats.items(), key=lambda kv: (kv[1]["stage"].split(".")[0].zfill(3), stage_ix[(kv[1]["stage"], kv[1]["cat"])]))
 
 rows, cur = "", None
-for n, s in stats.items():
+for n, s in ordered:
     g = (s["stage"], s["cat"])
     if g != cur:
-        rows += f'<tr class="grp"><td colspan="16">{e(g[0])} — {e(g[1])}</td></tr>'
+        rows += f'<tr class="grp"><td colspan="9">{e(g[0])} · {e(g[1])}</td></tr>'
         cur = g
-    sp = f'{s["spread"] * 100:.0f}%' if s["spread"] is not None else "—"
-    hi = " hi" if s["spread"] is not None and s["spread"] > 0.3 else ""
     dot = '<span class="d">●</span> ' if s["freq"] == "Ежедневно" else ""
     dm, tr = s["dmn"], s["trade"]
-    dcells = (f'<td class="n dv">{s["dn"]}</td><td class="n b dv">{f(dm[0])}<br><span class="sm">{e(dm[1])}</span></td>'
-              f'<td class="n dv">{f(s["davg"])}</td>') if dm else '<td class="n dv" colspan="3"><span class="sm">нет цен</span></td>'
+    rng = "—" if s["n"] == 1 else f'{f(s["mn"][0])} – {f(s["mx"])}'
+    hi = ' class="hi"' if s["spread"] is not None and s["spread"] > 0.3 else ""
+    rng_html = f'<span{hi}>{rng}</span><span class="sm">{s["n"]} цен' + (f' · разброс {s["spread"]*100:.0f}%' if s["spread"] else "") + '</span>'
+    dcell = f'<b>{f(dm[0])}</b><span class="sm">средн. {f(s["davg"])} · {s["dn"]} цен</span>' if dm else '<span class="no">нет цен</span>'
+    gap = ""
     if tr:
         tm = min(tr, key=lambda x: x[0]); tav = sum(x[0] for x in tr) / len(tr)
-        tcells = (f'<td class="n tv2">{len(tr)}</td><td class="n b tv2">{f(tm[0])}<br><span class="sm">{e(tm[1])}</span></td>'
-                  f'<td class="n tv2">{f(tav)}</td>')
+        tcell = f'<b>{f(tm[0])}</b><span class="sm">средн. {f(tav)} · {len(tr)} цен</span>'
+        if dm:
+            g2 = tav / s["davg"] - 1
+            gap = f'<span class="{"up" if g2 > 0.03 else "down" if g2 < -0.03 else ""}">{g2 * 100:+.0f}%</span>'
     else:
-        tcells = '<td class="n tv2" colspan="3"><span class="sm">нет цен</span></td>'
-    gap = "—"
-    if dm and tr:
-        g2 = tav / s["davg"] - 1
-        gap = f'<span class="{"up" if g2 > 0.03 else "down" if g2 < -0.03 else ""}">{g2 * 100:+.0f}%</span>'
-    rows += (f'<tr><td>{dot}{e(n)}</td><td>{e(s["unit"])}</td><td class="n">{s["n"]}</td><td class="n b">{f(s["mn"][0])}<br><span class="sm">{e(s["mn"][1])}</span></td>'
-             f'<td class="n b">{f(s["avg"])}</td><td class="n">{f(s["mx"])}</td>'
-             f'<td class="n{hi}">{sp}</td>{dcells}{tcells}<td class="n">{gap}</td><td class="n">{ours_html(s)}</td><td class="n">{chg_html(s["chg"])}</td></tr>')
+        tcell = '<span class="no">нет цен</span>'
+    o = s["omn"]
+    if o:
+        d = o[0] / s["mn"][0] - 1
+        our = (f'<b>{f(o[0])}</b> ' + (f'<span class="up">+{d * 100:.0f}%</span>' if d > 0.005 else '<span class="best">лучшая</span>')
+               + f'<span class="sm">{e(o[1])}</span>')
+    else:
+        our = '<span class="no">—</span>'
+    rows += (f'<tr><td class="pos">{dot}{e(n)} <span class="unit">{e(s["unit"])}</span></td>'
+             f'<td class="best-c"><span class="big">{f(s["mn"][0])}</span>{who(s["mn"][1])}</td>'
+             f'<td class="n">{f(s["avg"])}</td><td class="n">{rng_html}</td>'
+             f'<td class="n dv">{dcell}</td><td class="n tv2">{tcell}</td><td class="n">{gap or "—"}</td>'
+             f'<td class="n">{our}</td><td class="n">{chg_html(s["chg"])}</td></tr>')
 
 nprice = sum(s["n"] for s in stats.values())
 doc = f"""<!doctype html><html lang="ru"><head><meta charset="utf-8"><style>
@@ -156,10 +184,20 @@ h1 {{ font-size:16pt; margin:0; color:#1F3864; }} .sub {{ color:#555; margin:2px
 .tile {{ border:1px solid #d0d7e2; border-radius:4px; padding:6px 8px; }} .tl {{ color:#555; font-size:8pt; }}
 .tv {{ font-size:14pt; font-weight:bold; color:#1F3864; }} .ts {{ color:#666; font-size:7.4pt; }}
 h2 {{ font-size:10.5pt; color:#1F3864; margin:12px 0 4px; }}
-table {{ width:100%; border-collapse:collapse; table-layout:fixed; font-size:7.6pt; }} th {{ background:#1F3864; color:#fff; text-align:left; padding:3px 2px; font-size:6.6pt; overflow-wrap:normal; word-break:normal; hyphens:none; }}
-td {{ border-bottom:1px solid #e3e3e3; padding:3px 3px; vertical-align:top; overflow-wrap:anywhere; }} .n {{ text-align:right; white-space:nowrap; }} .b {{ font-weight:bold; }}
-tr.grp td {{ background:#eef2f8; font-weight:bold; color:#1F3864; }} .hi {{ color:#b00020; font-weight:bold; }} .d {{ color:#d4a017; }} .sm {{ color:#666; font-size:6.4pt; white-space:normal; display:block; overflow-wrap:anywhere; line-height:1.15; }}
-.dv {{ background:#f1f8ec; }} .tv2 {{ background:#fdf3e7; }} th.th2 {{ background:#9a5b13; }} th.dh {{ background:#2e6b34; }} th.c {{ text-align:center; }} .up {{ color:#b00020; font-weight:bold; }} .down {{ color:#1e7b34; font-weight:bold; }}
+table {{ width:100%; border-collapse:collapse; table-layout:fixed; font-size:8.2pt; }}
+th {{ background:#1F3864; color:#fff; text-align:left; padding:5px 4px; font-size:7.4pt; font-weight:bold; vertical-align:bottom; }}
+th.r {{ text-align:right; }} th.dh {{ background:#2e6b34; }} th.th2 {{ background:#9a5b13; }} .thu {{ font-weight:normal; opacity:.75; }}
+td {{ border-bottom:1px solid #e6e6e6; padding:5px 4px; vertical-align:middle; overflow-wrap:anywhere; }}
+tr:nth-child(even) td {{ background-color:#fafbfc; }}
+.n {{ text-align:right; }} .pos {{ font-weight:bold; }} .unit {{ font-weight:normal; color:#888; font-size:7pt; }}
+.big {{ display:block; font-size:10.5pt; font-weight:bold; color:#1F3864; }} .who {{ color:#444; font-size:7pt; }}
+.tag {{ font-size:6.2pt; padding:0 4px; border-radius:6px; white-space:nowrap; }} .tz {{ background:#d8f0dc; color:#1e6b2e; }} .tsk {{ background:#dceaf8; color:#1d4f8a; }}
+.tm {{ background:#fbe8d3; color:#8a4b0f; }} .tt {{ background:#f8d7da; color:#8a1c25; }} .tn {{ background:#eee; color:#666; }}
+tr.grp td {{ background:#1F3864 !important; color:#fff; font-weight:bold; font-size:8pt; padding:4px 6px; }}
+.hi {{ color:#b00020; font-weight:bold; }} .d {{ color:#d4a017; }} .no {{ color:#bbb; font-size:7pt; }}
+.sm {{ display:block; color:#777; font-size:6.6pt; font-weight:normal; line-height:1.2; }}
+td.dv {{ background-color:#f3f9f1 !important; }} td.tv2 {{ background-color:#fdf6ee !important; }}
+.up {{ color:#b00020; font-weight:bold; }} .down {{ color:#1e7b34; font-weight:bold; }} .best {{ color:#1e7b34; font-weight:bold; }}
 ul {{ margin:4px 0 0 16px; padding:0; }} li {{ margin-bottom:3px; }} .note {{ color:#555; font-size:7.6pt; }} tr {{ page-break-inside:avoid; }}
 </style></head><body>
 <h1>Сводка цен на стройматериалы — весь рынок Ташкента</h1>
@@ -167,11 +205,10 @@ ul {{ margin:4px 0 0 16px; padding:0; }} li {{ margin-bottom:3px; }} .note {{ co
 <div class="tiles">{tiles}</div>
 <h2>Что важно сегодня</h2><ul>{''.join(f'<li>{n}</li>' for n in notes)}</ul>
 <h2>Цены по позициям</h2>
-<table><colgroup><col style="width:14%"><col style="width:3.5%"><col style="width:3%"><col style="width:9%"><col style="width:6%"><col style="width:6%"><col style="width:4.5%"><col style="width:3%"><col style="width:9%"><col style="width:6%"><col style="width:3%"><col style="width:9%"><col style="width:6%"><col style="width:5%"><col style="width:8.5%"><col style="width:4.5%"></colgroup><thead><tr><th rowspan="2">Позиция</th><th rowspan="2">Ед.</th><th colspan="5" class="c">Весь рынок (все продавцы)</th><th colspan="3" class="c dh">Заводы, склады, дистрибьюторы</th><th colspan="3" class="c th2">Магазины, трейдеры, прочие</th><th rowspan="2">Наценка посредн.</th><th rowspan="2">Наши поставщики (мин.)</th><th rowspan="2">Изм.</th></tr>
-<tr><th>Цен</th><th>Мин. / у кого</th><th>Средняя</th><th>Макс.</th><th>Разброс</th><th class="dh">Цен</th><th class="dh">Мин. / у кого</th><th class="dh">Средняя</th><th class="th2">Цен</th><th class="th2">Мин. / у кого</th><th class="th2">Средняя</th></tr></thead>
+<table><colgroup><col style="width:20%"><col style="width:17%"><col style="width:8%"><col style="width:12%"><col style="width:11%"><col style="width:11%"><col style="width:6%"><col style="width:11%"><col style="width:4%"></colgroup><thead>
+<tr><th>Позиция <span class="thu">ед.</span></th><th>Лучшая цена · у кого</th><th class="r">Средняя по рынку</th><th class="r">Диапазон мин–макс</th><th class="r dh">Заводы и склады</th><th class="r th2">Магазины и трейдеры</th><th class="r">Посредники дороже на</th><th class="r">Наша лучшая КП</th><th class="r">Изм.</th></tr></thead>
 <tbody>{rows}</tbody></table>
-<p class="note">«Весь рынок» — все продавцы: заводы, склады, дистрибьюторы, трейдеры, строительные магазины, объявления. «Заводы, склады, дистрибьюторы» — с подтверждённым основанием в реестре (адрес производства/склада, официальный прайс). «Магазины, трейдеры, прочие» — магазины, перекупщики и ещё не проверенные продавцы. «Наценка посредников» — средняя цена магазинов/трейдеров к средней цене заводов/складов. ● — позиции ежедневной проверки. «Наши поставщики» — лучшая цена от поставщиков с отметкой «Работаем = Да» и насколько она выше рыночного минимума. «Изм.» — изменение цен у тех же продавцов к их прошлой цене (только продавцы, у которых есть цена и сегодня, и раньше) (красный — рост больше 3%, зелёный — снижение).<br>
-Цены из открытых объявлений и сайтов поставщиков — ориентир; для закупки нужна письменная КП.</p>
+<p class="note"><b>Как читать:</b> «Лучшая цена» — минимум по всему рынку и кто его даёт (метка: завод / склад / магазин / трейдер / не проверен). «Средняя» и «Диапазон» — по всем продавцам за 30 дней (последняя цена каждого). Зелёная колонка — только заводы, склады и официальные дистрибьюторы; оранжевая — магазины, трейдеры и непроверенные. «Посредники дороже на» — средняя у магазинов/трейдеров к средней у заводов/складов. «Наша лучшая КП» — лучшая цена от ваших поставщиков и насколько она выше рыночного минимума. «Изм.» — изменение у тех же продавцов к их прошлой цене. ● — позиции ежедневной проверки. Цены из объявлений — ориентир; для закупки нужна письменная КП.</p>
 </body></html>"""
 tmp = os.path.splitext(a.pdf)[0] + ".html"
 open(tmp, "w", encoding="utf-8").write(doc)
