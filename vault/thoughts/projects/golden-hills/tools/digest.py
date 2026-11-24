@@ -43,7 +43,7 @@ D = datetime.strptime(a.date, "%Y-%m-%d").date() if a.date else all_dates[-1]
 
 
 def f(x):
-    return f"{x:,.0f}".replace(",", " ")
+    return f"{x:,.0f}".replace(",", "\u00a0")  # неразрывный пробел: число не переносится по частям
 
 
 e = html.escape
@@ -110,7 +110,7 @@ for k, lbl in KEY:
     if k in stats:
         s = stats[k]
         tiles += (f'<div class="tile"><div class="tl">{e(lbl)}</div><div class="tv">{f(s["mn"][0])}</div>'
-                  f'<div class="ts">мин., сум/{e(s["unit"])} · средн. {f(s["avg"])} · {s["n"]} цен · изм. {chg_html(s["chg"])}</div></div>')
+                  f'<div class="ts">мин., сум/{e(s["unit"])} · средн.\u00a0{f(s["avg"])} · {s["n"]}\u00a0цен · изм. {chg_html(s["chg"])}</div></div>')
 
 notes = []
 if a.notes and os.path.exists(a.notes):
@@ -151,12 +151,12 @@ for n, s in ordered:
     dm, tr = s["dmn"], s["trade"]
     rng = "—" if s["n"] == 1 else f'{f(s["mn"][0])} – {f(s["mx"])}'
     hi = ' class="hi"' if s["spread"] is not None and s["spread"] > 0.3 else ""
-    rng_html = f'<span{hi}>{rng}</span><span class="sm">{s["n"]} цен' + (f' · разброс {s["spread"]*100:.0f}%' if s["spread"] else "") + '</span>'
-    dcell = f'<b>{f(dm[0])}</b><span class="sm">средн. {f(s["davg"])} · {s["dn"]} цен</span>' if dm else '<span class="no">нет цен</span>'
+    rng_html = f'<span{hi}>{rng}</span><span class="sm">{s["n"]}\u00a0цен' + (f' · разброс {s["spread"]*100:.0f}%' if s["spread"] else "") + '</span>'
+    dcell = f'<b>{f(dm[0])}</b><span class="sm">средн.\u00a0{f(s["davg"])} · {s["dn"]}\u00a0цен</span>' if dm else '<span class="no">нет цен</span>'
     gap = ""
     if tr:
         tm = min(tr, key=lambda x: x[0]); tav = sum(x[0] for x in tr) / len(tr)
-        tcell = f'<b>{f(tm[0])}</b><span class="sm">средн. {f(tav)} · {len(tr)} цен</span>'
+        tcell = f'<b>{f(tm[0])}</b><span class="sm">средн.\u00a0{f(tav)} · {len(tr)}\u00a0цен</span>'
         if dm:
             g2 = tav / s["davg"] - 1
             gap = f'<span class="{"up" if g2 > 0.03 else "down" if g2 < -0.03 else ""}">{g2 * 100:+.0f}%</span>'
@@ -185,9 +185,9 @@ h1 {{ font-size:16pt; margin:0; color:#1F3864; }} .sub {{ color:#555; margin:2px
 .tv {{ font-size:14pt; font-weight:bold; color:#1F3864; }} .ts {{ color:#666; font-size:7.4pt; }}
 h2 {{ font-size:10.5pt; color:#1F3864; margin:12px 0 4px; }}
 table {{ width:100%; border-collapse:collapse; table-layout:fixed; font-size:8.2pt; }}
-th {{ background:#1F3864; color:#fff; text-align:left; padding:5px 4px; font-size:7.4pt; font-weight:bold; vertical-align:bottom; }}
-th.r {{ text-align:right; }} th.dh {{ background:#2e6b34; }} th.th2 {{ background:#9a5b13; }} .thu {{ font-weight:normal; opacity:.75; }}
-td {{ border-bottom:1px solid #e6e6e6; padding:5px 4px; vertical-align:middle; overflow-wrap:anywhere; }}
+th {{ background:#1F3864; color:#fff; text-align:center; padding:6px 4px; font-size:7.4pt; font-weight:bold; vertical-align:middle; line-height:1.25; border-right:1px solid rgba(255,255,255,.35); overflow-wrap:normal; word-break:normal; hyphens:none; }}
+th.r {{ text-align:center; }} th.dh {{ background:#2e6b34; }} th.th2 {{ background:#9a5b13; }} .thu {{ font-weight:normal; opacity:.75; }}
+td {{ border-bottom:1px solid #e6e6e6; border-right:1px solid #f0f0f0; padding:5px 5px; vertical-align:middle; overflow-wrap:anywhere; }}
 tr:nth-child(even) td {{ background-color:#fafbfc; }}
 .n {{ text-align:right; }} .pos {{ font-weight:bold; }} .unit {{ font-weight:normal; color:#888; font-size:7pt; }}
 .big {{ display:block; font-size:10.5pt; font-weight:bold; color:#1F3864; }} .who {{ color:#444; font-size:7pt; }}
@@ -205,8 +205,8 @@ ul {{ margin:4px 0 0 16px; padding:0; }} li {{ margin-bottom:3px; }} .note {{ co
 <div class="tiles">{tiles}</div>
 <h2>Что важно сегодня</h2><ul>{''.join(f'<li>{n}</li>' for n in notes)}</ul>
 <h2>Цены по позициям</h2>
-<table><colgroup><col style="width:20%"><col style="width:17%"><col style="width:8%"><col style="width:12%"><col style="width:11%"><col style="width:11%"><col style="width:6%"><col style="width:11%"><col style="width:4%"></colgroup><thead>
-<tr><th>Позиция <span class="thu">ед.</span></th><th>Лучшая цена · у кого</th><th class="r">Средняя по рынку</th><th class="r">Диапазон мин–макс</th><th class="r dh">Заводы и склады</th><th class="r th2">Магазины и трейдеры</th><th class="r">Посредники дороже на</th><th class="r">Наша лучшая КП</th><th class="r">Изм.</th></tr></thead>
+<table><colgroup><col style="width:18%"><col style="width:17%"><col style="width:8%"><col style="width:12%"><col style="width:11%"><col style="width:11%"><col style="width:8%"><col style="width:10%"><col style="width:5%"></colgroup><thead>
+<tr><th>Позиция <span class="thu">(ед.)</span></th><th>Лучшая цена · у кого</th><th class="r">Средняя</th><th class="r">Диапазон</th><th class="r dh">Заводы и склады</th><th class="r th2">Магазины и трейдеры</th><th class="r">Наценка посредн.</th><th class="r">Наша КП</th><th class="r">Изм.</th></tr></thead>
 <tbody>{rows}</tbody></table>
 <p class="note"><b>Как читать:</b> «Лучшая цена» — минимум по всему рынку и кто его даёт (метка: завод / склад / магазин / трейдер / не проверен). «Средняя» и «Диапазон» — по всем продавцам за 30 дней (последняя цена каждого). Зелёная колонка — только заводы, склады и официальные дистрибьюторы; оранжевая — магазины, трейдеры и непроверенные. «Посредники дороже на» — средняя у магазинов/трейдеров к средней у заводов/складов. «Наша лучшая КП» — лучшая цена от ваших поставщиков и насколько она выше рыночного минимума. «Изм.» — изменение у тех же продавцов к их прошлой цене. ● — позиции ежедневной проверки. Цены из объявлений — ориентир; для закупки нужна письменная КП.</p>
 </body></html>"""
