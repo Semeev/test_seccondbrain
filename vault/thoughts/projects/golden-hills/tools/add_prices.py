@@ -76,6 +76,8 @@ for x in rows:
         v = x.get(k)
         if v:
             j[f"{col}{r}"] = v
+    if x.get("kp_date"):
+        j[f"T{r}"] = as_date(x["kp_date"])
     existing.add(key)
     added += 1
     if x["supplier"] not in suppliers:

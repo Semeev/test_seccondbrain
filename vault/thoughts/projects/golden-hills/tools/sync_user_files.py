@@ -97,8 +97,9 @@ for path in a.files:
             raw = sup_key(r)
             sup = map_supplier(r["sheet"], raw)
             it = map_item(r["sheet"], r["item"])
-            if isinstance(it, dict) and sup in M.get("supplier_class_override", {}) and it["position"].startswith("Арматура А400"):
-                it = dict(it, position=it["position"].replace("А400", "А500С"), comment="класс уточнён по официальной КП поставщика")
+            ov = M.get("supplier_class_override", {}).get(sup)
+            if isinstance(it, dict) and isinstance(ov, dict) and it["position"].startswith(f"Арматура {ov['from']} "):
+                it = dict(it, position=it["position"].replace(ov["from"], ov["to"]), comment=f"класс {ov['to']} — уточнено пользователем")
             key = f'{r["sheet"]}|{raw}|{r["item"]}'
             old = snap.get(key)
             new_snap[key] = r["price"]
@@ -116,12 +117,13 @@ for path in a.files:
                 continue
             if isinstance(it, dict) and it.get("swap_qty_price") and isinstance(r["qty"], (int, float)) and r["price"] < r["qty"]:
                 r = dict(r, price=float(r["qty"]), qty=r["price"])  # в файле перепутаны цена и количество
-            d = (r["sheet_date"].isoformat() if r["sheet_date"] else a.date)
+            d = a.date  # дата внесения; дата КП — отдельно (kp_date), только если есть в файле
             qty = r["qty"] if isinstance(r["qty"], (int, float)) else None
             com = "; ".join(x for x in [it.get("comment", ""), f"кол-во в запросе: {qty:g}" if qty else "",
                                         f"было {old:,.0f}".replace(",", " ") if old else ""] if x)
             prices.append(dict(date=d, position=it["position"], supplier=sup, price=r["price"], unit=r["unit"] or "",
-                               coef=it.get("coef"), source="КП (письменное)", link=f'файл КП, лист «{r["sheet"]}»', comment=com))
+                               coef=it.get("coef"), source="КП (письменное)", vat="Да", link=f'файл КП, лист «{r["sheet"]}»', comment=com,
+                               kp_date=r["sheet_date"].isoformat() if r["sheet_date"] else None))
             changed.append(f'{"изменилась" if old else "новая"}: {it["position"]} — {sup}: {r["price"]:,.0f}'.replace(",", " ")
                            + (f' (было {old:,.0f})'.replace(",", " ") if old else ""))
             contacts.setdefault(sup, set()).update(x for x in r["contacts"] if low(x) not in JUNK)
