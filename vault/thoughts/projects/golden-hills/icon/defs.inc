@@ -1,0 +1,24 @@
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="75%"><stop offset="0" stop-color="#3a2a22"/><stop offset="1" stop-color="#140d0a"/></radialGradient>
+    <linearGradient id="bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6d58a"/><stop offset=".45" stop-color="#d39a3c"/><stop offset="1" stop-color="#8a5a1c"/></linearGradient>
+    <linearGradient id="bronzeTxt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe3a0"/><stop offset=".55" stop-color="#e0a548"/><stop offset="1" stop-color="#9c6420"/></linearGradient>
+    <linearGradient id="crest" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff3b2f"/><stop offset="1" stop-color="#a3120c"/></linearGradient>
+    <linearGradient id="hat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe066"/><stop offset="1" stop-color="#f0a800"/></linearGradient>
+    <g id="hardhat">
+      <path d="M-70 10 C-70 -72 70 -72 70 10 Z" fill="url(#hat)" stroke="#7a5200" stroke-width="5"/>
+      <rect x="-11" y="-60" width="22" height="66" rx="8" fill="#fff2a8" opacity=".8"/>
+      <rect x="-86" y="2" width="172" height="20" rx="10" fill="#f0b400" stroke="#7a5200" stroke-width="5"/>
+    </g>
+    <g id="builder">
+      <path d="M-112 270 C-112 150 -60 112 0 112 C60 112 112 150 112 270 Z" fill="#f2801b" stroke="#6b3305" stroke-width="5"/>
+      <path d="M-100 175 L100 175" stroke="#e8e8e8" stroke-width="14"/>
+      <circle cx="0" cy="40" r="60" fill="#e9b48a" stroke="#6b3d22" stroke-width="5"/>
+      <path d="M-34 32 L-12 38 M34 32 L12 38" stroke="#3a2416" stroke-width="7" stroke-linecap="round"/>
+      <circle cx="-22" cy="50" r="7" fill="#2a1a10"/><circle cx="22" cy="50" r="7" fill="#2a1a10"/>
+      <path d="M-16 78 L16 78" stroke="#6b3d22" stroke-width="6" stroke-linecap="round"/>
+      <use href="#hardhat" transform="translate(0 4)"/>
+      <circle cx="0" cy="215" r="95" fill="url(#bronze)" stroke="#5e3a10" stroke-width="8"/>
+      <circle cx="0" cy="215" r="74" fill="none" stroke="#8a5a1c" stroke-width="5"/>
+      <path d="M-42 262 L0 162 L42 262" stroke="#c2160e" stroke-width="22" fill="none" stroke-linejoin="round"/>
+    </g>
+  </defs>
