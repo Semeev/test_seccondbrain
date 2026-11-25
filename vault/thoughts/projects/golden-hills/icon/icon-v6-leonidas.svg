@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#1c0d08"/><stop offset=".45" stop-color="#7a2a0e"/><stop offset=".7" stop-color="#d9631a"/><stop offset="1" stop-color="#3a1608"/>
+  </linearGradient>
+  <radialGradient id="sun" cx="50%" cy="50%" r="50%">
+    <stop offset="0" stop-color="#fff3c4"/><stop offset=".25" stop-color="#ffc74d" stop-opacity=".95"/><stop offset=".6" stop-color="#ff7a1a" stop-opacity=".45"/><stop offset="1" stop-color="#ff5a00" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#120705" stop-opacity="0"/><stop offset=".55" stop-color="#120705" stop-opacity=".85"/><stop offset="1" stop-color="#0c0403"/>
+  </linearGradient>
+  <linearGradient id="cape" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#c41a10"/><stop offset=".6" stop-color="#7d0b06"/><stop offset="1" stop-color="#3e0402"/>
+  </linearGradient>
+  <linearGradient id="vest" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#ffa43a"/><stop offset=".5" stop-color="#ef7414"/><stop offset="1" stop-color="#8f3c06"/>
+  </linearGradient>
+  <linearGradient id="skin" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#d9946a"/><stop offset=".6" stop-color="#a1603c"/><stop offset="1" stop-color="#5e331c"/>
+  </linearGradient>
+  <linearGradient id="hat" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#fff2a0"/><stop offset=".35" stop-color="#ffcc1f"/><stop offset="1" stop-color="#b07800"/>
+  </linearGradient>
+  <radialGradient id="shield" cx="35%" cy="30%" r="80%">
+    <stop offset="0" stop-color="#ffe9a8"/><stop offset=".3" stop-color="#dca24a"/><stop offset=".75" stop-color="#93601f"/><stop offset="1" stop-color="#4a2c0a"/>
+  </radialGradient>
+  <linearGradient id="steel" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#e9eef2"/><stop offset=".5" stop-color="#9aa6af"/><stop offset="1" stop-color="#4b555c"/>
+  </linearGradient>
+  <linearGradient id="txt" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fff0c0"/><stop offset=".5" stop-color="#f0b452"/><stop offset="1" stop-color="#a5651c"/>
+  </linearGradient>
+  <filter id="glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="10" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="soft"><feGaussianBlur stdDeviation="3"/></filter>
+
+  <g id="warrior">
+    <!-- cape flowing in wind -->
+    <path d="M-70 70 C-150 170 -190 330 -230 470 C-230 560 -200 640 -150 700 L100 700 C110 330 120 180 80 70 Z" fill="url(#cape)"/>
+    <path d="M-110 200 C-140 300 -160 380 -190 450 M-60 220 C-70 320 -80 400 -90 465" stroke="#3e0402" stroke-width="6" fill="none" opacity=".5"/>
+    <!-- sledgehammer -->
+    <path d="M150 470 L118 -150" stroke="#5a3418" stroke-width="15" stroke-linecap="round"/>
+    <path d="M147 470 L115 -150" stroke="#b07a42" stroke-width="4" stroke-linecap="round" opacity=".7"/>
+    <g transform="rotate(-3 117 -172)">
+      <rect x="58" y="-200" width="118" height="56" rx="8" fill="url(#steel)" stroke="#22282c" stroke-width="5"/>
+      <rect x="52" y="-206" width="16" height="68" rx="5" fill="#5d676e" stroke="#22282c" stroke-width="4"/>
+      <rect x="166" y="-206" width="16" height="68" rx="5" fill="#3c454b" stroke="#22282c" stroke-width="4"/>
+      <path d="M72 -190 L160 -190" stroke="#ffffff" stroke-width="5" opacity=".55" stroke-linecap="round"/>
+      <rect x="104" y="-148" width="26" height="14" rx="3" fill="#2c3236"/>
+    </g>
+    <!-- torso / vest -->
+    <path d="M-92 78 C-108 170 -96 300 -80 700 L84 700 C98 300 108 170 92 78 C60 58 -60 58 -92 78 Z" fill="url(#vest)" stroke="#4a1f04" stroke-width="4"/>
+    <path d="M-100 210 L102 210 M-96 255 L100 255" stroke="#f2f2ea" stroke-width="13" opacity=".9"/>
+    <path d="M-100 210 L102 210 M-96 255 L100 255" stroke="#9aa" stroke-width="3" opacity=".6"/>
+    <path d="M-30 62 L0 140 L30 62" fill="#3b2a20"/>
+    <!-- right arm holding shovel -->
+    <path d="M88 90 C125 110 140 160 135 215" stroke="#d87418" stroke-width="40" stroke-linecap="round" fill="none"/>
+    <ellipse cx="136" cy="225" rx="24" ry="20" fill="url(#skin)" stroke="#3e2010" stroke-width="3"/>
+    <!-- neck & head -->
+    <rect x="-20" y="25" width="40" height="45" fill="#7e4a2c"/>
+    <ellipse cx="0" cy="0" rx="42" ry="52" fill="url(#skin)" stroke="#3e2010" stroke-width="3"/>
+    <!-- side hair -->
+    <path d="M-44 -30 C-52 -6 -50 14 -44 26 L-38 -6 Z M44 -30 C52 -6 50 14 44 26 L38 -6 Z" fill="#1a0e07"/>
+    <!-- cheek shadow -->
+    <path d="M14 -20 C34 -14 42 4 40 22 C30 10 20 4 10 2 Z" fill="#4a2614" opacity=".45"/>
+    <!-- full beard, pointed -->
+    <path d="M-45 -8 C-50 44 -32 92 0 108 C32 92 50 44 45 -8 C40 12 30 24 18 28 C8 24 -8 24 -18 28 C-30 24 -40 12 -45 -8 Z" fill="#1f120a"/>
+    <path d="M-30 40 C-26 64 -14 84 -2 96 M28 40 C24 64 14 84 2 96 M-12 60 C-10 76 -6 88 0 100" stroke="#3a2416" stroke-width="3" fill="none" opacity=".7"/>
+    <!-- open shouting mouth -->
+    <path d="M-14 38 C-12 56 12 56 14 38 C6 34 -6 34 -14 38 Z" fill="#2a0604"/>
+    <path d="M-11 39 C-4 37 4 37 11 39 L10 43 C4 42 -4 42 -10 43 Z" fill="#efe6d6"/>
+    <!-- moustache -->
+    <path d="M-28 36 C-18 20 -6 22 0 27 C6 22 18 20 28 36 C18 30 8 31 0 33 C-8 31 -18 30 -28 36 Z" fill="#140a05"/>
+    <!-- fierce brows -->
+    <path d="M-40 -24 L-5 -11 L-7 -3 L-38 -14 Z M40 -24 L5 -11 L7 -3 L38 -14 Z" fill="#140a05"/>
+    <!-- narrowed eyes -->
+    <path d="M-30 -3 C-24 -8 -12 -8 -7 -3 C-12 0 -24 1 -30 -3 Z M30 -3 C24 -8 12 -8 7 -3 C12 0 24 1 30 -3 Z" fill="#f3e8d8"/>
+    <circle cx="-17" cy="-3.5" r="3.6" fill="#140a05"/><circle cx="17" cy="-3.5" r="3.6" fill="#140a05"/>
+    <path d="M-4 -2 L-3 10" stroke="#5e331c" stroke-width="3" opacity=".6" stroke-linecap="round"/>
+    <path d="M3 -4 C6 6 9 13 3 18 C-1 20 -5 19 -8 16" stroke="#4a2614" stroke-width="3.5" fill="none" opacity=".75" stroke-linecap="round"/>
+    <!-- hard hat -->
+    <path d="M-52 -28 C-56 -98 56 -98 52 -28 Z" fill="url(#hat)" stroke="#5c3d00" stroke-width="4"/>
+    <path d="M-9 -88 L9 -88 L10 -30 L-10 -30 Z" fill="#fff6c0" opacity=".75"/>
+    <path d="M-68 -34 C-40 -22 40 -22 68 -34 L66 -22 C40 -10 -40 -10 -66 -22 Z" fill="#e6a800" stroke="#5c3d00" stroke-width="4"/>
+    <path d="M-38 -60 C-34 -74 -22 -82 -14 -84" stroke="#fffbe0" stroke-width="5" fill="none" opacity=".8" stroke-linecap="round"/>
+    <!-- shield (hoplon) on left arm -->
+    <ellipse cx="-30" cy="255" rx="122" ry="128" fill="url(#shield)" stroke="#3a2208" stroke-width="7"/>
+    <ellipse cx="-30" cy="255" rx="100" ry="106" fill="none" stroke="#6b4214" stroke-width="5"/>
+    <ellipse cx="-30" cy="255" rx="94" ry="100" fill="none" stroke="#fff1c0" stroke-width="2" opacity=".5"/>
+    <path d="M-82 318 L-30 188 L22 318" stroke="#b5140c" stroke-width="26" fill="none" stroke-linejoin="miter"/>
+    <path d="M-82 318 L-30 188 L22 318" stroke="#ff5040" stroke-width="5" fill="none" opacity=".6" transform="translate(-3 -3)"/>
+    <path d="M-120 190 C-100 150 -60 135 -30 133" stroke="#fff6d8" stroke-width="8" fill="none" opacity=".65" stroke-linecap="round"/>
+  </g>
+</defs>
+
+<rect width="1024" height="1024" fill="url(#sky)"/>
+<circle cx="512" cy="430" r="330" fill="url(#sun)"/>
+<circle cx="512" cy="430" r="120" fill="#fff6d0" opacity=".85" filter="url(#glow)"/>
+<!-- distant hills / site cranes -->
+<path d="M0 640 C150 600 260 620 380 600 C520 580 640 610 760 590 C880 575 960 600 1024 590 L1024 1024 L0 1024 Z" fill="#2a0f06" opacity=".85"/>
+<g stroke="#2a0f06" stroke-width="8" fill="none" opacity=".9">
+  <path d="M110 610 L110 330 L300 330 M110 330 L60 330 M110 360 L150 330"/><path d="M250 330 L250 380"/>
+  <path d="M930 600 L930 360 L760 360 M930 360 L980 360 M930 390 L895 360"/><path d="M800 360 L800 400"/>
+</g>
+
+<!-- side warriors (behind, darker) -->
+<g style="filter:brightness(.62) saturate(.9)">
+  <use href="#warrior" transform="translate(262 400) scale(.86)"/>
+  <use href="#warrior" transform="translate(762 400) scale(-.86 .86)"/>
+</g>
+<!-- center hero -->
+<use href="#warrior" transform="translate(512 360) scale(1.02)"/>
+
+<!-- dust -->
+<g fill="#ffd9a0" opacity=".5">
+  <circle cx="160" cy="720" r="3"/><circle cx="220" cy="650" r="2"/><circle cx="840" cy="700" r="3"/><circle cx="900" cy="660" r="2"/><circle cx="420" cy="180" r="2"/><circle cx="640" cy="150" r="2.5"/><circle cx="700" cy="260" r="1.8"/><circle cx="330" cy="240" r="2"/>
+</g>
+<rect y="640" width="1024" height="384" fill="url(#fade)"/>
+<text x="512" y="975" text-anchor="middle" font-family="Inter Display" font-weight="900" font-size="200" letter-spacing="-4" fill="#ff8a2a" opacity=".55" filter="url(#glow)">300</text>
+<text x="512" y="975" text-anchor="middle" font-family="Inter Display" font-weight="900" font-size="200" letter-spacing="-4" fill="url(#txt)" stroke="#4a2608" stroke-width="4">300</text>
+</svg>
