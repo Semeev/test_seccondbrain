@@ -1,0 +1,457 @@
+<title>Снабжение Golden Hills</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: calm, large-print tool. Search and three big tab buttons on top, then one column of result blocks.
+   On phones the price tables turn into stacked rows, so nothing scrolls sideways. */
+:root {
+  --bg: #f0f1f0;
+  --surface: #ffffff;
+  --line: #cfd3d0;
+  --fg: #1e2320;
+  --muted: #4f5753;
+  --accent: #3e5c6e;
+  --accent-soft: #e3e9ec;
+  --best: #3d6650;
+  --best-soft: #e4ece6;
+  --warn: #6e5733;
+  --warn-soft: #efe9dd;
+  --bad: #7d4a42;
+  --bad-soft: #f1e6e3;
+  --chip: #e7e9e7;
+  --font-ui: "Golos Text", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --tap: 56px;
+  --radius: 12px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #1b1e1d; --surface: #242827; --line: #3b413e; --fg: #e9ecea; --muted: #b3bab6;
+  --accent: #a9c1cf; --accent-soft: #2e3a41; --best: #a9cbb5; --best-soft: #2b3a31;
+  --warn: #d6c29d; --warn-soft: #3a3428; --bad: #dcb0a8; --bad-soft: #3d2f2c; --chip: #313634; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #1b1e1d; --surface: #242827; --line: #3b413e; --fg: #e9ecea; --muted: #b3bab6;
+  --accent: #a9c1cf; --accent-soft: #2e3a41; --best: #a9cbb5; --best-soft: #2b3a31;
+  --warn: #d6c29d; --warn-soft: #3a3428; --bad: #dcb0a8; --bad-soft: #3d2f2c; --chip: #313634; color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 18px; line-height: 1.55; font-variant-numeric: tabular-nums }
+.wrap { max-width: 1000px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+button, input, select, textarea { font: inherit; color: inherit }
+
+header { background: var(--surface); border-bottom: 1px solid var(--line) }
+header .wrap { display: grid; gap: 14px; padding-block: 18px }
+.brand { display: flex; align-items: baseline; justify-content: space-between; gap: 6px 16px; flex-wrap: wrap }
+.brand h1 { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.01em }
+.brand .meta { color: var(--muted); font-size: 15px }
+.search { position: relative }
+.search input { width: 100%; font-size: 20px; min-height: 60px; padding: 12px 64px 12px 18px; border: 2px solid var(--line); border-radius: var(--radius); background: var(--bg); color: var(--fg) }
+.search input::placeholder { color: var(--muted); opacity: 0.8 }
+.search input:focus { outline: none; border-color: var(--accent); background: var(--surface) }
+.search button { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; border: 0; background: var(--chip); color: var(--fg); font-size: 26px; line-height: 1; cursor: pointer; border-radius: 10px }
+.tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px }
+.tabs button { min-height: var(--tap); font-size: 18px; font-weight: 600; border: 2px solid var(--line); background: var(--surface); color: var(--fg); padding: 8px 10px; border-radius: var(--radius); cursor: pointer; line-height: 1.2 }
+.tabs button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface) }
+.tabs .n { display: block; font-size: 14px; font-weight: 400; opacity: 0.85 }
+
+main { padding-block: 20px 56px }
+.filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 18px }
+.toggle { display: inline-flex; align-items: center; gap: 12px; font-size: 17px; min-height: var(--tap); padding: 8px 18px; border: 2px solid var(--line); border-radius: var(--radius); background: var(--surface); cursor: pointer; user-select: none }
+.toggle input { width: 24px; height: 24px; accent-color: var(--accent); margin: 0; flex: none }
+.toggle:has(input:checked) { border-color: var(--accent); background: var(--accent-soft) }
+select.toggle { color: var(--fg); padding-right: 12px }
+.count { color: var(--muted); font-size: 16px }
+
+.stack { display: grid; gap: 18px }
+.block { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; min-width: 0 }
+.block-head { display: grid; gap: 4px; padding: 16px 18px 14px; border-bottom: 1px solid var(--line) }
+.block-head h2 { margin: 0; font-size: 21px; font-weight: 600; line-height: 1.3; text-wrap: balance }
+.block-head .sub { color: var(--muted); font-size: 16px }
+.spread { font-size: 16px; color: var(--muted) }
+.spread b { color: var(--bad); font-weight: 600 }
+
+.tbl { overflow-x: auto }
+table { width: 100%; border-collapse: collapse; font-size: 17px }
+th { text-align: left; font-weight: 600; font-size: 15px; color: var(--muted); padding: 10px 16px; white-space: nowrap; background: var(--bg) }
+td { padding: 14px 16px; border-top: 1px solid var(--line); vertical-align: top }
+td.num, th.num { text-align: right; white-space: nowrap }
+td.num strong { font-size: 21px; font-weight: 700 }
+tr.best td { background: var(--best-soft) }
+tr.best td.num strong { color: var(--best) }
+.diff { display: block; font-size: 15px; color: var(--bad) }
+.diff.zero { color: var(--best); font-weight: 600 }
+.sname { font-size: 18px; font-weight: 600; cursor: pointer; color: var(--accent); background: none; border: 0; padding: 4px 0; text-align: left; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px }
+.small { font-size: 15px; color: var(--muted) }
+.phone { font-size: 18px; font-weight: 500; white-space: nowrap }
+.copy { font-size: 16px; font-weight: 500; min-height: 44px; border: 2px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 10px; padding: 6px 14px; cursor: pointer; margin: 6px 0 0 }
+.copy:hover { border-color: var(--accent) }
+.copy.ok { border-color: var(--best); color: var(--best) }
+.contact { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px }
+
+.chip { display: inline-block; font-size: 14px; font-weight: 500; padding: 3px 10px; border-radius: 8px; background: var(--chip); color: var(--muted); white-space: nowrap }
+.chip.factory { background: var(--best-soft); color: var(--best) }
+.chip.stock { background: var(--accent-soft); color: var(--accent) }
+.chip.trader { background: var(--bad-soft); color: var(--bad) }
+.chip.shop { background: var(--warn-soft); color: var(--warn) }
+.chip.ours { background: var(--accent-soft); color: var(--accent); font-weight: 700 }
+.tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; display: grid; gap: 12px; align-content: start; min-width: 0 }
+.card h3 { margin: 0; font-size: 20px; font-weight: 600; line-height: 1.3 }
+.kv { display: grid; grid-template-columns: 110px 1fr; gap: 8px 12px; font-size: 17px; margin: 0 }
+.kv dt { color: var(--muted) }
+.kv dd { margin: 0; min-width: 0; overflow-wrap: anywhere }
+.open, .btn, .close { min-height: var(--tap); font-size: 18px; font-weight: 600; border-radius: var(--radius); padding: 10px 20px; cursor: pointer }
+.open { width: 100%; color: var(--accent); background: var(--accent-soft); border: 2px solid transparent }
+.open:hover { border-color: var(--accent) }
+
+.empty { padding: 36px 16px; text-align: center; color: var(--muted); font-size: 18px }
+.hint { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; justify-content: center }
+.hint button { font-size: 17px; min-height: 48px; border: 2px solid var(--line); background: var(--surface); color: var(--fg); border-radius: var(--radius); padding: 6px 16px; cursor: pointer }
+.cats { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px }
+.cat { text-align: left; font-size: 18px; min-height: var(--tap); background: var(--surface); color: var(--fg); border: 2px solid var(--line); border-radius: var(--radius); padding: 12px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 10px }
+.cat:hover, .hint button:hover { border-color: var(--accent) }
+.cat span { color: var(--muted); font-size: 16px }
+.section-title { font-size: 19px; color: var(--fg); margin: 8px 0 12px; font-weight: 600 }
+
+/* Supplier detail panel */
+.drawer-bg { position: fixed; inset: 0; background: rgb(0 0 0 / 0.4); z-index: 20 }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(620px, 100%); background: var(--bg); z-index: 21; overflow-y: auto; padding: calc(env(safe-area-inset-top, 0px) + 16px) max(16px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 28px) max(16px, env(safe-area-inset-left, 0px)); display: grid; gap: 16px; align-content: start; box-shadow: -8px 0 32px rgb(0 0 0 / 0.2) }
+.drawer h2.title { margin: 0 0 4px; font-size: 24px; line-height: 1.3 }
+.close { width: 100%; border: 2px solid var(--line); background: var(--surface); color: var(--fg) }
+.drawer .card-body { padding: 18px }
+
+/* Request builder */
+.rfq { display: grid; gap: 16px; grid-template-columns: 1fr 1fr }
+.rfq > * { min-width: 0 }
+.field { display: grid; gap: 6px; font-size: 17px; font-weight: 600; color: var(--fg) }
+.field input, .field select, .field textarea { font-size: 18px; font-weight: 400; min-height: var(--tap); color: var(--fg); background: var(--surface); border: 2px solid var(--line); border-radius: var(--radius); padding: 10px 14px; width: 100% }
+.field textarea { min-height: 280px; resize: vertical; line-height: 1.55 }
+.field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--accent) }
+.btn { border: 0; background: var(--accent); color: var(--surface) }
+.actions { display: flex; gap: 10px; flex-wrap: wrap }
+.actions .copy { min-height: var(--tap); font-size: 18px; padding: 10px 20px; margin: 0; border-radius: var(--radius) }
+.full { grid-column: 1 / -1 }
+
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, .toggle:focus-within { outline: 3px solid var(--accent); outline-offset: 2px }
+
+/* Daily digest */
+.digest-days { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px }
+.digest-days button { min-height: 48px; font-size: 17px; border: 2px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 6px 16px; cursor: pointer }
+.digest-days button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); font-weight: 600 }
+.notes { list-style: none; margin: 0; padding: 0 }
+.notes li { padding: 16px 18px; border-top: 1px solid var(--line) }
+.notes li:first-child { border-top: 0 }
+.notes b { color: var(--fg); font-weight: 700 }
+a.btn { display: inline-flex; align-items: center; text-decoration: none }
+@media (max-width: 700px) {
+  body { font-size: 17px }
+  .tabs { grid-template-columns: repeat(2, 1fr) }
+  .brand h1 { font-size: 23px }
+  .tabs button { font-size: 17px }
+  .rfq { grid-template-columns: 1fr }
+  .toggle { width: 100% }
+  .kv { grid-template-columns: 1fr; gap: 0 }
+  .kv dd { margin-bottom: 10px }
+  /* price tables become stacked rows: supplier + price on top, contact below */
+  table.offers thead { display: none }
+  table.offers tr { display: grid; grid-template-columns: 1fr auto; border-top: 1px solid var(--line) }
+  table.offers td { border-top: 0; padding: 12px 16px 0 }
+  table.offers td.cond, table.offers td.date { grid-column: 1 / -1; padding-top: 6px }
+  table.offers td.contact-cell { grid-column: 1 / -1; padding-bottom: 14px }
+  table.offers td.date { display: none }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+</style>
+
+<header>
+  <div class="wrap">
+    <div class="brand">
+      <h1>Снабжение Golden Hills</h1>
+      <span class="meta" id="meta">Загружаю базу…</span>
+    </div>
+    <div class="search">
+      <input id="q" type="search" placeholder="Что ищем? Например: арматура" autocomplete="off" aria-label="Поиск материала или поставщика">
+      <button id="clear" aria-label="Очистить поиск" hidden>×</button>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="prices" aria-selected="true">Цены<span class="n" id="n-prices"></span></button>
+      <button role="tab" data-tab="suppliers" aria-selected="false">Поставщики<span class="n" id="n-sup"></span></button>
+      <button role="tab" data-tab="digest" aria-selected="false">Сводка<span class="n" id="n-dig"></span></button>
+      <button role="tab" data-tab="rfq" aria-selected="false">Запрос цены<span class="n">текст для КП</span></button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="view"></div>
+</main>
+<div id="drawer-root"></div>
+
+<script>
+const S = { data: null, tab: 'prices', dday: '', q: '', direct: false, vat: false, history: false, stype: '', rfqItem: '', rfqQty: '', rfqSel: new Set() };
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const fmt = n => Math.round(n).toLocaleString('ru-RU').replace(/\s/g, ' ');
+const fdate = d => d ? d.split('-').reverse().slice(0, 2).join('.') : '';
+const norm = s => String(s ?? '').toLowerCase().replace(/ё/g, 'е').replace(/[«»"']/g, '');
+const unitLbl = u => u ? `сум за ${u}` : 'сум';
+
+function typeClass(t) {
+  if (!t) return '';
+  if (t.startsWith('Завод')) return 'factory';
+  if (t.startsWith('Склад')) return 'stock';
+  if (t.startsWith('Перекуп') || t.startsWith('Трейдер')) return 'trader';
+  if (t.startsWith('Магазин')) return 'shop';
+  return '';
+}
+const typeShort = t => !t ? 'тип неизвестен' : t === 'Не проверено' ? 'тип не проверен' : t.replace('Склад/дистрибьютор', 'Склад').replace('Завод-производитель', 'Завод').replace('Магазин (розница)', 'Магазин');
+const chip = t => `<span class="chip ${typeClass(t)}">${esc(typeShort(t))}</span>`;
+const isDirect = t => t && (t.startsWith('Завод') || t.startsWith('Склад'));
+
+function copyBtn(text, label = 'Копировать') {
+  return `<button class="copy" data-copy="${esc(text)}">${label}</button>`;
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-copy]');
+  if (!b) return;
+  const t = b.dataset.copy, old = b.textContent;
+  const done = () => { b.textContent = 'Скопировано'; b.classList.add('ok'); setTimeout(() => { b.textContent = old; b.classList.remove('ok') }, 1600) };
+  const fallback = () => {
+    const ta = document.createElement('textarea'); ta.value = t; document.body.append(ta); ta.select();
+    try { document.execCommand('copy'); done() } catch (_) {} ta.remove();
+  };
+  try { navigator.clipboard.writeText(t).then(done).catch(fallback) } catch (_) { fallback() }
+});
+
+function matches(text, terms) { const n = norm(text); return terms.every(t => n.includes(t)) }
+function terms() { return norm(S.q).split(/\s+/).filter(Boolean) }
+
+/* ---------- prices ---------- */
+function offers() {
+  let rows = S.data.prices.map(p => ({ ...p, sup: S.data.supIdx[p.supplier] || {} }));
+  if (!S.history) {
+    const m = new Map();
+    for (const r of rows) {
+      const k = r.item + '|' + r.supplier;
+      const prev = m.get(k);
+      if (!prev || (r.date || '') >= (prev.date || '')) m.set(k, { ...r, older: prev ? [...(prev.older || []), prev] : [] });
+      else prev.older = [...(prev.older || []), r];
+    }
+    rows = [...m.values()];
+  }
+  if (S.direct) rows = rows.filter(r => isDirect(r.stype));
+  if (S.vat) rows = rows.filter(r => r.vat === 'Да');
+  if (S.stype) rows = rows.filter(r => (r.stype || '') === S.stype);
+  return rows;
+}
+
+function renderPrices() {
+  const t = terms();
+  const all = offers();
+  let rows = t.length ? all.filter(r => matches([r.item, r.cat, r.supplier, r.comment].join(' '), t)) : [];
+  const filters = `<div class="filters">
+    <label class="toggle"><input type="checkbox" id="f-direct" ${S.direct ? 'checked' : ''}> Только заводы и склады</label>
+    <label class="toggle"><input type="checkbox" id="f-vat" ${S.vat ? 'checked' : ''}> Только с НДС</label>
+    <label class="toggle"><input type="checkbox" id="f-hist" ${S.history ? 'checked' : ''}> Показать старые цены</label>
+  </div>`;
+  if (!t.length) {
+    const cats = {};
+    for (const r of all) if (r.cat) cats[r.cat] = (cats[r.cat] || 0) + 1;
+    const ex = ['арматура d16', 'бетон М300', 'мембрана', 'цемент', 'XPS', 'ПНД 160', 'газоблок'];
+    return filters + `<p class="section-title">Выберите раздел</p>
+      <div class="cats">${Object.entries(cats).sort((a, b) => b[1] - a[1]).map(([c, n]) =>
+        `<button class="cat" data-q="${esc(c)}">${esc(c)}<span>${n}</span></button>`).join('')}</div>
+      <div class="empty">Или напишите в поиске, что нужно. Например:
+        <div class="hint">${ex.map(x => `<button data-q="${esc(x)}">${esc(x)}</button>`).join('')}</div></div>`;
+  }
+  if (!rows.length) return filters + `<div class="empty">По запросу «${esc(S.q)}» цен нет.<br>Проверьте написание или уберите галочки выше.</div>`;
+  const groups = new Map();
+  for (const r of rows) { if (!groups.has(r.item)) groups.set(r.item, []); groups.get(r.item).push(r) }
+  const list = [...groups.entries()].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0], 'ru'));
+  return filters + `<div class="stack">` + list.map(([item, rs]) => {
+    rs.sort((a, b) => a.price - b.price);
+    const min = rs[0].price, max = rs[rs.length - 1].price;
+    const u = rs[0].unit || rs[0].rawunit;
+    const spread = rs.length > 1 && max > min ? `<span class="spread">Самая дорогая на <b>${Math.round((max / min - 1) * 100)}%</b> дороже лучшей</span>` : '';
+    return `<section class="block">
+      <div class="block-head"><h2>${esc(item)}</h2><span class="sub">${esc(rs[0].cat || '')} · ${unitLbl(u)} · ${rs.length} ${plural(rs.length, 'предложение', 'предложения', 'предложений')}</span>${spread}</div>
+      <div class="tbl"><table class="offers">
+        <thead><tr><th>Поставщик</th><th class="num">Цена, ${unitLbl(u)}</th><th>Условия</th><th>Телефон</th><th>Дата</th></tr></thead>
+        <tbody>${rs.map((r, i) => offerRow(r, min, i === 0 && rs.length > 1)).join('')}</tbody>
+      </table></div></section>`;
+  }).join('') + `</div>`;
+}
+function plural(n, a, b, c) { const m = n % 10, h = n % 100; return m === 1 && h !== 11 ? a : m >= 2 && m <= 4 && (h < 12 || h > 14) ? b : c }
+
+function offerRow(r, min, best) {
+  const d = r.price > min ? `<span class="diff">дороже на ${((r.price / min - 1) * 100).toFixed(r.price / min < 1.1 ? 1 : 0)}%</span>` : (best ? `<span class="diff zero">лучшая цена</span>` : '');
+  const raw = r.rawunit && r.rawunit !== r.unit ? `<span class="small" style="display:block">${fmt(r.rawprice)} за ${esc(r.rawunit)}</span>` : '';
+  const cond = [r.vat === 'Да' ? 'с НДС' : r.vat === 'Нет' ? 'без НДС' : 'НДС не указан', r.delivery === 'Да' ? 'с доставкой' : r.delivery === 'Нет' ? 'без доставки' : '', r.stock].filter(Boolean).join(', ');
+  const phone = r.sup.phone;
+  const older = (r.older || []).length ? `<span class="small">было: ${r.older.map(o => fmt(o.price) + ' (' + fdate(o.date) + ')').join(', ')}</span>` : '';
+  return `<tr class="${best ? 'best' : ''}">
+    <td><button class="sname" data-sup="${esc(r.supplier)}">${esc(r.supplier)}</button>
+      <div class="tags">${chip(r.stype)}${r.ours ? '<span class="chip ours">работаем</span>' : ''}${r.source ? `<span class="chip">${esc(r.source)}</span>` : ''}</div>
+      ${r.comment ? `<div class="small" style="margin-top:6px">${esc(r.comment)}</div>` : ''}</td>
+    <td class="num"><strong>${fmt(r.price)}</strong>${d}${raw}</td>
+    <td class="cond small">${esc(cond)}</td>
+    <td class="contact-cell">${phone ? `<div class="contact"><span class="phone">${esc(phone)}</span>${copyBtn(phone)}</div>` : `<span class="small">телефона нет</span>`}
+      ${r.sup.person ? `<div class="small">${esc(r.sup.person)}</div>` : ''}</td>
+    <td class="date small" style="white-space:nowrap">${fdate(r.date)}${r.kpdate ? `<br>КП от ${fdate(r.kpdate)}` : ''}${older ? '<br>' + older : ''}</td>
+  </tr>`;
+}
+
+/* ---------- suppliers ---------- */
+function renderSuppliers() {
+  const t = terms();
+  const types = [...new Set(S.data.suppliers.map(s => s.type || ''))].sort();
+  let list = S.data.suppliers.filter(s => !t.length || matches([s.name, s.cats, s.addr, s.person, s.comment, s.type].join(' '), t));
+  if (S.stype) list = list.filter(s => (s.type || '') === S.stype);
+  if (S.direct) list = list.filter(s => isDirect(s.type));
+  const cnt = name => S.data.prices.filter(p => p.supplier === name).length;
+  list.sort((a, b) => (b.works === 'Да') - (a.works === 'Да') || cnt(b.name) - cnt(a.name) || a.name.localeCompare(b.name, 'ru'));
+  const filters = `<div class="filters">
+    <select class="toggle" id="f-stype" aria-label="Тип поставщика"><option value="">Все типы поставщиков</option>${types.map(x => `<option ${S.stype === x ? 'selected' : ''} value="${esc(x)}">${esc(x || 'Тип не указан')}</option>`).join('')}</select>
+    <label class="toggle"><input type="checkbox" id="f-direct" ${S.direct ? 'checked' : ''}> Только заводы и склады</label>
+    <span class="count">Показано ${list.length} из ${S.data.suppliers.length}</span>
+  </div>`;
+  if (!list.length) return filters + `<div class="empty">Поставщиков по запросу «${esc(S.q)}» нет.</div>`;
+  return filters + `<div class="cards">${list.map(s => {
+    const n = cnt(s.name);
+    return `<article class="card">
+      <div><h3>${esc(s.name)}</h3><div class="tags">${chip(s.type)}${s.works === 'Да' ? '<span class="chip ours">работаем</span>' : ''}</div></div>
+      <dl class="kv">
+        ${s.cats ? `<dt>Товары</dt><dd>${esc(s.cats)}</dd>` : ''}
+        <dt>Телефон</dt><dd>${s.phone ? `<div class="contact"><span class="phone">${esc(s.phone)}</span>${copyBtn(s.phone)}</div>` : '<span class="small">нет</span>'}</dd>
+        ${s.person ? `<dt>Контакт</dt><dd>${esc(s.person)}</dd>` : ''}
+        ${s.addr ? `<dt>Адрес</dt><dd>${esc(s.addr)}</dd>` : ''}
+        ${s.terms ? `<dt>Условия</dt><dd>${esc(s.terms)}</dd>` : ''}
+      </dl>
+      <button class="open" data-sup="${esc(s.name)}">${n ? `Открыть карточку и цены (${n})` : 'Открыть карточку'}</button>
+    </article>`;
+  }).join('')}</div>`;
+}
+
+function openSupplier(name) {
+  const s = S.data.supIdx[name] || { name };
+  const ps = S.data.prices.filter(p => p.supplier === name).sort((a, b) => a.item.localeCompare(b.item, 'ru') || (b.date || '').localeCompare(a.date || ''));
+  const card = [
+    ['Тип', s.type], ['Почему такой тип', s.basis], ['Товары', s.cats], ['Телефон', s.phone], ['Контакт', s.person], ['Адрес', s.addr],
+    ['Сайт / источник', s.site], ['Условия', s.terms], ['Проверен лично', s.checked], ['Работаем', s.works], ['Комментарий', s.comment]
+  ].filter(x => x[1]);
+  const contact = [s.name, s.person, s.phone].filter(Boolean).join(' · ');
+  $('#drawer-root').innerHTML = `<div class="drawer-bg" data-close></div>
+    <aside class="drawer" role="dialog" aria-label="${esc(name)}">
+      <button class="close" data-close>← Назад к списку</button>
+      <div><h2 class="title">${esc(name)}</h2><div class="tags">${chip(s.type)}${s.works === 'Да' ? '<span class="chip ours">работаем</span>' : ''}</div></div>
+      <section class="block card-body"><dl class="kv">${card.map(([k, v]) => `<dt>${k}</dt><dd>${k === 'Телефон' ? `<span class="phone">${esc(v)}</span>` : /^https?:/.test(v) ? `<a href="${esc(v)}" target="_blank" rel="noopener">${esc(v)}</a>` : esc(v)}</dd>`).join('')}</dl>
+        ${s.phone ? `<div style="margin-top:12px">${copyBtn(contact, 'Скопировать контакт')}</div>` : ''}</section>
+      ${ps.length ? `<section class="block"><div class="block-head"><h2>Цены этого поставщика</h2><span class="sub">${ps.length} ${plural(ps.length, 'позиция', 'позиции', 'позиций')}</span></div><div class="tbl"><table>
+        <thead><tr><th>Позиция</th><th class="num">Цена</th><th>Дата</th></tr></thead>
+        <tbody>${ps.map(p => `<tr><td>${esc(p.item)}<div class="small">${esc([p.vat === 'Да' ? 'с НДС' : p.vat === 'Нет' ? 'без НДС' : '', p.source].filter(Boolean).join(' · '))}</div></td>
+          <td class="num"><strong>${fmt(p.price)}</strong><span class="small" style="display:block">${unitLbl(p.unit)}</span></td><td class="small">${fdate(p.date)}</td></tr>`).join('')}</tbody></table></div></section>`
+        : '<div class="empty">Цен от этого поставщика в базе пока нет.</div>'}
+    </aside>`;
+}
+document.addEventListener('click', e => {
+  const sup = e.target.closest('[data-sup]'); if (sup) { openSupplier(sup.dataset.sup); return }
+  if (e.target.closest('[data-close]')) { $('#drawer-root').innerHTML = ''; return }
+  const q = e.target.closest('[data-q]'); if (q) { S.q = q.dataset.q; $('#q').value = S.q; render(); }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#drawer-root').innerHTML = '' });
+
+/* ---------- digest ---------- */
+const keepBold = s => esc(s).replace(/&lt;(\/?)b&gt;/g, '<$1b>');
+const longDate = d => { const [y, m, dd] = d.split('-'); return `${+dd} ${['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'][m - 1]} ${y}` };
+function renderDigest() {
+  const ds = S.data.digests || [];
+  if (!ds.length) return '<div class="empty">Сводок пока нет.</div>';
+  const cur = ds.find(d => d.date === S.dday) || ds[0];
+  return `<div class="digest-days">${ds.map(d => `<button data-dday="${d.date}" aria-pressed="${d === cur}">${fdate(d.date)}${d === ds[0] ? ' · свежая' : ''}</button>`).join('')}</div>
+    <section class="block">
+      <div class="block-head"><h2>Сводка цен за ${longDate(cur.date)}</h2>
+        <span class="sub">Главное за день. Полная таблица по всем материалам — в PDF.</span>
+        <div class="actions" style="margin-top:10px"><a class="btn" href="${esc(cur.pdf)}" target="_blank" rel="noopener">Открыть PDF-сводку</a></div></div>
+      ${cur.notes.length ? `<ul class="notes">${cur.notes.map(n => `<li>${keepBold(n)}</li>`).join('')}</ul>` : '<div class="empty">Выводов за этот день нет, только PDF.</div>'}
+    </section>`;
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-dday]'); if (b) { S.dday = b.dataset.dday; render() } });
+
+/* ---------- RFQ ---------- */
+function rfqCandidates(item) {
+  const pos = S.data.positions.find(p => p.name === item);
+  if (!pos) return [];
+  const priced = new Set(S.data.prices.filter(p => p.item === item).map(p => p.supplier));
+  const catWords = norm(pos.cat).split(/[\s,:]+/).filter(w => w.length > 3).map(w => w.slice(0, 6));
+  const inCat = s => { const c = norm(s.cats); return catWords.some(w => c.includes(w)) };
+  return S.data.suppliers
+    .filter(s => priced.has(s.name) || inCat(s))
+    .map(s => ({ ...s, priced: priced.has(s.name) }))
+    .sort((a, b) => b.priced - a.priced || isDirect(b.type) - isDirect(a.type) || !!b.phone - !!a.phone);
+}
+function rfqText() {
+  const pos = S.data.positions.find(p => p.name === S.rfqItem);
+  if (!pos) return '';
+  const q = S.rfqQty.trim();
+  return `Здравствуйте!\n\nСП ООО «FM MUHENDISLIK INSAAT», генподрядчик ЖК «Golden Hills» (Ташкент, ул. Олтинтепа, 166), запрашивает коммерческое предложение:\n\n• ${pos.name}${q ? ` — ${q}` : ''}${pos.note ? `\n  Требования: ${pos.note}` : ''}\n\nПросим указать:\n— цену за ${pos.unit || 'единицу'} с НДС и без НДС;\n— стоимость и сроки доставки на объект;\n— наличие и минимальную партию;\n— условия оплаты;\n— срок действия предложения.\n\nКП прошу направить в ответ на это сообщение на фирменном бланке.\nСпасибо!`;
+}
+function renderRfq() {
+  const items = [...S.data.positions].sort((a, b) => (a.cat || '').localeCompare(b.cat || '', 'ru') || a.name.localeCompare(b.name, 'ru'));
+  const byCat = {};
+  for (const p of items) (byCat[p.cat || 'Прочее'] ||= []).push(p);
+  const cands = S.rfqItem ? rfqCandidates(S.rfqItem) : [];
+  const withPhone = cands.filter(c => c.phone);
+  const phones = withPhone.map(c => `${c.name} — ${c.phone}${c.person ? ' (' + c.person + ')' : ''}`).join('\n');
+  return `<section class="block" style="padding:18px"><div class="rfq">
+    <label class="field">1. Что запрашиваем
+      <select id="rfq-item"><option value="">Выберите материал…</option>${Object.entries(byCat).map(([c, ps]) =>
+        `<optgroup label="${esc(c)}">${ps.map(p => `<option ${p.name === S.rfqItem ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</optgroup>`).join('')}</select></label>
+    <label class="field">2. Сколько нужно<input id="rfq-qty" value="${esc(S.rfqQty)}" placeholder="например, 120 м³ или 25 т"></label>
+    ${S.rfqItem ? `<label class="field full">3. Текст запроса (можно исправить)<textarea id="rfq-text">${esc(rfqText())}</textarea></label>
+      <div class="full actions"><button class="btn" data-copy="" id="rfq-copy">Скопировать текст</button>
+      ${withPhone.length ? copyBtn(phones, `Скопировать телефоны (${withPhone.length})`) : ''}</div>` : `<p class="small full" style="margin:0">Выберите материал — я подготовлю текст запроса и покажу, кому его отправить.</p>`}
+  </div></section>
+  ${S.rfqItem ? `<p class="section-title" style="margin-top:22px">Кому отправить: ${cands.length}</p>
+    ${cands.length ? `<div class="block"><div class="tbl"><table class="offers"><thead><tr><th>Поставщик</th><th>Телефон</th><th>Товары</th></tr></thead><tbody>
+    ${cands.map(c => `<tr><td><button class="sname" data-sup="${esc(c.name)}">${esc(c.name)}</button><div class="tags">${chip(c.type)}${c.priced ? '<span class="chip">цена уже есть</span>' : ''}</div></td>
+      <td class="contact-cell">${c.phone ? `<div class="contact"><span class="phone">${esc(c.phone)}</span>${copyBtn(c.phone)}</div>` : '<span class="small">телефона нет</span>'}${c.person ? `<div class="small">${esc(c.person)}</div>` : ''}</td>
+      <td class="date small">${esc(c.cats || '')}</td></tr>`).join('')}</tbody></table></div></div>` : '<div class="empty">Поставщиков в этой категории пока нет в списке.</div>'}` : ''}`;
+}
+
+/* ---------- shell ---------- */
+function render() {
+  $('#clear').hidden = !S.q;
+  document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === S.tab));
+  $('#q').closest('.search').hidden = S.tab === 'rfq' || S.tab === 'digest';
+  $('#view').innerHTML = S.tab === 'prices' ? renderPrices() : S.tab === 'suppliers' ? renderSuppliers() : S.tab === 'digest' ? renderDigest() : renderRfq();
+  bind();
+}
+function bind() {
+  const on = (id, ev, fn) => { const el = document.getElementById(id); if (el) el.addEventListener(ev, fn) };
+  on('f-direct', 'change', e => { S.direct = e.target.checked; render() });
+  on('f-vat', 'change', e => { S.vat = e.target.checked; render() });
+  on('f-hist', 'change', e => { S.history = e.target.checked; render() });
+  on('f-stype', 'change', e => { S.stype = e.target.value; render() });
+  on('rfq-item', 'change', e => { S.rfqItem = e.target.value; render() });
+  on('rfq-qty', 'input', e => { S.rfqQty = e.target.value; const ta = $('#rfq-text'); if (ta) ta.value = rfqText() });
+  const cb = $('#rfq-copy'); if (cb) cb.addEventListener('pointerdown', () => { cb.dataset.copy = $('#rfq-text').value });
+  const ta = $('#rfq-text'); if (ta && cb) { ta.addEventListener('input', () => { cb.dataset.copy = ta.value }); cb.dataset.copy = ta.value }
+}
+let timer;
+$('#q').addEventListener('input', e => { clearTimeout(timer); timer = setTimeout(() => { S.q = e.target.value; render() }, 150) });
+$('#clear').addEventListener('click', () => { S.q = ''; $('#q').value = ''; render(); $('#q').focus() });
+document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => { S.tab = b.dataset.tab; S.stype = ''; render() }));
+
+fetch('data.json').then(r => r.json()).then(d => {
+  d.supIdx = Object.fromEntries(d.suppliers.map(s => [s.name, s]));
+  S.data = d;
+  const last = d.prices.map(p => p.date).filter(Boolean).sort().pop();
+  $('#meta').textContent = `Обновлено ${fdate(last)}.${last.slice(0, 4)}`;
+  $('#n-prices').textContent = `${d.prices.length} цен`;
+  $('#n-sup').textContent = `${d.suppliers.length} шт.`;
+  $('#n-dig').textContent = d.digests?.length ? `за ${fdate(d.digests[0].date)}` : '';
+  S.q = 'арматура d16'; $('#q').value = S.q;
+  render();
+}).catch(() => { $('#view').innerHTML = '<div class="empty">Не удалось загрузить базу. Обновите страницу.</div>' });
+</script>

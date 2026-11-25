@@ -39,6 +39,15 @@ for r in jr:
     rec['ours']= sup_.get('works')=='Да'
     rec={k:v for k,v in rec.items() if v not in (None,'',False)}
     prices.append(rec)
-json.dump(dict(generated=datetime.date.today().isoformat(), positions=positions, suppliers=suppliers, prices=prices),
+# Daily digests for the app's «Сводка» tab: conclusions text + PDF file name (published next to data.json)
+import pathlib, re
+proj = pathlib.Path(__file__).resolve().parent.parent
+digests = []
+for pdf in sorted((proj / 'сводки').glob('Сводка_цен_*.pdf'), reverse=True):
+    day = re.search(r'(\d{4}-\d{2}-\d{2})', pdf.name).group(1)
+    notes_f = proj / 'данные' / f'выводы_{day}.txt'
+    notes = [l.strip() for l in notes_f.read_text(encoding='utf-8').splitlines() if l.strip()] if notes_f.exists() else []
+    digests.append(dict(date=day, pdf=f'svodki/{day}.pdf', notes=notes))
+json.dump(dict(generated=datetime.date.today().isoformat(), positions=positions, suppliers=suppliers, prices=prices, digests=digests),
           open(out, 'w'), ensure_ascii=False, separators=(',', ':'))
 print(len(positions), len(suppliers), len(prices), file=sys.stderr)
