@@ -28,6 +28,7 @@
 :root, :root[data-theme="dark"] { color-scheme: light }
 
 * { box-sizing: border-box }
+[hidden] { display: none !important }
 body { background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 18px; line-height: 1.55; font-variant-numeric: tabular-nums }
 .wrap { max-width: 1000px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
 button, input, select, textarea { font: inherit; color: inherit }
@@ -164,6 +165,23 @@ button.tile:hover { border-color: var(--accent) }
 .grade-head small { font-size: 16px; font-weight: 400; color: var(--muted) }
 .tile .gb { min-width: 0; height: 26px; font-size: 13px; padding: 0 7px; border-width: 1.5px; justify-self: start; border-radius: 7px }
 .drawer { grid-auto-rows: max-content }
+/* Tasks */
+.task-add { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-bottom: 16px }
+.task-add input { min-height: var(--tap); font-size: 18px; border: 3px solid var(--accent); border-radius: var(--radius); padding: 10px 14px; background: var(--surface); color: var(--fg); min-width: 0 }
+.task-add input:focus { outline: none; box-shadow: 0 0 0 4px var(--accent-soft) }
+.tasks { display: grid; gap: 10px }
+.task { display: grid; grid-template-columns: 56px 1fr auto; gap: 14px; align-items: center; background: var(--surface); border: 2px solid var(--line); border-radius: var(--radius); padding: 10px 12px }
+.task.done { background: var(--bg) }
+.task.done .tt { text-decoration: line-through; color: var(--muted) }
+.tick { width: 52px; height: 52px; border-radius: 12px; border: 3px solid var(--accent); background: var(--surface); color: var(--surface); display: grid; place-items: center; cursor: pointer }
+.tick svg { width: 32px; height: 32px }
+.task.done .tick { background: var(--best); border-color: var(--best) }
+.tt { font-size: 18px; line-height: 1.4; overflow-wrap: anywhere; min-width: 0 }
+.tmeta { display: block; font-size: 14px; color: var(--muted); margin-top: 2px }
+.tdel { min-height: 44px; font-size: 15px; border: 2px solid var(--line); background: var(--surface); border-radius: 10px; padding: 4px 12px; cursor: pointer; color: var(--muted) }
+.tdel.sure { border-color: var(--bad); color: var(--bad); font-weight: 600 }
+.note-box { padding: 16px 18px; border-radius: var(--radius); background: var(--warn-soft); color: var(--warn); font-size: 17px }
+@media (max-width: 700px) { .task { grid-template-columns: 52px 1fr; } .tdel { grid-column: 2; justify-self: start } }
 .drawer .gallery { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)) }
 .drawer .tile { min-height: 0 }
 .section-title { font-size: 19px; color: var(--fg); margin: 8px 0 12px; font-weight: 600 }
@@ -239,7 +257,7 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none }
       <button role="tab" data-tab="prices" aria-selected="true"><svg data-i="grid"></svg>Категории<span class="n" id="n-prices"></span></button>
       <button role="tab" data-tab="suppliers" aria-selected="false"><svg data-i="people"></svg>Поставщики<span class="n" id="n-sup"></span></button>
       <button role="tab" data-tab="digest" aria-selected="false"><svg data-i="doc"></svg>Сводка<span class="n" id="n-dig"></span></button>
-      <button role="tab" data-tab="rfq" aria-selected="false"><svg data-i="mail"></svg>Запрос цены<span class="n">текст для КП</span></button>
+      <button role="tab" data-tab="tasks" aria-selected="false"><svg data-i="tasks"></svg>Задачи<span class="n" id="n-tasks">загрузка…</span></button>
     </nav>
   </div>
 </header>
@@ -291,6 +309,8 @@ const I = {
   warehouse: '<path d="M3 21V9l9-5 9 5v12"/><path d="M7 21v-8h10v8M7 17h10"/>',
   shop: '<path d="M4 10v11h16V10"/><path d="M3 4h18l-1 6H4z"/><path d="M10 21v-5h4v5"/>',
   trader: '<path d="M4 8h13l-3-3M20 16H7l3 3"/>',
+  tasks: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="m7 10 2 2 4-4M7 16h.01M11 16h6M15 10h2"/>',
+  tick: '<path d="m5 12.5 4.5 4.5L19 7"/>',
   check: '<circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.5 2.5L16 9.5"/>',
   question: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.7M12 17h.01"/>'
 };
@@ -510,6 +530,7 @@ function openItem(item) {
     <aside class="drawer" role="dialog" aria-label="${esc(item)}">
       <button class="close" data-close>← Назад</button>
       <h2 class="cat-title" style="font-size:22px"><span class="ic">${catIcon(cat)}</span>${esc(item)}</h2>
+      <button class="btn" data-rfq="${esc(item)}">${svg('mail').replace('<svg', '<svg style="width:22px;height:22px;margin-right:8px"')}Запросить КП по этому материалу</button>
       ${rs.length ? priceBlocks(rs) : '<div class="empty">Цен с этими фильтрами нет.</div>'}
     </aside>`;
 }
@@ -614,6 +635,8 @@ function openSupplier(name) {
 document.addEventListener('click', e => {
   const sup = e.target.closest('[data-sup]'); if (sup) { openSupplier(sup.dataset.sup); return }
   const it = e.target.closest('[data-item]'); if (it) { openItem(it.dataset.item); return }
+  const rq = e.target.closest('[data-rfq]'); if (rq) { S.rfqItem = rq.dataset.rfq; S.tab = 'rfq'; $('#drawer-root').innerHTML = ''; render(); scrollTo(0, 0); return }
+  if (e.target.closest('[data-rfqback]')) { S.tab = 'prices'; render(); return }
   if (e.target.closest('[data-close]')) { $('#drawer-root').innerHTML = ''; return }
   const q = e.target.closest('[data-q]'); if (q) { S.q = q.dataset.q; $('#q').value = S.q; render(); return }
   const c = e.target.closest('[data-cat]'); if (c) { S.cat = c.dataset.cat; S.catView = 'prices'; S.grade = ''; clearQ(); render(); scrollTo(0, 0); return }
@@ -642,6 +665,63 @@ function renderDigest() {
 }
 document.addEventListener('click', e => { const b = e.target.closest('[data-dday]'); if (b) { S.dday = b.dataset.dday; render() } });
 
+/* ---------- tasks (shared, stored in the artifact's db) ---------- */
+const T = { db: null, list: [], state: 'loading', view: 'todo', ro: false, sure: '', busy: false, draft: '' };
+function tasksRender() {
+  const todo = T.list.filter(x => !x.done), done = T.list.filter(x => x.done);
+  const n = $('#n-tasks'); if (n) n.textContent = T.state === 'ok' ? (todo.length ? `осталось ${todo.length}` : 'всё сделано') : T.state === 'off' ? 'нужен вход' : 'загрузка…';
+  if (S.tab === 'tasks') render();
+}
+async function tasksInit() {
+  try { T.db = window.claude?.use ? await window.claude.use('db') : null } catch (_) { T.db = null }
+  if (!T.db) { T.state = 'off'; tasksRender(); return }
+  const timer = setTimeout(() => { if (T.state === 'loading') { T.state = 'slow'; tasksRender() } }, 10000);
+  T.db.collection('tasks').onSnapshot(snap => {
+    if (!snap.metadata.fromCache) clearTimeout(timer);
+    T.list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    T.state = 'ok'; tasksRender();
+  }, () => { clearTimeout(timer); T.state = 'error'; tasksRender() });
+  try { const u = await window.claude.use('user'); if ((await u?.can('data.write')) === false) { T.ro = true; tasksRender() } } catch (_) {}
+}
+tasksInit();
+const ddmm = iso => iso ? fdate(iso.slice(0, 10)) : '';
+function renderTasks() {
+  if (T.state === 'off') return `<div class="note-box">Задачи хранятся в вашем аккаунте Claude. Откройте приложение, войдя в Claude, — тогда список появится и отметки будут сохраняться.</div>`;
+  if (T.state === 'loading') return '<div class="empty">Загружаю задачи…</div>';
+  if (T.state === 'slow') return '<div class="empty">Задачи пока не загрузились. Проверьте интернет — список появится сам.</div>';
+  if (T.state === 'error') return '<div class="note-box">Не получилось загрузить задачи. Обновите страницу.</div>';
+  const todo = T.list.filter(x => !x.done).sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || (a.created || '').localeCompare(b.created || ''));
+  const done = T.list.filter(x => x.done).sort((a, b) => (b.doneAt || '').localeCompare(a.doneAt || ''));
+  const list = T.view === 'todo' ? todo : done;
+  const add = T.ro ? '<p class="small">Отмечать и добавлять задачи может только владелец приложения.</p>' : `<form class="task-add" id="task-form">
+      <input id="task-new" placeholder="Новая задача, например: позвонить на завод" autocomplete="off" aria-label="Новая задача" value="${esc(T.draft)}">
+      <button class="btn" type="submit">Добавить</button></form>`;
+  const row = x => `<div class="task ${x.done ? 'done' : ''}">
+      <button class="tick" data-tick="${esc(x.id)}" aria-pressed="${!!x.done}" aria-label="${x.done ? 'Вернуть в работу' : 'Отметить сделанной'}" ${T.ro ? 'disabled' : ''}>${svg('tick')}</button>
+      <div class="tt">${esc(x.title)}${x.note ? `<span class="tmeta">${esc(x.note)}</span>` : ''}<span class="tmeta">${x.done ? 'Сделано ' + ddmm(x.doneAt) : 'Добавлено ' + ddmm(x.created)}</span></div>
+      ${T.ro ? '' : `<button class="tdel ${T.sure === x.id ? 'sure' : ''}" data-tdel="${esc(x.id)}">${T.sure === x.id ? 'Точно удалить?' : 'Удалить'}</button>`}</div>`;
+  return add + `<div class="seg" style="margin-bottom:16px"><button data-tview="todo" aria-pressed="${T.view === 'todo'}">Нужно сделать · ${todo.length}</button>
+      <button data-tview="done" aria-pressed="${T.view === 'done'}">Сделано · ${done.length}</button></div>
+    ${list.length ? `<div class="tasks">${list.map(row).join('')}</div>` : `<div class="empty">${T.view === 'todo' ? 'Все задачи сделаны. Новую можно добавить сверху.' : 'Сделанных задач пока нет.'}</div>`}`;
+}
+async function taskWrite(fn) {
+  if (T.busy) return; T.busy = true;
+  try { await fn() } catch (e) { if (e?.code === 'invalid_argument') { T.ro = true; render() } }
+  T.busy = false;
+}
+document.addEventListener('click', e => {
+  const tk = e.target.closest('[data-tick]'); if (tk) { const x = T.list.find(t => t.id === tk.dataset.tick); if (x) taskWrite(() => T.db.collection('tasks').doc(x.id).update(x.done ? { done: false, doneAt: null } : { done: true, doneAt: new Date().toISOString() })); return }
+  const del = e.target.closest('[data-tdel]'); if (del) { const id = del.dataset.tdel; if (T.sure === id) { T.sure = ''; taskWrite(() => T.db.collection('tasks').doc(id).delete()) } else { T.sure = id; render() } return }
+  const tv = e.target.closest('[data-tview]'); if (tv) { T.view = tv.dataset.tview; T.sure = ''; render() }
+});
+document.addEventListener('submit', e => {
+  if (e.target.id !== 'task-form') return; e.preventDefault();
+  const inp = $('#task-new'); const title = inp.value.trim(); if (!title) { inp.focus(); return }
+  T.draft = ''; inp.value = ''; T.view = 'todo';
+  taskWrite(() => T.db.collection('tasks').add({ title, done: false, created: new Date().toISOString(), order: Date.now() }));
+});
+document.addEventListener('input', e => { if (e.target.id === 'task-new') T.draft = e.target.value });
+
 /* ---------- RFQ ---------- */
 function rfqCandidates(item) {
   const pos = S.data.positions.find(p => p.name === item);
@@ -667,7 +747,7 @@ function renderRfq() {
   const cands = S.rfqItem ? rfqCandidates(S.rfqItem) : [];
   const withPhone = cands.filter(c => c.phone);
   const phones = withPhone.map(c => `${c.name} — ${c.phone}${c.person ? ' (' + c.person + ')' : ''}`).join('\n');
-  return `<section class="block" style="padding:18px"><div class="rfq">
+  return `<div class="cat-head"><button class="back" data-rfqback>← Назад</button><h2 class="cat-title"><span class="ic">${svg('mail')}</span>Запрос КП</h2></div><section class="block" style="padding:18px"><div class="rfq">
     <label class="field">1. Что запрашиваем
       <select id="rfq-item"><option value="">Выберите материал…</option>${Object.entries(byCat).map(([c, ps]) =>
         `<optgroup label="${esc(c)}">${ps.map(p => `<option ${p.name === S.rfqItem ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</optgroup>`).join('')}</select></label>
@@ -689,9 +769,9 @@ function render() {
   $('#clear').hidden = !S.q;
   $('#q-label').textContent = S.tab === 'suppliers' ? (S.supCat && !S.supCat.startsWith('__') ? `Найти поставщика в разделе «${S.supCat}»` : 'Найти поставщика — напишите здесь') : S.cat ? `Найти в разделе «${S.cat}»` : 'Найти материал — напишите здесь';
   $('#q').placeholder = S.tab === 'suppliers' ? 'например: Cubix' : S.cat ? 'например: d16' : 'например: бетон';
-  document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === S.tab));
-  $('#q').closest('.search').hidden = S.tab === 'rfq' || S.tab === 'digest';
-  $('#view').innerHTML = S.tab === 'prices' ? renderPrices() : S.tab === 'suppliers' ? renderSuppliers() : S.tab === 'digest' ? renderDigest() : renderRfq();
+  document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === S.tab || (S.tab === 'rfq' && b.dataset.tab === 'prices')));
+  $('#q').closest('.search').hidden = S.tab === 'rfq' || S.tab === 'digest' || S.tab === 'tasks';
+  $('#view').innerHTML = S.tab === 'prices' ? renderPrices() : S.tab === 'suppliers' ? renderSuppliers() : S.tab === 'digest' ? renderDigest() : S.tab === 'tasks' ? renderTasks() : renderRfq();
   bind();
 }
 function bind() {
