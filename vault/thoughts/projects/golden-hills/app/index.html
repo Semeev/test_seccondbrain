@@ -339,7 +339,14 @@ document.addEventListener('click', e => {
   try { navigator.clipboard.writeText(t).then(done).catch(fallback) } catch (_) { fallback() }
 });
 
-function matches(text, terms) { const n = norm(text); return terms.every(t => n.includes(t)) }
+/* Search that ignores alphabet: «полимер» finds «Polimer», «метал сити» finds «Metal City»; ПЭ = ПНД = PE */
+const CYR = { а:'a', б:'b', в:'v', г:'g', д:'d', е:'e', ж:'j', з:'z', и:'i', й:'i', к:'k', л:'l', м:'m', н:'n', о:'o', п:'p', р:'r', с:'s', т:'t', у:'u', ф:'f', х:'h', ц:'s', ч:'ch', ш:'sh', щ:'sh', ъ:'', ы:'i', ь:'', э:'e', ю:'yu', я:'ya', ў:'o', қ:'k', ғ:'g', ҳ:'h' };
+const key = s => norm(s).replace(/[а-яўқғҳ]/g, c => CYR[c] ?? c)
+  .replace(/c(?=[eiy])/g, 's').replace(/c/g, 'k').replace(/q/g, 'k').replace(/x/g, 'ks').replace(/w/g, 'v').replace(/kh/g, 'h').replace(/zh|dzh|dj/g, 'j')
+  .replace(/y(?=[aeiou])/g, '').replace(/y/g, 'i').replace(/([a-z])\1/g, '$1');
+const SYN = [['pe', 'pnd', 'pe100', 'polietilen'], ['pp', 'polipropilen']];
+function termKeys(t) { const k = key(t); const g = SYN.find(x => x.includes(k)); return g || [k.length > 4 ? k.replace(/[aeiou]+$/, '') : k] }  // «трубы» → «труб», so word endings do not matter
+function matches(text, terms) { const n = key(text); return terms.every(t => termKeys(t).some(k => n.includes(k))) }
 function terms() { return norm(S.q).split(/\s+/).filter(Boolean) }
 
 /* ---------- prices ---------- */
@@ -448,6 +455,17 @@ function gradeBadge(g, order, big) {
   const i = order.filter(Boolean).indexOf(g);
   return `<span class="gb ${g ? 'g' + (i % 4) : 'gx'}">${g ? esc(g) : 'другое'}</span>`;
 }
+function relatedCats(c) {
+  const words = cc => new Set(norm(cc).split(/[\s,:()/]+/).filter(w => w.length > 3 || /^(пнд|пп|пэ|гкл|лкм|впв)$/.test(w)).map(w => w.slice(0, 5)));
+  const mine = words(c);
+  return categories().filter(x => x.name !== c && [...words(x.name)].some(w => mine.has(w)));
+}
+function relatedBlock(c) {
+  const rel = relatedCats(c);
+  return rel.length ? `<p class="section-title" style="margin-top:26px">Похожие разделы</p>
+    <div class="cats">${rel.map(x => `<button class="cat" data-cat="${esc(x.name)}"><span class="ic">${catIcon(x.name)}</span><b>${esc(x.name)}</b>
+      <span class="cnt">${x.prices} ${plural(x.prices, 'цена', 'цены', 'цен')} · ${x.suppliers} ${plural(x.suppliers, 'поставщик', 'поставщика', 'поставщиков')}</span></button>`).join('')}</div>` : '';
+}
 function renderCategory(t) {
   const c = S.cat;
   const rows = offers().filter(r => (r.cat || 'Прочее') === c && (!t.length || matches([r.item, r.supplier, r.comment].join(' '), t)));
@@ -461,7 +479,7 @@ function renderCategory(t) {
     <div class="seg"><button data-cv="prices" aria-pressed="${S.catView === 'prices'}">Материалы · ${groups.size}</button>
       <button data-cv="suppliers" aria-pressed="${S.catView === 'suppliers'}">Поставщики · ${sups.length}</button></div></div>`;
   if (S.catView === 'suppliers')
-    return head + (sups.length ? `<div class="gallery">${sups.map(s => supTile(s, c)).join('')}</div>` : '<div class="empty">Поставщиков этой категории пока нет в списке.</div>');
+    return head + (sups.length ? `<div class="gallery">${sups.map(s => supTile(s, c)).join('')}</div>` : '<div class="empty">Поставщиков этой категории пока нет в списке.</div>') + relatedBlock(c);
   const entries = [...[...groups.entries()].map(([item, rs]) => ({ item, rs })), ...missing.map(p => ({ item: p.name, rs: null }))]
     .sort((a, b) => !a.rs - !b.rs || itemRank(a.item) - itemRank(b.item));
   if (!entries.length) return head + priceFilters() + `<div class="empty">${t.length ? `По запросу «${esc(S.q)}» в этой категории ничего нет.` : 'Цен в этой категории пока нет.'}</div>`;
@@ -471,7 +489,7 @@ function renderCategory(t) {
   const order = steel ? gradeOrder(entries.map(e => gradeOf(e.item))) : [...new Set(entries.map(e => gradeOf(e.item)))].sort((a, b) => (!a) - (!b));
   const named = order.filter(Boolean);
   // group by grade only when the category really has several grades
-  if (named.length < 2) return head + priceFilters() + `<div class="gallery">${entries.map(e => tile(e, '')).join('')}</div>`;
+  if (named.length < 2) return head + priceFilters() + `<div class="gallery">${entries.map(e => tile(e, '')).join('')}</div>` + relatedBlock(c);
   if (S.grade && !order.includes(S.grade === '-' ? '' : S.grade)) S.grade = '';
   const count = g => entries.filter(e => gradeOf(e.item) === g).length;
   const chips = `<div class="grades" role="group" aria-label="Марка">
@@ -483,7 +501,7 @@ function renderCategory(t) {
     return `<section class="grade-sec"><h3 class="grade-head">${gradeBadge(g, order)}<span class="gh">${g ? 'Марка ' + esc(g) : 'Другое'}<small>${es.length} ${plural(es.length, 'позиция', 'позиции', 'позиций')}</small></span></h3>
       <div class="gallery">${es.map(e => tile(e, gradeBadge(g, order), g.startsWith('А') ? g : '')).join('')}</div></section>`;
   }).join('');
-  return head + priceFilters() + chips + secs;
+  return head + priceFilters() + chips + secs + relatedBlock(c);
 }
 function openItem(item) {
   const rs = offers().filter(r => r.item === item);
