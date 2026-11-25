@@ -1,14 +1,12 @@
 """Voice message handler."""
 
 import asyncio
-import html
 import logging
 from datetime import datetime
 
 from aiogram import Bot, Router
 from aiogram.types import Message
 
-from d_brain.bot.formatters import format_error
 from d_brain.config import get_settings
 from d_brain.services.git import VaultGit
 from d_brain.services.session import SessionStore
@@ -34,19 +32,19 @@ async def handle_voice(message: Message, bot: Bot) -> None:
     try:
         file = await bot.get_file(message.voice.file_id)
         if not file.file_path:
-            await message.answer("Не получилось получить голосовое. Попробуйте ещё раз.")
+            await message.answer("Failed to download voice message")
             return
 
         file_bytes = await bot.download_file(file.file_path)
         if not file_bytes:
-            await message.answer("Не получилось получить голосовое. Попробуйте ещё раз.")
+            await message.answer("Failed to download voice message")
             return
 
         audio_bytes = file_bytes.read()
         transcript = await transcriber.transcribe(audio_bytes)
 
         if not transcript:
-            await message.answer("Не получилось разобрать слова. Попробуйте сказать ещё раз.")
+            await message.answer("Could not transcribe audio")
             return
 
         timestamp = datetime.fromtimestamp(message.date.timestamp())
@@ -66,9 +64,9 @@ async def handle_voice(message: Message, bot: Bot) -> None:
         git = VaultGit(settings.vault_path)
         asyncio.create_task(asyncio.to_thread(git.commit_and_push, "chore: add voice entry"))
 
-        await message.answer(f"<b>Сохранено.</b>\n\n{html.escape(transcript)}")
+        await message.answer(f"🎤 {transcript}\n\n✓ Сохранено")
         logger.info("Voice message saved: %d chars", len(transcript))
 
     except Exception as e:
         logger.exception("Error processing voice message")
-        await message.answer(format_error(str(e)))
+        await message.answer(f"Error: {e}")

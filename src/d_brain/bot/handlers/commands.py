@@ -6,54 +6,31 @@ from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
-from d_brain.bot.keyboards import (
-    BTN_DO,
-    BTN_PROCESS,
-    BTN_STATUS,
-    BTN_WEEKLY,
-    get_main_keyboard,
-)
+from d_brain.bot.keyboards import get_main_keyboard
 from d_brain.config import get_settings
 from d_brain.services.session import SessionStore
 from d_brain.services.storage import VaultStorage
 
 router = Router(name="commands")
 
-MONTHS = (
-    "января", "февраля", "марта", "апреля", "мая", "июня",
-    "июля", "августа", "сентября", "октября", "ноября", "декабря",
-)
-WEEKDAYS = (
-    "понедельник", "вторник", "среда", "четверг", "пятница", "суббота", "воскресенье",
-)
-TYPE_NAMES = {
-    "voice": "голосовые",
-    "text": "текст",
-    "photo": "фото",
-    "forward": "пересланные",
-    "command": "команды",
-}
-
-
-def _human_date(day: date) -> str:
-    """25 ноября, среда — easier to read than 2026-11-25."""
-    return f"{day.day} {MONTHS[day.month - 1]}, {WEEKDAYS[day.weekday()]}"
-
 
 @router.message(Command("start"))
 async def cmd_start(message: Message) -> None:
     """Handle /start command."""
     await message.answer(
-        "<b>Здравствуйте!</b>\n\n"
-        "Я ваш помощник-дневник.\n"
-        "Просто напишите мне или скажите голосом — я всё запишу.\n\n"
-        "Можно присылать:\n"
-        "• голосовые сообщения\n"
-        "• текст\n"
-        "• фотографии\n"
-        "• пересланные сообщения\n\n"
-        "Внизу экрана — большие кнопки.\n"
-        "Нажмите <b>Помощь</b>, если что-то непонятно.",
+        "<b>d-brain</b> - твой голосовой дневник\n\n"
+        "Отправляй мне:\n"
+        "🎤 Голосовые сообщения\n"
+        "💬 Текст\n"
+        "📷 Фото\n"
+        "↩️ Пересланные сообщения\n\n"
+        "Всё будет сохранено и обработано.\n\n"
+        "<b>Команды:</b>\n"
+        "/status - статус сегодняшнего дня\n"
+        "/process - обработать записи\n"
+        "/do - выполнить произвольный запрос\n"
+        "/weekly - недельный дайджест\n"
+        "/help - справка",
         reply_markup=get_main_keyboard(),
     )
 
@@ -62,20 +39,19 @@ async def cmd_start(message: Message) -> None:
 async def cmd_help(message: Message) -> None:
     """Handle /help command."""
     await message.answer(
-        "<b>Как пользоваться</b>\n\n"
-        "<b>Записать мысль</b>\n"
-        "Напишите или скажите голосом. Я сохраню.\n\n"
-        f"<b>{BTN_STATUS}</b>\n"
-        "Сколько записей сделано сегодня.\n\n"
-        f"<b>{BTN_PROCESS}</b>\n"
-        "Разложу записи по местам: мысли — в заметки, дела — в задачи. "
-        "Удобно нажимать вечером.\n\n"
-        f"<b>{BTN_WEEKLY}</b>\n"
-        "Короткий рассказ о прошедшей неделе.\n\n"
-        f"<b>{BTN_DO}</b>\n"
-        "Попросите что угодно. Например:\n"
-        "<i>перенеси просроченные дела на понедельник</i>",
-        reply_markup=get_main_keyboard(),
+        "<b>Как использовать d-brain:</b>\n\n"
+        "1. Отправь голосовое — я транскрибирую и сохраню\n"
+        "2. Отправь текст — сохраню как есть\n"
+        "3. Отправь фото — сохраню в attachments\n"
+        "4. Перешли сообщение — сохраню с источником\n\n"
+        "Вечером используй /process для обработки:\n"
+        "Мысли → Obsidian, Задачи → Todoist\n\n"
+        "<b>Команды:</b>\n"
+        "/status - сколько записей сегодня\n"
+        "/process - обработать записи\n"
+        "/do - выполнить произвольный запрос\n"
+        "/weekly - недельный дайджест\n\n"
+        "<i>Пример: /do перенеси просроченные задачи на понедельник</i>"
     )
 
 
@@ -94,7 +70,7 @@ async def cmd_status(message: Message) -> None:
     content = storage.read_daily(today)
 
     if not content:
-        await message.answer(f"<b>{_human_date(today)}</b>\n\nЗаписей пока нет.")
+        await message.answer(f"📅 <b>{today}</b>\n\nЗаписей пока нет.")
         return
 
     lines = content.strip().split("\n")
@@ -113,14 +89,14 @@ async def cmd_status(message: Message) -> None:
     if stats:
         week_stats = "\n\n<b>За 7 дней:</b>"
         for entry_type, count in sorted(stats.items()):
-            week_stats += f"\n• {TYPE_NAMES.get(entry_type, entry_type)}: {count}"
+            week_stats += f"\n• {entry_type}: {count}"
 
     await message.answer(
-        f"<b>{_human_date(today)}</b>\n\n"
-        f"Всего записей: <b>{total}</b>\n\n"
-        f"• Голосовых: {voice_count}\n"
-        f"• Текстовых: {text_count}\n"
-        f"• Фото: {photo_count}\n"
-        f"• Пересланных: {forward_count}"
+        f"📅 <b>{today}</b>\n\n"
+        f"Всего записей: <b>{total}</b>\n"
+        f"- 🎤 Голосовых: {voice_count}\n"
+        f"- 💬 Текстовых: {text_count}\n"
+        f"- 📷 Фото: {photo_count}\n"
+        f"- ↩️ Пересланных: {forward_count}"
         f"{week_stats}"
     )

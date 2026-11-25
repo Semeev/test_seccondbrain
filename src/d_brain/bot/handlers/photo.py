@@ -6,7 +6,6 @@ from datetime import datetime
 from aiogram import Bot, Router
 from aiogram.types import Message
 
-from d_brain.bot.formatters import format_error
 from d_brain.config import get_settings
 from d_brain.services.session import SessionStore
 from d_brain.services.storage import VaultStorage
@@ -30,12 +29,12 @@ async def handle_photo(message: Message, bot: Bot) -> None:
     try:
         file = await bot.get_file(photo.file_id)
         if not file.file_path:
-            await message.answer("Не получилось получить фото. Попробуйте ещё раз.")
+            await message.answer("Failed to download photo")
             return
 
         file_bytes = await bot.download_file(file.file_path)
         if not file_bytes:
-            await message.answer("Не получилось получить фото. Попробуйте ещё раз.")
+            await message.answer("Failed to download photo")
             return
 
         timestamp = datetime.fromtimestamp(message.date.timestamp())
@@ -71,9 +70,9 @@ async def handle_photo(message: Message, bot: Bot) -> None:
             msg_id=message.message_id,
         )
 
-        await message.answer("<b>Фото сохранено.</b>")
+        await message.answer("📷 ✓ Сохранено")
         logger.info("Photo saved: %s", relative_path)
 
     except Exception as e:
         logger.exception("Error processing photo")
-        await message.answer(format_error(str(e)))
+        await message.answer(f"Error: {e}")

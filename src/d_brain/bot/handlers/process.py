@@ -8,7 +8,7 @@ from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
-from d_brain.bot.formatters import format_process_report, progress_text
+from d_brain.bot.formatters import format_process_report
 from d_brain.config import get_settings
 from d_brain.services.git import VaultGit
 from d_brain.services.processor import ClaudeProcessor
@@ -23,7 +23,7 @@ async def cmd_process(message: Message) -> None:
     user_id = message.from_user.id if message.from_user else "unknown"
     logger.info("Process command triggered by user %s", user_id)
 
-    status_msg = await message.answer(progress_text(0, "Разбираю записи", "Это может занять до 10 минут."))
+    status_msg = await message.answer("⏳ Processing... (may take up to 10 min)")
 
     settings = get_settings()
     processor = ClaudeProcessor(settings.vault_path, settings.todoist_api_key)
@@ -42,7 +42,7 @@ async def cmd_process(message: Message) -> None:
             if not task.done():
                 try:
                     await status_msg.edit_text(
-                        progress_text(elapsed, "Разбираю записи")
+                        f"⏳ Processing... ({elapsed // 60}m {elapsed % 60}s)"
                     )
                 except Exception:
                     pass  # Ignore edit errors

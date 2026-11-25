@@ -8,7 +8,6 @@ from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.types import BufferedInputFile, Message
 
-from d_brain.bot.formatters import format_error
 from d_brain.config import get_settings
 
 router = Router(name="vocalists")
@@ -24,7 +23,7 @@ VOCALIST_TRIGGERS = re.compile(
 @router.message(F.text.regexp(VOCALIST_TRIGGERS))
 async def cmd_vocalists(message: Message) -> None:
     """Generate and send vocalist database as PDF."""
-    await message.answer("Готовлю файл, подождите немного…")
+    await message.answer("⏳ Генерирую PDF...")
 
     try:
         settings = get_settings()
@@ -41,4 +40,4 @@ async def cmd_vocalists(message: Message) -> None:
 
     except Exception as e:
         logger.exception("Failed to generate vocalists PDF")
-        await message.answer(format_error(str(e)))
+        await message.answer(f"❌ Ошибка: {e}")

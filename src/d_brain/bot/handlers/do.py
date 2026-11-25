@@ -8,17 +8,12 @@ from aiogram.filters import Command, CommandObject
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
-from d_brain.bot.formatters import format_process_report, progress_text
+from d_brain.bot.formatters import format_process_report
 from d_brain.bot.states import DoCommandState
 from d_brain.config import get_settings
 from d_brain.services.git import VaultGit
 from d_brain.services.processor import ClaudeProcessor
 from d_brain.services.transcription import DeepgramTranscriber
-
-ASK_PROMPT = (
-    "<b>Что нужно сделать?</b>\n\n"
-    "Напишите или скажите голосом, что вам нужно."
-)
 
 router = Router(name="do")
 logger = logging.getLogger(__name__)
@@ -36,7 +31,10 @@ async def cmd_do(message: Message, command: CommandObject, state: FSMContext) ->
 
     # Otherwise, wait for next message
     await state.set_state(DoCommandState.waiting_for_input)
-    await message.answer(ASK_PROMPT)
+    await message.answer(
+        "🎯 <b>Что сделать?</b>\n\n"
+        "Отправь голосовое или текстовое сообщение с запросом."
+    )
 
 
 @router.message(DoCommandState.waiting_for_input)
@@ -55,34 +53,34 @@ async def handle_do_input(message: Message, bot: Bot, state: FSMContext) -> None
         try:
             file = await bot.get_file(message.voice.file_id)
             if not file.file_path:
-                await message.answer("Не получилось получить голосовое. Попробуйте ещё раз.")
+                await message.answer("❌ Не удалось скачать голосовое")
                 return
 
             file_bytes = await bot.download_file(file.file_path)
             if not file_bytes:
-                await message.answer("Не получилось получить голосовое. Попробуйте ещё раз.")
+                await message.answer("❌ Не удалось скачать голосовое")
                 return
 
             audio_bytes = file_bytes.read()
             prompt = await transcriber.transcribe(audio_bytes)
         except Exception as e:
             logger.exception("Failed to transcribe voice for /do")
-            await message.answer("Не получилось разобрать голосовое. Попробуйте ещё раз.")
+            await message.answer(f"❌ Не удалось транскрибировать: {e}")
             return
 
         if not prompt:
-            await message.answer("Не получилось разобрать слова. Попробуйте сказать ещё раз.")
+            await message.answer("❌ Не удалось распознать речь")
             return
 
         # Echo transcription to user
-        await message.answer(f"Вы сказали:\n<i>{prompt}</i>")
+        await message.answer(f"🎤 <i>{prompt}</i>")
 
     # Handle text input
     elif message.text:
         prompt = message.text
 
     else:
-        await message.answer("Напишите текст или отправьте голосовое.")
+        await message.answer("❌ Отправь текст или голосовое сообщение")
         return
 
     user_id = message.from_user.id if message.from_user else 0
@@ -91,7 +89,7 @@ async def handle_do_input(message: Message, bot: Bot, state: FSMContext) -> None
 
 async def process_request(message: Message, prompt: str, user_id: int = 0) -> None:
     """Process the user's request with Claude."""
-    status_msg = await message.answer(progress_text(0))
+    status_msg = await message.answer("⏳ Выполняю...")
 
     settings = get_settings()
     processor = ClaudeProcessor(settings.vault_path, settings.todoist_api_key)
@@ -108,7 +106,7 @@ async def process_request(message: Message, prompt: str, user_id: int = 0) -> No
             if not task.done():
                 try:
                     await status_msg.edit_text(
-                        progress_text(elapsed)
+                        f"⏳ Выполняю... ({elapsed // 60}m {elapsed % 60}s)"
                     )
                 except Exception:
                     pass
