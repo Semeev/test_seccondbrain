@@ -47,8 +47,13 @@ def f(x):
 
 
 e = html.escape
+# мелочь, которую пользователь просил не выводить в PDF (в базе остаётся)
+_hide = os.path.join(os.path.dirname(os.path.abspath(a.xlsx)), "данные", "скрыть_в_сводке.json")
+HIDE = set(__import__("json").load(open(_hide, encoding="utf-8"))["positions"]) if os.path.exists(_hide) else set()
 stats = OrderedDict()
 for name, (cat, unit, stage, freq) in pos.items():
+    if name in HIDE:
+        continue
     hist = by.get(name, {})
     latest = {}
     for dt in sorted(hist):
