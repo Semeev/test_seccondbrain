@@ -371,7 +371,7 @@ function priceFilters() {
 function priceBlocks(rows) {
   const groups = new Map();
   for (const r of rows) { if (!groups.has(r.item)) groups.set(r.item, []); groups.get(r.item).push(r) }
-  const list = [...groups.entries()].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0], 'ru'));
+  const list = [...groups.entries()].sort((a, b) => catRank(a[1][0].cat) - catRank(b[1][0].cat) || itemRank(a[0]) - itemRank(b[0]));
   return `<div class="stack">` + list.map(([item, rs]) => {
     rs.sort((a, b) => a.price - b.price);
     const min = rs[0].price, max = rs[rs.length - 1].price;
@@ -385,13 +385,20 @@ function priceBlocks(rows) {
       </table></div></section>`;
   }).join('') + `</div>`;
 }
+/* Priority: category order from данные/приоритет_категорий.json, then how often the price is checked */
+const catRank = c => { const i = (S.data.catOrder || []).indexOf(c || 'Прочее'); return i < 0 ? 999 : i };
+const FREQ = { 'Ежедневно': 0, 'Еженедельно': 1, 'Ежемесячно': 2 };
+let posIdx;
+const posOf = name => (posIdx ||= Object.fromEntries(S.data.positions.map(p => [p.name, p])))[name] || {};
+const itemRank = name => { const f = (S.data.itemsFirst || []).indexOf(name); if (f >= 0) return f - 1000; const p = posOf(name); return (FREQ[p.freq] ?? 3) * 10000 + (p.idx ?? 9999) };
+const supRank = name => Math.min(999, ...S.data.prices.filter(p => p.supplier === name).map(p => catRank(p.cat)));
 function categories() {
   const m = new Map();
   const get = c => { if (!m.has(c)) m.set(c, { name: c, positions: 0, prices: 0 }); return m.get(c) };
   for (const p of S.data.positions) get(p.cat || 'Прочее').positions++;
   for (const r of offers()) get(r.cat || 'Прочее').prices++;
   for (const c of m.values()) c.suppliers = catSuppliers(c.name).length;
-  return [...m.values()].sort((a, b) => b.prices - a.prices || a.name.localeCompare(b.name, 'ru'));
+  return [...m.values()].sort((a, b) => catRank(a.name) - catRank(b.name) || a.name.localeCompare(b.name, 'ru'));
 }
 function catSuppliers(cat) {
   const priced = new Set(S.data.prices.filter(p => (p.cat || 'Прочее') === cat).map(p => p.supplier));
@@ -456,10 +463,12 @@ function renderCategory(t) {
   if (S.catView === 'suppliers')
     return head + (sups.length ? `<div class="gallery">${sups.map(s => supTile(s, c)).join('')}</div>` : '<div class="empty">Поставщиков этой категории пока нет в списке.</div>');
   const entries = [...[...groups.entries()].map(([item, rs]) => ({ item, rs })), ...missing.map(p => ({ item: p.name, rs: null }))]
-    .sort((a, b) => a.item.localeCompare(b.item, 'ru', { numeric: true }));
+    .sort((a, b) => !a.rs - !b.rs || itemRank(a.item) - itemRank(b.item));
   if (!entries.length) return head + priceFilters() + `<div class="empty">${t.length ? `По запросу «${esc(S.q)}» в этой категории ничего нет.` : 'Цен в этой категории пока нет.'}</div>`;
   const tile = (e, badge, g = '') => e.rs ? itemTile(e.item, e.rs, badge, stripGrade(e.item, g)) : `<div class="tile off">${badge}<span class="t-name">${esc(stripGrade(e.item, g))}</span><span class="t-price">цен пока нет</span></div>`;
-  const order = gradeOrder(entries.map(e => gradeOf(e.item)));
+  // steel grades: А500С → А400 → А240; other grades (cement): by their most important item
+  const steel = entries.some(e => gradeOf(e.item).startsWith('А'));
+  const order = steel ? gradeOrder(entries.map(e => gradeOf(e.item))) : [...new Set(entries.map(e => gradeOf(e.item)))].sort((a, b) => (!a) - (!b));
   const named = order.filter(Boolean);
   // group by grade only when the category really has several grades
   if (named.length < 2) return head + priceFilters() + `<div class="gallery">${entries.map(e => tile(e, '')).join('')}</div>`;
@@ -470,7 +479,7 @@ function renderCategory(t) {
     ${order.map(g => `<button data-grade="${g || '-'}" aria-pressed="${S.grade === (g || '-')}">${gradeBadge(g, order)}${count(g)}</button>`).join('')}</div>`;
   const shown = S.grade ? order.filter(g => (g || '-') === S.grade) : order;
   const secs = shown.map(g => {
-    const es = entries.filter(e => gradeOf(e.item) === g);
+    const es = entries.filter(e => gradeOf(e.item) === g).sort((a, b) => !a.rs - !b.rs || (steel ? a.item.localeCompare(b.item, 'ru', { numeric: true }) : itemRank(a.item) - itemRank(b.item)));
     return `<section class="grade-sec"><h3 class="grade-head">${gradeBadge(g, order)}<span class="gh">${g ? 'Марка ' + esc(g) : 'Другое'}<small>${es.length} ${plural(es.length, 'позиция', 'позиции', 'позиций')}</small></span></h3>
       <div class="gallery">${es.map(e => tile(e, gradeBadge(g, order), g.startsWith('А') ? g : '')).join('')}</div></section>`;
   }).join('');
@@ -512,7 +521,7 @@ function nomenclature(name, cat) {
   for (const p of S.data.prices) if (p.supplier === name && (!cat || (p.cat || 'Прочее') === cat)) {
     const prev = m.get(p.item); if (!prev || (p.date || '') >= (prev.date || '')) m.set(p.item, p);
   }
-  return [...m.values()].sort((a, b) => a.item.localeCompare(b.item, 'ru'));
+  return [...m.values()].sort((a, b) => catRank(a.cat) - catRank(b.cat) || itemRank(a.item) - itemRank(b.item));
 }
 function supplierCard(s, cat) {
   const nom = nomenclature(s.name, cat), all = cat ? nomenclature(s.name) : nom;
@@ -546,7 +555,7 @@ function renderSuppliers() {
       <span class="cnt">${n} ${plural(n, 'поставщик', 'поставщика', 'поставщиков')}</span></button>`;
     return `<div class="cats" style="margin-bottom:22px">${tileBtn('__ours', svg('check'), 'Работаем', ours.length)}${tileBtn('__all', svg('people'), 'Все поставщики', S.data.suppliers.length)}</div>
       <p class="section-title">Поставщики по категориям</p>
-      <div class="cats">${[...cats].sort((a, b) => b.suppliers - a.suppliers || a.name.localeCompare(b.name, 'ru')).map(c => tileBtn(c.name, catIcon(c.name), c.name, c.suppliers)).join('')}</div>`;
+      <div class="cats">${cats.map(c => tileBtn(c.name, catIcon(c.name), c.name, c.suppliers)).join('')}</div>`;
   }
   const key = S.supCat;
   const cat = key && !key.startsWith('__') ? key : undefined;
@@ -555,7 +564,8 @@ function renderSuppliers() {
   if (S.stype) list = list.filter(s => (s.type || '') === S.stype);
   if (S.direct) list = list.filter(s => isDirect(s.type));
   const cnt = name => nomenclature(name, cat).length;
-  list.sort((a, b) => (b.works === 'Да') - (a.works === 'Да') || cnt(b.name) - cnt(a.name) || a.name.localeCompare(b.name, 'ru'));
+  const rank = cat ? () => 0 : supRank;
+  list.sort((a, b) => (b.works === 'Да') - (a.works === 'Да') || rank(a.name) - rank(b.name) || cnt(b.name) - cnt(a.name) || a.name.localeCompare(b.name, 'ru'));
   const title = key === '__ours' ? ['check', 'Работаем'] : key === '__all' ? ['people', 'Все поставщики'] : cat ? [null, cat] : ['people', 'Результаты поиска'];
   const head = `<div class="cat-head"><button class="back" data-supback>← Все категории</button>
     <h2 class="cat-title"><span class="ic">${title[0] ? svg(title[0]) : catIcon(cat)}</span>${esc(title[1])}</h2></div>`;
@@ -633,7 +643,7 @@ function rfqText() {
   return `Здравствуйте!\n\nСП ООО «FM MUHENDISLIK INSAAT», генподрядчик ЖК «Golden Hills» (Ташкент, ул. Олтинтепа, 166), запрашивает коммерческое предложение:\n\n• ${pos.name}${q ? ` — ${q}` : ''}${pos.note ? `\n  Требования: ${pos.note}` : ''}\n\nПросим указать:\n— цену за ${pos.unit || 'единицу'} с НДС и без НДС;\n— стоимость и сроки доставки на объект;\n— наличие и минимальную партию;\n— условия оплаты;\n— срок действия предложения.\n\nКП прошу направить в ответ на это сообщение на фирменном бланке.\nСпасибо!`;
 }
 function renderRfq() {
-  const items = [...S.data.positions].sort((a, b) => (a.cat || '').localeCompare(b.cat || '', 'ru') || a.name.localeCompare(b.name, 'ru'));
+  const items = [...S.data.positions].sort((a, b) => catRank(a.cat) - catRank(b.cat) || itemRank(a.name) - itemRank(b.name));
   const byCat = {};
   for (const p of items) (byCat[p.cat || 'Прочее'] ||= []).push(p);
   const cands = S.rfqItem ? rfqCandidates(S.rfqItem) : [];

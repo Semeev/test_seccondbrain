@@ -6,7 +6,7 @@ def rows(name):
     h = next(it)
     return h, [r for r in it if any(v not in (None, '') for v in r)]
 ph, pos = rows('Позиции')
-positions = [dict(cat=r[0], name=r[1], unit=r[2], note=r[3], stage=r[4]) for r in pos if r[1]]
+positions = [dict(cat=r[0], name=r[1], unit=r[2], note=r[3], stage=r[4], freq=(r[5] if len(r) > 5 else None), idx=i) for i, r in enumerate(pos) if r[1]]
 pmap = {p['name']: p for p in positions}
 sh, sup = rows('Поставщики')
 def s(v): return None if v in (None, '') else str(v).strip()
@@ -48,6 +48,9 @@ for pdf in sorted((proj / 'сводки').glob('Сводка_цен_*.pdf'), rev
     notes_f = proj / 'данные' / f'выводы_{day}.txt'
     notes = [l.strip() for l in notes_f.read_text(encoding='utf-8').splitlines() if l.strip()] if notes_f.exists() else []
     digests.append(dict(date=day, pdf=f'svodki/{day}.pdf', notes=notes))
-json.dump(dict(generated=datetime.date.today().isoformat(), positions=positions, suppliers=suppliers, prices=prices, digests=digests),
+prio_f = proj / 'данные' / 'приоритет_категорий.json'
+prio = json.load(open(prio_f, encoding='utf-8')) if prio_f.exists() else {}
+cat_order, items_first = prio.get('order', []), prio.get('items_first', [])
+json.dump(dict(generated=datetime.date.today().isoformat(), positions=positions, suppliers=suppliers, prices=prices, digests=digests, catOrder=cat_order, itemsFirst=items_first),
           open(out, 'w'), ensure_ascii=False, separators=(',', ':'))
 print(len(positions), len(suppliers), len(prices), file=sys.stderr)
