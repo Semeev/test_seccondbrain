@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="75%">
+      <stop offset="0" stop-color="#3a2a22"/>
+      <stop offset="1" stop-color="#140d0a"/>
+    </radialGradient>
+    <linearGradient id="bronze" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f6d58a"/>
+      <stop offset=".45" stop-color="#d39a3c"/>
+      <stop offset="1" stop-color="#8a5a1c"/>
+    </linearGradient>
+    <linearGradient id="bronzeTxt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe3a0"/>
+      <stop offset=".55" stop-color="#e0a548"/>
+      <stop offset="1" stop-color="#9c6420"/>
+    </linearGradient>
+    <linearGradient id="crest" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff3b2f"/>
+      <stop offset="1" stop-color="#a3120c"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <g transform="translate(512 0) scale(0.86) translate(-512 -40)">
+    <!-- crest -->
+    <path d="M286 430 C270 70 754 70 738 430 Z" fill="url(#crest)"/>
+    <g stroke="#7d0d08" stroke-width="7" stroke-linecap="round" opacity=".55" fill="none">
+      <path d="M512 400 L512 140"/><path d="M512 400 L440 150"/><path d="M512 400 L584 150"/>
+      <path d="M512 400 L375 180"/><path d="M512 400 L649 180"/><path d="M512 400 L325 240"/>
+      <path d="M512 400 L699 240"/><path d="M512 400 L300 320"/><path d="M512 400 L724 320"/>
+    </g>
+    <!-- helmet -->
+    <path d="M512 245 C650 245 718 330 718 450 C718 560 700 640 680 700 L600 728 L512 700 L424 728 L344 700 C324 640 306 560 306 450 C306 330 374 245 512 245 Z"
+          fill="url(#bronze)" stroke="#5e3a10" stroke-width="10"/>
+    <!-- dome highlight -->
+    <path d="M400 330 C440 280 520 268 580 282 C520 300 450 330 410 380 Z" fill="#fff4d0" opacity=".45"/>
+    <!-- brow ridge -->
+    <path d="M340 432 C420 396 604 396 684 432" stroke="#6b4214" stroke-width="12" fill="none" stroke-linecap="round"/>
+    <!-- opening -->
+    <path d="M356 452 C400 424 460 424 498 438 L498 572 L526 572 L526 438 C564 424 624 424 668 452 C624 490 570 494 542 494 L572 740 L452 740 L482 494 C454 494 400 490 356 452 Z"
+          fill="#140d0a"/>
+    <!-- cheek edge lines -->
+    <path d="M360 640 C400 660 430 690 440 712" stroke="#6b4214" stroke-width="6" fill="none" opacity=".7"/>
+    <path d="M664 640 C624 660 594 690 584 712" stroke="#6b4214" stroke-width="6" fill="none" opacity=".7"/>
+  </g>
+  <text x="512" y="930" text-anchor="middle" font-family="Inter Display" font-weight="900" font-size="250"
+        letter-spacing="-6" fill="url(#bronzeTxt)" stroke="#5e3a10" stroke-width="4">300</text>
+</svg>
