@@ -159,7 +159,7 @@ def format_process_report(report: dict[str, Any]) -> str:
     """
     if "error" in report:
         error_msg = html.escape(str(report["error"]))
-        return f"❌ <b>Ошибка:</b> {error_msg}"
+        return f"<b>Что-то пошло не так.</b>\n\n{error_msg}"
 
     if "report" in report:
         raw_report = report["report"]
@@ -175,7 +175,19 @@ def format_process_report(report: dict[str, Any]) -> str:
         # Truncate if too long
         return truncate_html(sanitized, max_length=4096)
 
-    return "✅ <b>Обработка завершена</b>"
+    return "<b>Готово.</b>"
+
+
+def progress_text(elapsed: int, action: str = "Выполняю", note: str = "") -> str:
+    """Calm progress message: what is happening and how long it has taken."""
+    text = f"<b>{action}…</b>"
+    if elapsed:
+        minutes, seconds = divmod(elapsed, 60)
+        spent = f"{minutes} мин {seconds} сек" if minutes else f"{seconds} сек"
+        text += f"\n\nПрошло: {spent}"
+    if note:
+        text += f"\n\n{note}"
+    return text + "\n\nПожалуйста, подождите."
 
 
 def format_error(error: str) -> str:
@@ -187,7 +199,7 @@ def format_error(error: str) -> str:
     Returns:
         Formatted HTML error message
     """
-    return f"❌ <b>Ошибка:</b> {html.escape(error)}"
+    return f"<b>Что-то пошло не так.</b>\n\n{html.escape(error)}\n\nПопробуйте ещё раз чуть позже."
 
 
 def format_empty_daily() -> str:
@@ -197,6 +209,6 @@ def format_empty_daily() -> str:
         Formatted HTML message
     """
     return (
-        "📭 <b>Нет записей для обработки</b>\n\n"
-        "<i>Добавьте голосовые сообщения или текст в течение дня</i>"
+        "<b>Сегодня пока нет записей.</b>\n\n"
+        "Напишите или скажите что-нибудь голосом — я сохраню."
     )

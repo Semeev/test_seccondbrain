@@ -1,5 +1,6 @@
 """Forwarded message handler."""
 
+import html
 import logging
 from datetime import datetime
 
@@ -54,5 +55,5 @@ async def handle_forward(message: Message) -> None:
         msg_id=message.message_id,
     )
 
-    await message.answer(f"✓ Сохранено (от {source_name})")
+    await message.answer(f"<b>Сохранено.</b>\nОт кого: {html.escape(source_name)}")
     logger.info("Forwarded message saved from: %s", source_name)

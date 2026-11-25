@@ -41,5 +41,5 @@ async def handle_text(message: Message) -> None:
     git = VaultGit(settings.vault_path)
     asyncio.create_task(asyncio.to_thread(git.commit_and_push, "chore: add text entry"))
 
-    await message.answer("✓ Сохранено")
+    await message.answer("<b>Сохранено.</b>")
     logger.info("Text message saved: %d chars", len(message.text))

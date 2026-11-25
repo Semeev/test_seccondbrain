@@ -11,6 +11,13 @@ from d_brain.services.session import SessionStore
 
 logger = logging.getLogger(__name__)
 
+# Style for every report the bot shows: calm, simple, easy to read for anyone.
+READABLE_STYLE = """Стиль ответа: простой и спокойный, как для пожилого человека.
+- Короткие предложения, понятные слова, без жаргона и англицизмов.
+- Не больше одного эмодзи на весь ответ, лучше без них.
+- Главное — в начале, жирным. Дальше короткий список, каждый пункт с новой строки.
+- Между смысловыми блоками пустая строка."""
+
 DEFAULT_TIMEOUT = 1200  # 20 minutes
 
 
@@ -158,7 +165,7 @@ week: {year}-W{week:02d}
         if not daily_file.exists():
             logger.info("No daily file for %s, skipping", day)
             return {
-                "report": "📭 Записей нет",
+                "report": "<b>Сегодня пока нет записей.</b>",
                 "processed_entries": 0,
             }
 
@@ -170,7 +177,8 @@ week: {year}-W{week:02d}
 {skill_content}
 
 Vault: {self.vault_path}
-Вызывай mcp__todoist__* напрямую. Возвращай только RAW HTML."""
+Вызывай mcp__todoist__* напрямую. Возвращай только RAW HTML.
+{READABLE_STYLE}"""
 
         try:
             # Pass TODOIST_API_KEY to Claude subprocess
@@ -255,7 +263,8 @@ Vault: {self.vault_path}
 {session_context}
 Запрос: {user_prompt}
 
-Вызывай mcp__todoist__* напрямую. Возвращай только RAW HTML для Telegram (теги: b, i, code, s, u). Максимум 4096 символов."""
+Вызывай mcp__todoist__* напрямую. Возвращай только RAW HTML для Telegram (теги: b, i, code, s, u). Максимум 4096 символов.
+{READABLE_STYLE}"""
 
         try:
             env = os.environ.copy()
@@ -318,7 +327,8 @@ Vault: {self.vault_path}
 2. Проверь прогресс по goals/3-weekly.md
 3. Выполненные задачи — через mcp__todoist__get-completed-tasks
 
-Возвращай только RAW HTML для Telegram. Начни с 📅 <b>Недельный дайджест</b>. Теги: b, i, code. Максимум 4096 символов."""
+Возвращай только RAW HTML для Telegram. Начни с <b>Итоги недели</b>. Теги: b, i, code. Максимум 4096 символов.
+{READABLE_STYLE}"""
 
         try:
             env = os.environ.copy()

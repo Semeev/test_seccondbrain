@@ -1,18 +1,48 @@
-"""Reply keyboards for Telegram bot."""
+"""Reply keyboards for Telegram bot.
+
+Design: large, calm buttons that are easy to read and hard to miss.
+- Two buttons per row at most, so each button is wide.
+- resize_keyboard=False: Telegram stretches the buttons to the full
+  keyboard height, so they become noticeably taller.
+- Plain words instead of colourful emoji.
+"""
 
 from aiogram.types import ReplyKeyboardMarkup
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
+BTN_STATUS = "Сегодня"
+BTN_PROCESS = "Разобрать записи"
+BTN_WEEKLY = "Итоги недели"
+BTN_DO = "Задать вопрос"
+BTN_HELP = "Помощь"
+
+# Old labels, so keyboards already shown to the user keep working
+# until Telegram replaces them with the new one.
+LEGACY_LABELS = {
+    BTN_STATUS: "📊 Статус",
+    BTN_PROCESS: "⚙️ Обработать",
+    BTN_WEEKLY: "📅 Неделя",
+    BTN_DO: "✨ Запрос",
+    BTN_HELP: "❓ Помощь",
+}
+
+
+def labels(button: str) -> set[str]:
+    """All texts (new and legacy) that trigger the given button."""
+    return {button, LEGACY_LABELS[button]}
+
 
 def get_main_keyboard() -> ReplyKeyboardMarkup:
-    """Main reply keyboard with common commands."""
+    """Main reply keyboard: 2 + 2 + 1 large buttons."""
     builder = ReplyKeyboardBuilder()
-    # First row: main commands
-    builder.button(text="📊 Статус")
-    builder.button(text="⚙️ Обработать")
-    builder.button(text="📅 Неделя")
-    # Second row: additional
-    builder.button(text="✨ Запрос")
-    builder.button(text="❓ Помощь")
-    builder.adjust(3, 2)  # 3 in first row, 2 in second
-    return builder.as_markup(resize_keyboard=True, is_persistent=True)
+    builder.button(text=BTN_STATUS)
+    builder.button(text=BTN_WEEKLY)
+    builder.button(text=BTN_PROCESS)
+    builder.button(text=BTN_DO)
+    builder.button(text=BTN_HELP)
+    builder.adjust(2, 2, 1)
+    return builder.as_markup(
+        resize_keyboard=False,
+        is_persistent=True,
+        input_field_placeholder="Напишите или скажите голосом…",
+    )
