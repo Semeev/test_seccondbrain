@@ -37,10 +37,14 @@ header .wrap { display: grid; gap: 14px; padding-block: 18px }
 .brand { display: flex; align-items: baseline; justify-content: space-between; gap: 6px 16px; flex-wrap: wrap }
 .brand h1 { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.01em }
 .brand .meta { color: var(--muted); font-size: 15px }
-.search { position: relative }
-.search input { width: 100%; font-size: 20px; min-height: 60px; padding: 12px 64px 12px 18px; border: 2px solid var(--line); border-radius: var(--radius); background: var(--bg); color: var(--fg) }
-.search input::placeholder { color: var(--muted); opacity: 0.8 }
-.search input:focus { outline: none; border-color: var(--accent); background: var(--surface) }
+/* Search: labelled, framed in the accent colour, with a magnifier, so it reads as the place to type */
+.search { display: grid; gap: 8px }
+.q-label { font-size: 19px; font-weight: 700; color: var(--fg) }
+.q-box { position: relative }
+.q-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 26px; height: 26px; color: var(--accent); pointer-events: none }
+.search input { width: 100%; font-size: 20px; min-height: 64px; padding: 12px 64px 12px 54px; border: 3px solid var(--accent); border-radius: var(--radius); background: var(--surface); color: var(--fg); box-shadow: 0 2px 8px rgb(62 92 110 / 0.15) }
+.search input::placeholder { color: var(--muted); opacity: 1 }
+.search input:focus { outline: none; box-shadow: 0 0 0 4px var(--accent-soft) }
 .search button { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; border: 0; background: var(--chip); color: var(--fg); font-size: 26px; line-height: 1; cursor: pointer; border-radius: 10px }
 .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px }
 .tabs button { min-height: var(--tap); font-size: 18px; font-weight: 600; border: 2px solid var(--line); background: var(--surface); color: var(--fg); padding: 8px 10px; border-radius: var(--radius); cursor: pointer; line-height: 1.2 }
@@ -105,7 +109,15 @@ tr.best td.num strong { color: var(--best) }
 .cats { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px }
 .cat { text-align: left; font-size: 18px; min-height: 72px; background: var(--surface); color: var(--fg); border: 2px solid var(--line); border-radius: var(--radius); padding: 12px 16px; cursor: pointer }
 .cat:hover, .hint button:hover { border-color: var(--accent) }
-.cat { display: grid; gap: 2px; align-content: center }
+.cat { display: grid; grid-template-columns: 52px 1fr; column-gap: 14px; row-gap: 2px; align-items: center }
+.cat .ic { grid-row: span 2; width: 52px; height: 52px; border-radius: 12px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center }
+.cat .ic svg { width: 30px; height: 30px }
+.cat-title { display: flex; align-items: center; gap: 12px }
+.cat-title .ic { width: 48px; height: 48px; border-radius: 12px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; flex: none }
+.cat-title .ic svg { width: 28px; height: 28px }
+.tabs button { display: grid; justify-items: center; gap: 2px }
+.tabs svg { width: 24px; height: 24px }
+.chip svg { width: 15px; height: 15px; vertical-align: -2px; margin-right: 4px }
 .cat b { font-weight: 600 }
 .cat .cnt { color: var(--muted); font-size: 15px }
 .cat-head { display: grid; gap: 14px; margin-bottom: 18px }
@@ -179,14 +191,18 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none }
       <span class="meta" id="meta">Загружаю базу…</span>
     </div>
     <div class="search">
-      <input id="q" type="search" placeholder="Что ищем? Например: арматура" autocomplete="off" aria-label="Поиск материала или поставщика">
-      <button id="clear" aria-label="Очистить поиск" hidden>×</button>
+      <label class="q-label" for="q" id="q-label">Найти материал — напишите здесь</label>
+      <div class="q-box">
+        <svg class="q-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+        <input id="q" type="search" placeholder="например: арматура" autocomplete="off">
+        <button id="clear" aria-label="Очистить поиск" hidden>×</button>
+      </div>
     </div>
     <nav class="tabs" role="tablist">
-      <button role="tab" data-tab="prices" aria-selected="true">Категории<span class="n" id="n-prices"></span></button>
-      <button role="tab" data-tab="suppliers" aria-selected="false">Поставщики<span class="n" id="n-sup"></span></button>
-      <button role="tab" data-tab="digest" aria-selected="false">Сводка<span class="n" id="n-dig"></span></button>
-      <button role="tab" data-tab="rfq" aria-selected="false">Запрос цены<span class="n">текст для КП</span></button>
+      <button role="tab" data-tab="prices" aria-selected="true"><svg data-i="grid"></svg>Категории<span class="n" id="n-prices"></span></button>
+      <button role="tab" data-tab="suppliers" aria-selected="false"><svg data-i="people"></svg>Поставщики<span class="n" id="n-sup"></span></button>
+      <button role="tab" data-tab="digest" aria-selected="false"><svg data-i="doc"></svg>Сводка<span class="n" id="n-dig"></span></button>
+      <button role="tab" data-tab="rfq" aria-selected="false"><svg data-i="mail"></svg>Запрос цены<span class="n">текст для КП</span></button>
     </nav>
   </div>
 </header>
@@ -197,6 +213,59 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none }
 <div id="drawer-root"></div>
 
 <script>
+/* Line icons (24×24, stroke = currentColor), one per category and supplier type */
+const I = {
+  rebar: '<path d="M4 18 18 4M7 21 21 7M3 13 13 3"/><path d="M7 13l2 2M11 9l2 2M10 16l2 2M14 12l2 2"/>',
+  mixer: '<path d="M2 16V9h5l2 3v4"/><path d="M9 15l2-7 9 2-2 7z"/><circle cx="6" cy="18" r="2"/><circle cx="16" cy="19" r="2"/><path d="M8 18h6"/>',
+  bag: '<path d="M6 7h12l1.5 13h-15z"/><path d="M8 7l1-3h6l1 3"/><path d="M9 12h6"/>',
+  brick: '<rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 9.7h18M3 14.3h18M9 5v4.7M15 5v4.7M6 9.7v4.6M12 9.7v4.6M18 9.7v4.6M9 14.3V19M15 14.3V19"/>',
+  roof: '<path d="M2 12 12 4l10 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>',
+  drop: '<path d="M12 3s7 7.5 7 12a7 7 0 0 1-14 0c0-4.5 7-12 7-12z"/><path d="M9 15a3 3 0 0 0 3 3"/>',
+  pipe: '<path d="M3 8h9a5 5 0 0 1 5 5v8"/><path d="M3 14h7a1 1 0 0 1 1 1v6"/><path d="M5 6v10M15 19h4"/>',
+  fire: '<path d="M12 3c.5 3 5 5.5 5 10.5a5 5 0 0 1-10 0c0-2.5 1.5-4 2.5-5.5.5 1.5 1.5 2.5 2.5 2.5 0-2.5-.5-5.5 0-7.5z"/>',
+  hydrant: '<rect x="4" y="3" width="16" height="18" rx="1.5"/><circle cx="12" cy="12" r="4"/><path d="M12 8v-2M8 21v-2h8v2"/>',
+  fan: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.5"/><path d="M12 10.5C11 7 12 5 14 5s2 3-.5 5.5M13.5 12.5c3.5-.5 5 1 4.5 3s-3.5 1.5-5-1.5M10.5 13c-1.5 3-4 3.5-5 1.5s1.5-3.5 5-3"/>',
+  bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+  cable: '<path d="M4 20c0-6 4-7 8-7s8-1 8-7"/><rect x="16" y="3" width="6" height="4" rx="1"/><rect x="2" y="17" width="6" height="4" rx="1"/>',
+  window: '<rect x="4" y="3" width="16" height="18" rx="1"/><path d="M12 3v18M4 12h16"/>',
+  door: '<path d="M5 21V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v17"/><path d="M3 21h18"/><circle cx="15" cy="12" r="1"/>',
+  layers: '<path d="M12 4 3 8.5 12 13l9-4.5z"/><path d="M3 12.5 12 17l9-4.5M3 16.5 12 21l9-4.5"/>',
+  facade: '<rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 7h2M14 7h2M8 11h2M14 11h2M8 15h2M14 15h2M11 21v-3h2v3"/>',
+  wood: '<rect x="3" y="5" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="15" width="18" height="4" rx="1"/><path d="M7 7h4M12 12h5M6 17h3"/>',
+  screw: '<path d="M8 3h8v4H8z"/><path d="M10 7v12l2 2 2-2V7"/><path d="M10 10l4 1M10 13l4 1M10 16l4 1"/>',
+  sand: '<path d="M2 19h20"/><path d="M4 19c2-6 5-10 8-10s6 4 8 10"/><path d="M10 14h.01M14 15h.01M12 12h.01M8 17h.01M16 17h.01"/>',
+  radiator: '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 6v12M11 6v12M15 6v12M19 6v12M5 18v2M19 18v2"/>',
+  wrench: '<path d="M14.5 6.5a4 4 0 0 0 5 5L12 19a2.1 2.1 0 0 1-3-3l7.5-7.5"/><path d="M14.5 6.5 17 4l3 3-2.5 2.5"/>',
+  meter: '<circle cx="12" cy="12" r="8"/><path d="M12 12l3-3M8 15h8"/><path d="M2 12h2M20 12h2"/>',
+  roller: '<rect x="4" y="3" width="14" height="6" rx="1.5"/><path d="M18 6h2v5h-8v3"/><rect x="10.5" y="14" width="3" height="7" rx="1"/>',
+  panel: '<rect x="5" y="3" width="14" height="18" rx="1"/><path d="M8 6h.01M16 6h.01M8 18h.01M16 18h.01M8 12h.01M16 12h.01"/>',
+  helmet: '<path d="M3 17h18"/><path d="M5 17v-3a7 7 0 0 1 14 0v3"/><path d="M10 7.5V5h4v2.5"/>',
+  fuel: '<path d="M4 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16"/><path d="M3 21h12M7 8h4"/><path d="M14 10h2a2 2 0 0 1 2 2v4a1 1 0 0 0 2 0V8l-3-3"/>',
+  tree: '<path d="M12 21v-5"/><path d="M12 3 6 11h3l-4 5h14l-4-5h3z"/>',
+  mesh: '<rect x="3" y="3" width="18" height="18" rx="1"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/>',
+  fitting: '<path d="M4 9h6v6H4zM14 9h6v6h-6z"/><path d="M10 12h4M12 5v4M12 15v4"/>',
+  box: '<path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/>',
+  steel: '<path d="M4 6h16M4 18h16M12 6v12"/><path d="M8 6v2M16 6v2M8 16v2M16 16v2"/>',
+  grid: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  people: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6.5 6.5 0 0 1 3.5 6"/>',
+  doc: '<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5M9 13h7M9 17h5"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
+  factory: '<path d="M3 21V11l5 3v-3l5 3V4h4v17z"/><path d="M3 21h18"/>',
+  warehouse: '<path d="M3 21V9l9-5 9 5v12"/><path d="M7 21v-8h10v8M7 17h10"/>',
+  shop: '<path d="M4 10v11h16V10"/><path d="M3 4h18l-1 6H4z"/><path d="M10 21v-5h4v5"/>',
+  trader: '<path d="M4 8h13l-3-3M20 16H7l3 3"/>',
+  question: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.7M12 17h.01"/>'
+};
+const CAT_ICONS = [[/фитинг/i, 'fitting'], [/арматур|металлопрок/i, 'rebar'], [/бетон/i, 'mixer'], [/цемент|сух/i, 'bag'], [/газоблок|кирпич/i, 'brick'], [/кровл/i, 'roof'],
+  [/гидроиз/i, 'drop'], [/пожаротуш|спринклер/i, 'fire'], [/пожарн|впв/i, 'hydrant'], [/дымоуд|вентил/i, 'fan'], [/электро/i, 'bolt'], [/кабел/i, 'cable'],
+  [/окн/i, 'window'], [/двер/i, 'door'], [/утепл/i, 'layers'], [/фасад/i, 'facade'], [/опалуб|лес/i, 'wood'], [/метиз/i, 'screw'], [/инертн/i, 'sand'],
+  [/отоплен/i, 'radiator'], [/монтаж/i, 'wrench'], [/счётчик|счетчик/i, 'meter'], [/лкм/i, 'roller'], [/гкл|перегород/i, 'panel'], [/сиз|спецодеж/i, 'helmet'],
+  [/гсм/i, 'fuel'], [/благоустр/i, 'tree'], [/сетк/i, 'mesh'], [/труб|ливн|канализ/i, 'pipe']];
+const svg = name => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[name] || I.box}</svg>`;
+const catIcon = c => svg((CAT_ICONS.find(([re]) => re.test(c)) || [0, 'box'])[1]);
+const typeIcon = t => !t || t === 'Не проверено' ? 'question' : t.startsWith('Завод') ? 'factory' : t.startsWith('Склад') ? 'warehouse' : t.startsWith('Магазин') ? 'shop' : 'trader';
+document.querySelectorAll('svg[data-i]').forEach(el => { el.outerHTML = svg(el.dataset.i) });
+
 const S = { data: null, tab: 'prices', dday: '', cat: '', catView: 'prices', q: '', direct: false, vat: false, history: false, stype: '', rfqItem: '', rfqQty: '', rfqSel: new Set() };
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -214,7 +283,7 @@ function typeClass(t) {
   return '';
 }
 const typeShort = t => !t ? 'тип неизвестен' : t === 'Не проверено' ? 'тип не проверен' : t.replace('Склад/дистрибьютор', 'Склад').replace('Завод-производитель', 'Завод').replace('Магазин (розница)', 'Магазин');
-const chip = t => `<span class="chip ${typeClass(t)}">${esc(typeShort(t))}</span>`;
+const chip = t => `<span class="chip ${typeClass(t)}">${svg(typeIcon(t))}${esc(typeShort(t))}</span>`;
 const isDirect = t => t && (t.startsWith('Завод') || t.startsWith('Склад'));
 
 function copyBtn(text, label = 'Копировать') {
@@ -303,7 +372,7 @@ function renderPrices() {
   }
   const cats = categories();
   return `<p class="section-title">Категории материалов</p>
-    <div class="cats">${cats.map(c => `<button class="cat" data-cat="${esc(c.name)}"><b>${esc(c.name)}</b>
+    <div class="cats">${cats.map(c => `<button class="cat" data-cat="${esc(c.name)}"><span class="ic">${catIcon(c.name)}</span><b>${esc(c.name)}</b>
       <span class="cnt">${c.prices ? `${c.prices} ${plural(c.prices, 'цена', 'цены', 'цен')}` : 'цен пока нет'} · ${c.suppliers} ${plural(c.suppliers, 'поставщик', 'поставщика', 'поставщиков')}</span></button>`).join('')}</div>`;
 }
 function renderCategory(t) {
@@ -314,7 +383,7 @@ function renderCategory(t) {
   const priced = new Set(rows.map(r => r.item));
   const missing = t.length ? [] : S.data.positions.filter(p => (p.cat || 'Прочее') === c && !priced.has(p.name));
   const head = `<div class="cat-head"><button class="back" data-back>← Все категории</button>
-    <h2 class="cat-title">${esc(c)}</h2>
+    <h2 class="cat-title"><span class="ic">${catIcon(c)}</span>${esc(c)}</h2>
     <div class="seg"><button data-cv="prices" aria-pressed="${S.catView === 'prices'}">Цены · ${rows.length}</button>
       <button data-cv="suppliers" aria-pressed="${S.catView === 'suppliers'}">Поставщики · ${sups.length}</button></div></div>`;
   if (S.catView === 'suppliers')
@@ -475,7 +544,8 @@ function renderRfq() {
 function clearQ() { S.q = ''; $('#q').value = '' }
 function render() {
   $('#clear').hidden = !S.q;
-  $('#q').placeholder = S.tab === 'suppliers' ? 'Найти поставщика' : S.cat ? 'Поиск в этой категории' : 'Найти материал';
+  $('#q-label').textContent = S.tab === 'suppliers' ? 'Найти поставщика — напишите здесь' : S.cat ? `Найти в разделе «${S.cat}»` : 'Найти материал — напишите здесь';
+  $('#q').placeholder = S.tab === 'suppliers' ? 'например: Metal City' : S.cat ? 'например: d16' : 'например: бетон';
   document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === S.tab));
   $('#q').closest('.search').hidden = S.tab === 'rfq' || S.tab === 'digest';
   $('#view').innerHTML = S.tab === 'prices' ? renderPrices() : S.tab === 'suppliers' ? renderSuppliers() : S.tab === 'digest' ? renderDigest() : renderRfq();
