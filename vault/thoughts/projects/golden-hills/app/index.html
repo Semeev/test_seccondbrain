@@ -75,7 +75,7 @@ tr.best td.num strong { color: var(--best) }
 .diff.zero { color: var(--best); font-weight: 600 }
 .sname { font-size: 18px; font-weight: 600; cursor: pointer; color: var(--accent); background: none; border: 0; padding: 4px 0; text-align: left; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px }
 .small { font-size: 15px; color: var(--muted) }
-.phone { font-size: 18px; font-weight: 500; white-space: nowrap }
+.phone { font-size: 18px; font-weight: 500; overflow-wrap: anywhere; min-width: 0 }
 .copy { font-size: 16px; font-weight: 500; min-height: 44px; border: 2px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 10px; padding: 6px 14px; cursor: pointer; margin: 6px 0 0 }
 .copy:hover { border-color: var(--accent) }
 .copy.ok { border-color: var(--best); color: var(--best) }
@@ -103,9 +103,23 @@ tr.best td.num strong { color: var(--best) }
 .hint { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; justify-content: center }
 .hint button { font-size: 17px; min-height: 48px; border: 2px solid var(--line); background: var(--surface); color: var(--fg); border-radius: var(--radius); padding: 6px 16px; cursor: pointer }
 .cats { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px }
-.cat { text-align: left; font-size: 18px; min-height: var(--tap); background: var(--surface); color: var(--fg); border: 2px solid var(--line); border-radius: var(--radius); padding: 12px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 10px }
+.cat { text-align: left; font-size: 18px; min-height: 72px; background: var(--surface); color: var(--fg); border: 2px solid var(--line); border-radius: var(--radius); padding: 12px 16px; cursor: pointer }
 .cat:hover, .hint button:hover { border-color: var(--accent) }
-.cat span { color: var(--muted); font-size: 16px }
+.cat { display: grid; gap: 2px; align-content: center }
+.cat b { font-weight: 600 }
+.cat .cnt { color: var(--muted); font-size: 15px }
+.cat-head { display: grid; gap: 14px; margin-bottom: 18px }
+.cat-title { margin: 0; font-size: 26px; line-height: 1.25; text-wrap: balance }
+.back { justify-self: start; min-height: 48px; font-size: 17px; font-weight: 600; border: 2px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 6px 18px; cursor: pointer }
+.back:hover { border-color: var(--accent) }
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px }
+.seg button { min-height: var(--tap); font-size: 18px; font-weight: 600; border: 2px solid var(--line); background: var(--surface); border-radius: var(--radius); cursor: pointer; padding: 6px 10px }
+.seg button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent) }
+.nom { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 16px }
+.nom li { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid var(--line); padding-top: 6px }
+.nom li span:last-child { white-space: nowrap; font-weight: 600 }
+.nom .more { color: var(--muted); border: 0; padding-top: 0 }
+.missing { margin-top: 18px }
 .section-title { font-size: 19px; color: var(--fg); margin: 8px 0 12px; font-weight: 600 }
 
 /* Supplier detail panel */
@@ -169,7 +183,7 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none }
       <button id="clear" aria-label="Очистить поиск" hidden>×</button>
     </div>
     <nav class="tabs" role="tablist">
-      <button role="tab" data-tab="prices" aria-selected="true">Цены<span class="n" id="n-prices"></span></button>
+      <button role="tab" data-tab="prices" aria-selected="true">Категории<span class="n" id="n-prices"></span></button>
       <button role="tab" data-tab="suppliers" aria-selected="false">Поставщики<span class="n" id="n-sup"></span></button>
       <button role="tab" data-tab="digest" aria-selected="false">Сводка<span class="n" id="n-dig"></span></button>
       <button role="tab" data-tab="rfq" aria-selected="false">Запрос цены<span class="n">текст для КП</span></button>
@@ -183,7 +197,7 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none }
 <div id="drawer-root"></div>
 
 <script>
-const S = { data: null, tab: 'prices', dday: '', q: '', direct: false, vat: false, history: false, stype: '', rfqItem: '', rfqQty: '', rfqSel: new Set() };
+const S = { data: null, tab: 'prices', dday: '', cat: '', catView: 'prices', q: '', direct: false, vat: false, history: false, stype: '', rfqItem: '', rfqQty: '', rfqSel: new Set() };
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const fmt = n => Math.round(n).toLocaleString('ru-RU').replace(/\s/g, ' ');
@@ -240,41 +254,73 @@ function offers() {
   return rows;
 }
 
-function renderPrices() {
-  const t = terms();
-  const all = offers();
-  let rows = t.length ? all.filter(r => matches([r.item, r.cat, r.supplier, r.comment].join(' '), t)) : [];
-  const filters = `<div class="filters">
+function priceFilters() {
+  return `<div class="filters">
     <label class="toggle"><input type="checkbox" id="f-direct" ${S.direct ? 'checked' : ''}> Только заводы и склады</label>
     <label class="toggle"><input type="checkbox" id="f-vat" ${S.vat ? 'checked' : ''}> Только с НДС</label>
     <label class="toggle"><input type="checkbox" id="f-hist" ${S.history ? 'checked' : ''}> Показать старые цены</label>
   </div>`;
-  if (!t.length) {
-    const cats = {};
-    for (const r of all) if (r.cat) cats[r.cat] = (cats[r.cat] || 0) + 1;
-    const ex = ['арматура d16', 'бетон М300', 'мембрана', 'цемент', 'XPS', 'ПНД 160', 'газоблок'];
-    return filters + `<p class="section-title">Выберите раздел</p>
-      <div class="cats">${Object.entries(cats).sort((a, b) => b[1] - a[1]).map(([c, n]) =>
-        `<button class="cat" data-q="${esc(c)}">${esc(c)}<span>${n}</span></button>`).join('')}</div>
-      <div class="empty">Или напишите в поиске, что нужно. Например:
-        <div class="hint">${ex.map(x => `<button data-q="${esc(x)}">${esc(x)}</button>`).join('')}</div></div>`;
-  }
-  if (!rows.length) return filters + `<div class="empty">По запросу «${esc(S.q)}» цен нет.<br>Проверьте написание или уберите галочки выше.</div>`;
+}
+function priceBlocks(rows) {
   const groups = new Map();
   for (const r of rows) { if (!groups.has(r.item)) groups.set(r.item, []); groups.get(r.item).push(r) }
   const list = [...groups.entries()].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0], 'ru'));
-  return filters + `<div class="stack">` + list.map(([item, rs]) => {
+  return `<div class="stack">` + list.map(([item, rs]) => {
     rs.sort((a, b) => a.price - b.price);
     const min = rs[0].price, max = rs[rs.length - 1].price;
     const u = rs[0].unit || rs[0].rawunit;
     const spread = rs.length > 1 && max > min ? `<span class="spread">Самая дорогая на <b>${Math.round((max / min - 1) * 100)}%</b> дороже лучшей</span>` : '';
     return `<section class="block">
-      <div class="block-head"><h2>${esc(item)}</h2><span class="sub">${esc(rs[0].cat || '')} · ${unitLbl(u)} · ${rs.length} ${plural(rs.length, 'предложение', 'предложения', 'предложений')}</span>${spread}</div>
+      <div class="block-head"><h2>${esc(item)}</h2><span class="sub">${S.cat ? '' : esc(rs[0].cat || '') + ' · '}${unitLbl(u)} · ${rs.length} ${plural(rs.length, 'предложение', 'предложения', 'предложений')}</span>${spread}</div>
       <div class="tbl"><table class="offers">
         <thead><tr><th>Поставщик</th><th class="num">Цена, ${unitLbl(u)}</th><th>Условия</th><th>Телефон</th><th>Дата</th></tr></thead>
         <tbody>${rs.map((r, i) => offerRow(r, min, i === 0 && rs.length > 1)).join('')}</tbody>
       </table></div></section>`;
   }).join('') + `</div>`;
+}
+function categories() {
+  const m = new Map();
+  const get = c => { if (!m.has(c)) m.set(c, { name: c, positions: 0, prices: 0 }); return m.get(c) };
+  for (const p of S.data.positions) get(p.cat || 'Прочее').positions++;
+  for (const r of offers()) get(r.cat || 'Прочее').prices++;
+  for (const c of m.values()) c.suppliers = catSuppliers(c.name).length;
+  return [...m.values()].sort((a, b) => b.prices - a.prices || a.name.localeCompare(b.name, 'ru'));
+}
+function catSuppliers(cat) {
+  const priced = new Set(S.data.prices.filter(p => (p.cat || 'Прочее') === cat).map(p => p.supplier));
+  const words = norm(cat).split(/[\s,:()/]+/).filter(w => w.length > 3).map(w => w.slice(0, 6));
+  const inCat = s => { const c = norm(s.cats); return c && words.some(w => c.includes(w)) };
+  return S.data.suppliers.filter(s => priced.has(s.name) || inCat(s))
+    .map(s => ({ ...s, priced: priced.has(s.name) }))
+    .sort((a, b) => (b.works === 'Да') - (a.works === 'Да') || b.priced - a.priced || isDirect(b.type) - isDirect(a.type) || !!b.phone - !!a.phone || a.name.localeCompare(b.name, 'ru'));
+}
+function renderPrices() {
+  const t = terms();
+  if (S.cat) return renderCategory(t);
+  if (t.length) {
+    const rows = offers().filter(r => matches([r.item, r.cat, r.supplier, r.comment].join(' '), t));
+    return priceFilters() + (rows.length ? priceBlocks(rows) : `<div class="empty">По запросу «${esc(S.q)}» цен нет.<br>Проверьте написание или уберите галочки выше.</div>`);
+  }
+  const cats = categories();
+  return `<p class="section-title">Категории материалов</p>
+    <div class="cats">${cats.map(c => `<button class="cat" data-cat="${esc(c.name)}"><b>${esc(c.name)}</b>
+      <span class="cnt">${c.prices ? `${c.prices} ${plural(c.prices, 'цена', 'цены', 'цен')}` : 'цен пока нет'} · ${c.suppliers} ${plural(c.suppliers, 'поставщик', 'поставщика', 'поставщиков')}</span></button>`).join('')}</div>`;
+}
+function renderCategory(t) {
+  const c = S.cat;
+  const rows = offers().filter(r => (r.cat || 'Прочее') === c && (!t.length || matches([r.item, r.supplier, r.comment].join(' '), t)));
+  let sups = catSuppliers(c);
+  if (t.length) sups = sups.filter(s => matches([s.name, s.cats, s.person, s.comment].join(' '), t));
+  const priced = new Set(rows.map(r => r.item));
+  const missing = t.length ? [] : S.data.positions.filter(p => (p.cat || 'Прочее') === c && !priced.has(p.name));
+  const head = `<div class="cat-head"><button class="back" data-back>← Все категории</button>
+    <h2 class="cat-title">${esc(c)}</h2>
+    <div class="seg"><button data-cv="prices" aria-pressed="${S.catView === 'prices'}">Цены · ${rows.length}</button>
+      <button data-cv="suppliers" aria-pressed="${S.catView === 'suppliers'}">Поставщики · ${sups.length}</button></div></div>`;
+  if (S.catView === 'suppliers')
+    return head + (sups.length ? `<div class="cards">${sups.map(s => supplierCard(s, c)).join('')}</div>` : '<div class="empty">Поставщиков этой категории пока нет в списке.</div>');
+  return head + priceFilters() + (rows.length ? priceBlocks(rows) : `<div class="empty">${t.length ? `По запросу «${esc(S.q)}» в этой категории цен нет.` : 'Цен в этой категории пока нет.'}</div>`)
+    + (missing.length ? `<section class="block missing"><div class="block-head"><h2>Ещё без цен: ${missing.length}</h2><span class="sub">${missing.map(p => esc(p.name)).join(' · ')}</span></div></section>` : '');
 }
 function plural(n, a, b, c) { const m = n % 10, h = n % 100; return m === 1 && h !== 11 ? a : m >= 2 && m <= 4 && (h < 12 || h > 14) ? b : c }
 
@@ -297,36 +343,45 @@ function offerRow(r, min, best) {
 }
 
 /* ---------- suppliers ---------- */
+function nomenclature(name, cat) {
+  const m = new Map();
+  for (const p of S.data.prices) if (p.supplier === name && (!cat || (p.cat || 'Прочее') === cat)) {
+    const prev = m.get(p.item); if (!prev || (p.date || '') >= (prev.date || '')) m.set(p.item, p);
+  }
+  return [...m.values()].sort((a, b) => a.item.localeCompare(b.item, 'ru'));
+}
+function supplierCard(s, cat) {
+  const nom = nomenclature(s.name, cat), all = cat ? nomenclature(s.name) : nom;
+  const show = nom.slice(0, 6);
+  return `<article class="card">
+    <div><h3>${esc(s.name)}</h3><div class="tags">${chip(s.type)}${s.works === 'Да' ? '<span class="chip ours">работаем</span>' : ''}</div></div>
+    <dl class="kv">
+      <dt>Телефон</dt><dd>${s.phone ? `<div class="contact"><span class="phone">${esc(s.phone)}</span>${copyBtn(s.phone)}</div>` : '<span class="small">нет</span>'}</dd>
+      ${s.person ? `<dt>Контакт</dt><dd>${esc(s.person)}</dd>` : ''}
+      ${s.cats ? `<dt>Продаёт</dt><dd>${esc(s.cats)}</dd>` : ''}
+    </dl>
+    ${nom.length ? `<ul class="nom">${show.map(p => `<li><span>${esc(p.item)}</span><span>${fmt(p.price)}</span></li>`).join('')}
+      ${nom.length > show.length ? `<li class="more">и ещё ${nom.length - show.length}</li>` : ''}</ul>` : '<span class="small">Цен в базе пока нет</span>'}
+    <button class="open" data-sup="${esc(s.name)}">${all.length ? `Вся номенклатура и цены (${all.length})` : 'Открыть карточку'}</button>
+  </article>`;
+}
 function renderSuppliers() {
   const t = terms();
-  const types = [...new Set(S.data.suppliers.map(s => s.type || ''))].sort();
-  let list = S.data.suppliers.filter(s => !t.length || matches([s.name, s.cats, s.addr, s.person, s.comment, s.type].join(' '), t));
+  const types = [...new Set(S.data.suppliers.map(s => s.type).filter(Boolean))].sort();
+  const items = name => nomenclature(name).map(p => p.item).join(' ');
+  let list = S.data.suppliers.filter(s => !t.length || matches([s.name, s.cats, s.addr, s.person, s.comment, s.type, items(s.name)].join(' '), t));
   if (S.stype) list = list.filter(s => (s.type || '') === S.stype);
   if (S.direct) list = list.filter(s => isDirect(s.type));
-  const cnt = name => S.data.prices.filter(p => p.supplier === name).length;
+  const cnt = name => nomenclature(name).length;
   list.sort((a, b) => (b.works === 'Да') - (a.works === 'Да') || cnt(b.name) - cnt(a.name) || a.name.localeCompare(b.name, 'ru'));
   const filters = `<div class="filters">
-    <select class="toggle" id="f-stype" aria-label="Тип поставщика"><option value="">Все типы поставщиков</option>${types.map(x => `<option ${S.stype === x ? 'selected' : ''} value="${esc(x)}">${esc(x || 'Тип не указан')}</option>`).join('')}</select>
+    <select class="toggle" id="f-stype" aria-label="Тип поставщика"><option value="">Все типы поставщиков</option>${types.map(x => `<option ${S.stype === x ? 'selected' : ''} value="${esc(x)}">${esc(x)}</option>`).join('')}</select>
     <label class="toggle"><input type="checkbox" id="f-direct" ${S.direct ? 'checked' : ''}> Только заводы и склады</label>
     <span class="count">Показано ${list.length} из ${S.data.suppliers.length}</span>
   </div>`;
   if (!list.length) return filters + `<div class="empty">Поставщиков по запросу «${esc(S.q)}» нет.</div>`;
-  return filters + `<div class="cards">${list.map(s => {
-    const n = cnt(s.name);
-    return `<article class="card">
-      <div><h3>${esc(s.name)}</h3><div class="tags">${chip(s.type)}${s.works === 'Да' ? '<span class="chip ours">работаем</span>' : ''}</div></div>
-      <dl class="kv">
-        ${s.cats ? `<dt>Товары</dt><dd>${esc(s.cats)}</dd>` : ''}
-        <dt>Телефон</dt><dd>${s.phone ? `<div class="contact"><span class="phone">${esc(s.phone)}</span>${copyBtn(s.phone)}</div>` : '<span class="small">нет</span>'}</dd>
-        ${s.person ? `<dt>Контакт</dt><dd>${esc(s.person)}</dd>` : ''}
-        ${s.addr ? `<dt>Адрес</dt><dd>${esc(s.addr)}</dd>` : ''}
-        ${s.terms ? `<dt>Условия</dt><dd>${esc(s.terms)}</dd>` : ''}
-      </dl>
-      <button class="open" data-sup="${esc(s.name)}">${n ? `Открыть карточку и цены (${n})` : 'Открыть карточку'}</button>
-    </article>`;
-  }).join('')}</div>`;
+  return filters + `<div class="cards">${list.map(s => supplierCard(s)).join('')}</div>`;
 }
-
 function openSupplier(name) {
   const s = S.data.supIdx[name] || { name };
   const ps = S.data.prices.filter(p => p.supplier === name).sort((a, b) => a.item.localeCompare(b.item, 'ru') || (b.date || '').localeCompare(a.date || ''));
@@ -341,7 +396,7 @@ function openSupplier(name) {
       <div><h2 class="title">${esc(name)}</h2><div class="tags">${chip(s.type)}${s.works === 'Да' ? '<span class="chip ours">работаем</span>' : ''}</div></div>
       <section class="block card-body"><dl class="kv">${card.map(([k, v]) => `<dt>${k}</dt><dd>${k === 'Телефон' ? `<span class="phone">${esc(v)}</span>` : /^https?:/.test(v) ? `<a href="${esc(v)}" target="_blank" rel="noopener">${esc(v)}</a>` : esc(v)}</dd>`).join('')}</dl>
         ${s.phone ? `<div style="margin-top:12px">${copyBtn(contact, 'Скопировать контакт')}</div>` : ''}</section>
-      ${ps.length ? `<section class="block"><div class="block-head"><h2>Цены этого поставщика</h2><span class="sub">${ps.length} ${plural(ps.length, 'позиция', 'позиции', 'позиций')}</span></div><div class="tbl"><table>
+      ${ps.length ? `<section class="block"><div class="block-head"><h2>Номенклатура и цены</h2><span class="sub">${ps.length} ${plural(ps.length, 'позиция', 'позиции', 'позиций')}</span></div><div class="tbl"><table>
         <thead><tr><th>Позиция</th><th class="num">Цена</th><th>Дата</th></tr></thead>
         <tbody>${ps.map(p => `<tr><td>${esc(p.item)}<div class="small">${esc([p.vat === 'Да' ? 'с НДС' : p.vat === 'Нет' ? 'без НДС' : '', p.source].filter(Boolean).join(' · '))}</div></td>
           <td class="num"><strong>${fmt(p.price)}</strong><span class="small" style="display:block">${unitLbl(p.unit)}</span></td><td class="small">${fdate(p.date)}</td></tr>`).join('')}</tbody></table></div></section>`
@@ -351,7 +406,10 @@ function openSupplier(name) {
 document.addEventListener('click', e => {
   const sup = e.target.closest('[data-sup]'); if (sup) { openSupplier(sup.dataset.sup); return }
   if (e.target.closest('[data-close]')) { $('#drawer-root').innerHTML = ''; return }
-  const q = e.target.closest('[data-q]'); if (q) { S.q = q.dataset.q; $('#q').value = S.q; render(); }
+  const q = e.target.closest('[data-q]'); if (q) { S.q = q.dataset.q; $('#q').value = S.q; render(); return }
+  const c = e.target.closest('[data-cat]'); if (c) { S.cat = c.dataset.cat; S.catView = 'prices'; clearQ(); render(); scrollTo(0, 0); return }
+  if (e.target.closest('[data-back]')) { S.cat = ''; clearQ(); render(); scrollTo(0, 0); return }
+  const v = e.target.closest('[data-cv]'); if (v) { S.catView = v.dataset.cv; render() }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#drawer-root').innerHTML = '' });
 
@@ -414,8 +472,10 @@ function renderRfq() {
 }
 
 /* ---------- shell ---------- */
+function clearQ() { S.q = ''; $('#q').value = '' }
 function render() {
   $('#clear').hidden = !S.q;
+  $('#q').placeholder = S.tab === 'suppliers' ? 'Найти поставщика' : S.cat ? 'Поиск в этой категории' : 'Найти материал';
   document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === S.tab));
   $('#q').closest('.search').hidden = S.tab === 'rfq' || S.tab === 'digest';
   $('#view').innerHTML = S.tab === 'prices' ? renderPrices() : S.tab === 'suppliers' ? renderSuppliers() : S.tab === 'digest' ? renderDigest() : renderRfq();
@@ -435,17 +495,16 @@ function bind() {
 let timer;
 $('#q').addEventListener('input', e => { clearTimeout(timer); timer = setTimeout(() => { S.q = e.target.value; render() }, 150) });
 $('#clear').addEventListener('click', () => { S.q = ''; $('#q').value = ''; render(); $('#q').focus() });
-document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => { S.tab = b.dataset.tab; S.stype = ''; render() }));
+document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => { if (b.dataset.tab !== S.tab || S.tab === 'prices') { S.cat = ''; clearQ() } S.tab = b.dataset.tab; S.stype = ''; render() }));
 
 fetch('data.json').then(r => r.json()).then(d => {
   d.supIdx = Object.fromEntries(d.suppliers.map(s => [s.name, s]));
   S.data = d;
   const last = d.prices.map(p => p.date).filter(Boolean).sort().pop();
   $('#meta').textContent = `Обновлено ${fdate(last)}.${last.slice(0, 4)}`;
-  $('#n-prices').textContent = `${d.prices.length} цен`;
+  $('#n-prices').textContent = `${new Set(d.positions.map(p => p.cat || 'Прочее')).size} разделов`;
   $('#n-sup').textContent = `${d.suppliers.length} шт.`;
   $('#n-dig').textContent = d.digests?.length ? `за ${fdate(d.digests[0].date)}` : '';
-  S.q = 'арматура d16'; $('#q').value = S.q;
   render();
 }).catch(() => { $('#view').innerHTML = '<div class="empty">Не удалось загрузить базу. Обновите страницу.</div>' });
 </script>
