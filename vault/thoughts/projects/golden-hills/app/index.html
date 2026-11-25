@@ -146,6 +146,23 @@ button.tile:hover { border-color: var(--accent) }
 .tile .ic { width: 44px; height: 44px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center }
 .tile .ic svg { width: 26px; height: 26px }
 .tile .phone { font-size: 16px }
+/* Grade groups (steel А240/А400/А500С, cement ПЦ 400/500) */
+.grades { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px }
+.grades button { display: inline-flex; align-items: center; gap: 10px; min-height: var(--tap); font-size: 17px; font-weight: 600; border: 2px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 6px 14px 6px 8px; cursor: pointer }
+.grades button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft) }
+.grades button.all { padding-left: 14px }
+.gb { display: inline-grid; place-items: center; min-width: 58px; height: 40px; padding: 0 8px; border-radius: 10px; font-size: 16px; font-weight: 800; letter-spacing: 0.02em; border: 2px solid currentColor }
+.gb.g0 { color: var(--accent); background: var(--accent-soft) }
+.gb.g1 { color: var(--best); background: var(--best-soft) }
+.gb.g2 { color: var(--warn); background: var(--warn-soft) }
+.gb.g3 { color: var(--bad); background: var(--bad-soft) }
+.gb.gx { color: var(--muted); background: var(--chip); font-size: 14px }
+.grade-sec { display: grid; gap: 12px; margin-bottom: 26px }
+.grade-head { display: flex; align-items: center; gap: 14px; margin: 0; font-size: 21px }
+.grade-head .gb { min-width: 72px; height: 48px; font-size: 18px }
+.grade-head span.gh { display: grid; line-height: 1.25 }
+.grade-head small { font-size: 16px; font-weight: 400; color: var(--muted) }
+.tile .gb { min-width: 0; height: 26px; font-size: 13px; padding: 0 7px; border-width: 1.5px; justify-self: start; border-radius: 7px }
 .drawer { grid-auto-rows: max-content }
 .drawer .gallery { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)) }
 .drawer .tile { min-height: 0 }
@@ -286,7 +303,7 @@ const catIcon = c => svg((CAT_ICONS.find(([re]) => re.test(c)) || [0, 'box'])[1]
 const typeIcon = t => !t || t === 'Не проверено' ? 'question' : t.startsWith('Завод') ? 'factory' : t.startsWith('Склад') ? 'warehouse' : t.startsWith('Магазин') ? 'shop' : 'trader';
 document.querySelectorAll('svg[data-i]').forEach(el => { el.outerHTML = svg(el.dataset.i) });
 
-const S = { data: null, tab: 'prices', dday: '', cat: '', catView: 'prices', q: '', direct: false, vat: false, history: false, stype: '', rfqItem: '', rfqQty: '', rfqSel: new Set() };
+const S = { data: null, tab: 'prices', dday: '', cat: '', catView: 'prices', grade: '', q: '', direct: false, vat: false, history: false, stype: '', rfqItem: '', rfqQty: '', rfqSel: new Set() };
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const fmt = n => Math.round(n).toLocaleString('ru-RU').replace(/\s/g, ' ');
@@ -395,12 +412,13 @@ function renderPrices() {
     <div class="cats">${cats.map(c => `<button class="cat" data-cat="${esc(c.name)}"><span class="ic">${catIcon(c.name)}</span><b>${esc(c.name)}</b>
       <span class="cnt">${c.prices ? `${c.prices} ${plural(c.prices, 'цена', 'цены', 'цен')}` : 'цен пока нет'} · ${c.suppliers} ${plural(c.suppliers, 'поставщик', 'поставщика', 'поставщиков')}</span></button>`).join('')}</div>`;
 }
-function itemTile(item, rs) {
+const stripGrade = (name, g) => g ? name.replace(/\s*[АA]\s?\d{3}\s?[СC]?(?=\s|$)/, '').replace(/\s+/g, ' ').trim() : name;
+function itemTile(item, rs, badge = '', label = item) {
   rs.sort((a, b) => a.price - b.price);
   const best = rs[0], u = best.unit || best.rawunit;
   const spread = rs.length > 1 && rs[rs.length - 1].price > best.price ? ` · разброс ${Math.round((rs[rs.length - 1].price / best.price - 1) * 100)}%` : '';
-  return `<button class="tile" data-item="${esc(item)}">
-    <span class="t-name">${esc(item)}</span>
+  return `<button class="tile" data-item="${esc(item)}">${badge}
+    <span class="t-name">${esc(label)}</span>
     <span class="t-price">${fmt(best.price)}</span><span class="t-unit">${unitLbl(u)}${rs.length > 1 ? ', лучшая' : ''}</span>
     <span class="t-meta">${esc(best.supplier)}</span>
     <span class="t-more">${rs.length} ${plural(rs.length, 'предложение', 'предложения', 'предложений')}${spread} →</span></button>`;
@@ -413,6 +431,14 @@ function supTile(s, cat) {
     <span class="tags" style="margin:0">${chip(s.type)}${s.works === 'Да' ? '<span class="chip ours">работаем</span>' : ''}</span>
     ${s.phone ? `<span class="phone">${esc(s.phone)}</span>` : '<span class="t-meta">телефона нет</span>'}
     <span class="t-more">${n ? `${n} ${plural(n, 'цена', 'цены', 'цен')} →` : 'Карточка →'}</span></button>`;
+}
+const GRADE_RE = [[/(?:^|\s)[АA]\s?(\d{3})\s?([СC])?(?=\s|$)/, m => `А${m[1]}${m[2] ? 'С' : ''}`], [/ПЦ\s?(\d{3})/, m => `ПЦ ${m[1]}`]];
+function gradeOf(name) { for (const [re, f] of GRADE_RE) { const m = name.match(re); if (m) return f(m) } return '' }
+const gradeNum = g => +(g.match(/\d+/) || [0])[0];
+function gradeOrder(list) { return [...new Set(list)].sort((a, b) => (!a) - (!b) || gradeNum(b) - gradeNum(a)) }
+function gradeBadge(g, order, big) {
+  const i = order.filter(Boolean).indexOf(g);
+  return `<span class="gb ${g ? 'g' + (i % 4) : 'gx'}">${g ? esc(g) : 'другое'}</span>`;
 }
 function renderCategory(t) {
   const c = S.cat;
@@ -428,10 +454,26 @@ function renderCategory(t) {
       <button data-cv="suppliers" aria-pressed="${S.catView === 'suppliers'}">Поставщики · ${sups.length}</button></div></div>`;
   if (S.catView === 'suppliers')
     return head + (sups.length ? `<div class="gallery">${sups.map(s => supTile(s, c)).join('')}</div>` : '<div class="empty">Поставщиков этой категории пока нет в списке.</div>');
-  const tiles = [...groups.entries()].sort((a, b) => a[0].localeCompare(b[0], 'ru', { numeric: true })).map(([item, rs]) => itemTile(item, rs));
-  const off = missing.map(p => `<div class="tile off"><span class="t-name">${esc(p.name)}</span><span class="t-price">цен пока нет</span></div>`);
-  if (!tiles.length && !off.length) return head + priceFilters() + `<div class="empty">${t.length ? `По запросу «${esc(S.q)}» в этой категории ничего нет.` : 'Цен в этой категории пока нет.'}</div>`;
-  return head + priceFilters() + `<div class="gallery">${tiles.join('') + off.join('')}</div>`;
+  const entries = [...[...groups.entries()].map(([item, rs]) => ({ item, rs })), ...missing.map(p => ({ item: p.name, rs: null }))]
+    .sort((a, b) => a.item.localeCompare(b.item, 'ru', { numeric: true }));
+  if (!entries.length) return head + priceFilters() + `<div class="empty">${t.length ? `По запросу «${esc(S.q)}» в этой категории ничего нет.` : 'Цен в этой категории пока нет.'}</div>`;
+  const tile = (e, badge, g = '') => e.rs ? itemTile(e.item, e.rs, badge, stripGrade(e.item, g)) : `<div class="tile off">${badge}<span class="t-name">${esc(stripGrade(e.item, g))}</span><span class="t-price">цен пока нет</span></div>`;
+  const order = gradeOrder(entries.map(e => gradeOf(e.item)));
+  const named = order.filter(Boolean);
+  // group by grade only when the category really has several grades
+  if (named.length < 2) return head + priceFilters() + `<div class="gallery">${entries.map(e => tile(e, '')).join('')}</div>`;
+  if (S.grade && !order.includes(S.grade === '-' ? '' : S.grade)) S.grade = '';
+  const count = g => entries.filter(e => gradeOf(e.item) === g).length;
+  const chips = `<div class="grades" role="group" aria-label="Марка">
+    <button class="all" data-grade="" aria-pressed="${!S.grade}">Все марки · ${entries.length}</button>
+    ${order.map(g => `<button data-grade="${g || '-'}" aria-pressed="${S.grade === (g || '-')}">${gradeBadge(g, order)}${count(g)}</button>`).join('')}</div>`;
+  const shown = S.grade ? order.filter(g => (g || '-') === S.grade) : order;
+  const secs = shown.map(g => {
+    const es = entries.filter(e => gradeOf(e.item) === g);
+    return `<section class="grade-sec"><h3 class="grade-head">${gradeBadge(g, order)}<span class="gh">${g ? 'Марка ' + esc(g) : 'Другое'}<small>${es.length} ${plural(es.length, 'позиция', 'позиции', 'позиций')}</small></span></h3>
+      <div class="gallery">${es.map(e => tile(e, gradeBadge(g, order), g.startsWith('А') ? g : '')).join('')}</div></section>`;
+  }).join('');
+  return head + priceFilters() + chips + secs;
 }
 function openItem(item) {
   const rs = offers().filter(r => r.item === item);
@@ -529,9 +571,10 @@ document.addEventListener('click', e => {
   const it = e.target.closest('[data-item]'); if (it) { openItem(it.dataset.item); return }
   if (e.target.closest('[data-close]')) { $('#drawer-root').innerHTML = ''; return }
   const q = e.target.closest('[data-q]'); if (q) { S.q = q.dataset.q; $('#q').value = S.q; render(); return }
-  const c = e.target.closest('[data-cat]'); if (c) { S.cat = c.dataset.cat; S.catView = 'prices'; clearQ(); render(); scrollTo(0, 0); return }
+  const c = e.target.closest('[data-cat]'); if (c) { S.cat = c.dataset.cat; S.catView = 'prices'; S.grade = ''; clearQ(); render(); scrollTo(0, 0); return }
   if (e.target.closest('[data-back]')) { S.cat = ''; clearQ(); render(); scrollTo(0, 0); return }
-  const v = e.target.closest('[data-cv]'); if (v) { S.catView = v.dataset.cv; render() }
+  const v = e.target.closest('[data-cv]'); if (v) { S.catView = v.dataset.cv; render(); return }
+  const g = e.target.closest('[data-grade]'); if (g) { S.grade = g.dataset.grade; render() }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#drawer-root').innerHTML = '' });
 
