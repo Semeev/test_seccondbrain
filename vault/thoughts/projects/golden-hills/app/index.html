@@ -24,14 +24,8 @@
   --tap: 56px;
   --radius: 12px;
 }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #1b1e1d; --surface: #242827; --line: #3b413e; --fg: #e9ecea; --muted: #b3bab6;
-  --accent: #a9c1cf; --accent-soft: #2e3a41; --best: #a9cbb5; --best-soft: #2b3a31;
-  --warn: #d6c29d; --warn-soft: #3a3428; --bad: #dcb0a8; --bad-soft: #3d2f2c; --chip: #313634; color-scheme: dark } }
-:root[data-theme="dark"] {
-  --bg: #1b1e1d; --surface: #242827; --line: #3b413e; --fg: #e9ecea; --muted: #b3bab6;
-  --accent: #a9c1cf; --accent-soft: #2e3a41; --best: #a9cbb5; --best-soft: #2b3a31;
-  --warn: #d6c29d; --warn-soft: #3a3428; --bad: #dcb0a8; --bad-soft: #3d2f2c; --chip: #313634; color-scheme: dark }
+/* Always light: one calm look on every device, whatever the system theme */
+:root, :root[data-theme="dark"] { color-scheme: light }
 
 * { box-sizing: border-box }
 body { background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 18px; line-height: 1.55; font-variant-numeric: tabular-nums }
