@@ -182,7 +182,7 @@ button.tile:hover { border-color: var(--accent) }
 .tdel.sure { border-color: var(--bad); color: var(--bad); font-weight: 600 }
 .note-box { padding: 16px 18px; border-radius: var(--radius); background: var(--warn-soft); color: var(--warn); font-size: 17px }
 /* Payments: invoices and contracts by status (waiting for a decision → queued for payment → paid) */
-.pay-sum { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px }
+.pay-sum { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 16px }
 .pay-sum button { text-align: left; min-height: 76px; border: 2px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 10px 14px; cursor: pointer; display: grid; gap: 2px; align-content: start }
 .pay-sum button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft) }
 .pay-sum b { font-size: 17px }
@@ -836,10 +836,11 @@ document.addEventListener('input', e => { if (e.target.id === 'task-new') T.draf
    Doc: supplier, doc, amount (сум с НДС), what, terms, due (YYYY-MM-DD or ""), dueNote, status: "wait" | "queue" | "paid",
    created, paidAt, order. Claude adds new invoices/contracts as "wait"; the person moves them to the queue and marks them paid. */
 const P = { list: [], state: 'loading', view: 'queue', sure: '', busy: false, add: false, open: new Set(), doc: '' };
-const PAY_VIEWS = [['wait', 'Ожидают оплаты'], ['queue', 'В очереди на оплату'], ['paid', 'Оплачено']];
+const PAY_VIEWS = [['queue', 'Ожидают оплаты'], ['paid', 'Оплачено']];  // everything the person sends needs paying; old 'wait' docs count as unpaid
+const payGroup = x => x.status === 'paid' ? 'paid' : 'queue';
 const money = n => fmt(n || 0) + ' сум';
 function payRender() {
-  const q = P.list.filter(x => x.status === 'queue');
+  const q = P.list.filter(x => x.status !== 'paid');
   const n = $('#n-pay'); if (n) n.textContent = P.state === 'ok' ? (q.length ? `к оплате ${q.length}` : 'очередь пуста') : P.state === 'off' ? 'нужен вход' : 'загрузка…';
   if (S.tab === 'pay') render();
 }
@@ -872,9 +873,8 @@ function payCard(x) {
   const ro = T.ro;
   const btn = (act, label, cls = '') => `<button class="${cls}" data-pay="${act}" data-id="${esc(x.id)}">${label}</button>`;
   const del = btn('del', P.sure === x.id ? 'Точно удалить?' : 'Удалить', P.sure === x.id ? 'sure' : '');
-  const acts = ro ? '' : x.status === 'wait' ? btn('queue', 'В очередь на оплату', 'main') + del
-    : x.status === 'queue' ? btn('paid', 'Оплачено', 'main') + btn('wait', 'Вернуть в ожидающие')
-    : btn('queue', 'Не оплачено — вернуть в очередь');
+  const acts = ro ? '' : x.status !== 'paid' ? btn('paid', 'Оплачено', 'main') + del
+    : btn('queue', 'Не оплачено — вернуть в ожидающие');
   return `<article class="pay ${x.status === 'paid' ? 'paid' : ''}">
     <div class="pay-top"><span class="pay-sup">${esc(x.supplier)}</span><span class="pay-amt">${money(x.amount)}</span></div>
     <span class="pay-doc">${esc(x.doc || '')}</span>
@@ -925,14 +925,14 @@ function renderPay() {
   if (P.state === 'loading') return '<div class="empty">Загружаю счета и договоры…</div>';
   if (P.state === 'slow') return '<div class="empty">Список пока не загрузился. Проверьте интернет — он появится сам.</div>';
   if (P.state === 'error') return '<div class="note-box">Не получилось загрузить счета. Обновите страницу.</div>';
-  const by = s => P.list.filter(x => x.status === s);
+  const by = s => P.list.filter(x => payGroup(x) === s);
   const sum = xs => xs.reduce((a, x) => a + (+x.amount || 0), 0);
   const head = `<div class="pay-sum" role="group" aria-label="Статус">${PAY_VIEWS.map(([k, l]) => { const xs = by(k);
     return `<button data-payview="${k}" aria-pressed="${P.view === k}"><b>${l}</b><span class="ps-n">${xs.length} ${plural(xs.length, 'документ', 'документа', 'документов')}</span><span class="ps-s">${money(sum(xs))}</span></button>` }).join('')}</div>`;
   const xs = by(P.view).sort((a, b) => P.view === 'paid' ? (b.paidAt || '').localeCompare(a.paidAt || '')
     : P.view === 'queue' ? (a.due || '9999').localeCompare(b.due || '9999') || (a.order ?? 0) - (b.order ?? 0)
     : (b.created || '').localeCompare(a.created || ''));
-  const empty = { wait: 'Новых счетов и договоров нет. Пришлите их Claude — они появятся здесь.', queue: 'Очередь на оплату пуста.', paid: 'Оплаченных пока нет.' }[P.view];
+  const empty = { queue: 'Неоплаченных счетов и договоров нет. Пришлите новые Claude — они появятся здесь.', paid: 'Оплаченных пока нет.' }[P.view];
   const add = T.ro ? '' : P.add ? `<form class="pay-add" id="pay-form">
       <label class="field">Поставщик<input id="pay-sup" required autocomplete="off"></label>
       <label class="field">Документ<input id="pay-doc" placeholder="Счёт № … от …" autocomplete="off"></label>
@@ -961,8 +961,8 @@ document.addEventListener('submit', e => {
   if (e.target.id !== 'pay-form') return; e.preventDefault();
   const supplier = $('#pay-sup').value.trim(), amount = +$('#pay-amt').value.replace(/[^\d.,]/g, '').replace(',', '.');
   if (!supplier || !amount) return;
-  const doc = { supplier, doc: $('#pay-doc').value.trim(), amount, due: $('#pay-due').value || '', status: 'wait', created: new Date().toISOString(), order: Date.now() };
-  P.add = false; P.view = 'wait';
+  const doc = { supplier, doc: $('#pay-doc').value.trim(), amount, due: $('#pay-due').value || '', status: 'queue', created: new Date().toISOString(), order: Date.now() };
+  P.add = false; P.view = 'queue';
   payWrite(() => P.db.collection('payments').add(doc));
 });
 
