@@ -216,6 +216,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .notes li:first-child { border-top: 0 }
 .notes b { color: var(--fg); font-weight: 700 }
 a.btn { display: inline-flex; align-items: center; text-decoration: none }
+/* PDF digest viewer: pages drawn on canvases inside the tab, so it works in the phone app too */
+.btn.ghost { background: var(--surface); color: var(--accent); border: 2px solid var(--accent) }
+.pdf-status { font-size: 16px; color: var(--muted); padding: 4px 18px 16px }
+.pdf-view { display: grid; gap: 12px; padding: 0 12px 16px; background: var(--bg) }
+.pdf-view canvas { width: 100%; height: auto; display: block; background: #fff; border: 1px solid var(--line); border-radius: 6px }
+.pdf-note { font-size: 15px; color: var(--muted); padding: 0 18px 14px }
 @media (max-width: 700px) {
   body { font-size: 17px }
   .gallery, .drawer .gallery { grid-template-columns: 1fr 1fr; gap: 10px }
@@ -659,11 +665,75 @@ function renderDigest() {
     <section class="block">
       <div class="block-head"><h2>Сводка цен за ${longDate(cur.date)}</h2>
         <span class="sub">Главное за день. Полная таблица по всем материалам — в PDF.</span>
-        <div class="actions" style="margin-top:10px"><a class="btn" href="${esc(cur.pdf)}" target="_blank" rel="noopener">Открыть PDF-сводку</a></div></div>
+        <div class="actions" style="margin-top:10px">
+          <button class="btn" id="pdf-show" data-pdf="${esc(cur.pdf)}">${PDF.shown === cur.pdf ? 'Скрыть сводку' : 'Показать сводку целиком'}</button>
+          <button class="btn ghost" id="pdf-save" data-pdf="${esc(cur.pdf)}" data-name="Сводка_цен_${cur.date}.pdf">Скачать PDF</button></div></div>
+      <div id="pdf-status" class="pdf-status" ${PDF.msg ? '' : 'hidden'}>${esc(PDF.msg)}</div>
+      <div id="pdf-view" class="pdf-view" ${PDF.shown === cur.pdf ? '' : 'hidden'}></div>
       ${cur.notes.length ? `<ul class="notes">${cur.notes.map(n => `<li>${keepBold(n)}</li>`).join('')}</ul>` : '<div class="empty">Выводов за этот день нет, только PDF.</div>'}
     </section>`;
 }
-document.addEventListener('click', e => { const b = e.target.closest('[data-dday]'); if (b) { S.dday = b.dataset.dday; render() } });
+document.addEventListener('click', e => { const b = e.target.closest('[data-dday]'); if (b) { S.dday = b.dataset.dday; PDF.shown = ''; PDF.msg = ''; render() } });
+
+/* PDF digest: drawn inside the page with pdf.js (loaded on first use); saved through the viewer's downloads capability.
+   Opening the file in a new tab does not work inside the Claude frame on phones, so neither path relies on it. */
+const PDF = { shown: '', msg: '', lib: null, cache: {} };
+function loadScript(src) { return new Promise((ok, bad) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = bad; document.head.append(s) }) }
+async function pdfLib() {
+  if (PDF.lib) return PDF.lib;
+  const base = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+  await loadScript(base + 'pdf.min.js');
+  await loadScript(base + 'pdf.worker.min.js');  // defines pdfjsWorker → pdf.js runs it in this page, no separate worker origin needed
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc = base + 'pdf.worker.min.js';
+  return (PDF.lib = window.pdfjsLib);
+}
+async function pdfBytes(path) {
+  if (!PDF.cache[path]) { const r = await fetch(path); if (!r.ok) throw new Error('HTTP ' + r.status); PDF.cache[path] = await r.arrayBuffer() }
+  return PDF.cache[path];
+}
+function pdfMsg(m) { PDF.msg = m; const el = $('#pdf-status'); if (el) { el.textContent = m; el.hidden = !m } }
+async function showPdf(path) {
+  const box = $('#pdf-view'); if (!box) return;
+  PDF.shown = path; box.hidden = false; box.textContent = ''; pdfMsg('Загружаю сводку…');
+  $('#pdf-show').textContent = 'Скрыть сводку';
+  try {
+    const lib = await pdfLib();
+    const doc = await lib.getDocument({ data: (await pdfBytes(path)).slice(0) }).promise;
+    const width = Math.min(box.clientWidth || 800, 1100), ratio = Math.min(window.devicePixelRatio || 1, 2);
+    for (let i = 1; i <= doc.numPages; i++) {
+      if (PDF.shown !== path) return;
+      pdfMsg(`Страница ${i} из ${doc.numPages}…`);
+      const page = await doc.getPage(i);
+      const vp = page.getViewport({ scale: width / page.getViewport({ scale: 1 }).width * ratio });
+      const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height; c.setAttribute('aria-label', `Страница ${i}`);
+      box.append(c);
+      await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+    }
+    pdfMsg('');
+  } catch (err) {
+    pdfMsg('Не получилось показать сводку здесь. Нажмите «Скачать PDF» — файл откроется на устройстве.');
+  }
+}
+async function savePdf(btn) {
+  const old = btn.textContent;
+  try {
+    const dl = await claude.use('downloads');
+    if (!dl) { pdfMsg('В этом окне скачивание недоступно. Откройте приложение в браузере на claude.ai или нажмите «Показать сводку целиком».'); return }
+    btn.textContent = 'Готовлю файл…';
+    const bytes = await pdfBytes(btn.dataset.pdf);
+    const res = await dl.save({ filename: btn.dataset.name, data: new Blob([bytes], { type: 'application/pdf' }) });
+    pdfMsg(res.status === 'saved' ? 'Файл сохранён.' : '');
+  } catch (err) {
+    const c = err && err.code;
+    pdfMsg(c === 'declined' ? '' : c === 'host_unavailable' ? 'Это приложение не умеет сохранять файлы. Откройте сводку в браузере или на компьютере, либо нажмите «Показать сводку целиком».'
+      : c === 'rate_limited' ? 'Окно сохранения уже открыто — подтвердите его или попробуйте через минуту.' : 'Не получилось скачать. Нажмите «Показать сводку целиком».');
+  } finally { btn.textContent = old }
+}
+document.addEventListener('click', e => {
+  const s = e.target.closest('#pdf-show');
+  if (s) { if (PDF.shown === s.dataset.pdf) { PDF.shown = ''; PDF.msg = ''; render() } else showPdf(s.dataset.pdf); return }
+  const d = e.target.closest('#pdf-save'); if (d) savePdf(d);
+});
 
 /* ---------- tasks (shared, stored in the artifact's db) ---------- */
 const T = { db: null, list: [], state: 'loading', view: 'todo', ro: false, sure: '', busy: false, draft: '' };
