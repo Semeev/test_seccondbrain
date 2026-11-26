@@ -381,7 +381,7 @@ const I = {
   check: '<circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.5 2.5L16 9.5"/>',
   question: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.7M12 17h.01"/>'
 };
-const CAT_ICONS = [[/фитинг/i, 'fitting'], [/арматур|металлопрок/i, 'rebar'], [/бетон/i, 'mixer'], [/цемент|сух/i, 'bag'], [/газоблок|кирпич/i, 'brick'], [/кровл/i, 'roof'],
+const CAT_ICONS = [[/фитинг|запорн/i, 'fitting'], [/хомут/i, 'wrench'], [/^трубы и /i, 'pipe'], [/арматур|металлопрок/i, 'rebar'], [/бетон/i, 'mixer'], [/цемент|сух/i, 'bag'], [/газоблок|кирпич/i, 'brick'], [/кровл/i, 'roof'],
   [/гидроиз/i, 'drop'], [/пожаротуш|спринклер/i, 'fire'], [/пожарн|впв/i, 'hydrant'], [/дымоуд|вентил/i, 'fan'], [/электро/i, 'bolt'], [/кабел/i, 'cable'],
   [/окн/i, 'window'], [/двер/i, 'door'], [/утепл/i, 'layers'], [/фасад/i, 'facade'], [/опалуб|лес/i, 'wood'], [/метиз/i, 'screw'], [/инертн/i, 'sand'],
   [/отоплен/i, 'radiator'], [/монтаж/i, 'wrench'], [/счётчик|счетчик/i, 'meter'], [/лкм/i, 'roller'], [/гкл|перегород/i, 'panel'], [/сиз|спецодеж/i, 'helmet'],
@@ -720,12 +720,24 @@ function supFilters(shown) {
    split: внутри группы — виды товара по первому слову позиции (уголок, лист, швеллер…), а не категории. */
 const SUP_GROUPS = [
   { name: 'Чёрный металл', cats: ['Арматура', 'Металлопрокат', 'Сетки'], split: true },
-  { name: 'Бетон, цемент, смеси', cats: ['Бетон', 'Цемент', 'Сухие смеси'] },
-  { name: 'Инертные материалы', cats: ['Инертные: шагал, ПГС, камень', 'Инертные'] },
+  { name: 'Трубы и запорная арматура', split: true,
+    cats: ['Трубы ПП (водопровод)', 'Трубы ПНД (наружные сети)', 'Канализация', 'Ливнёвка ПНД', 'Фитинги и арматура', 'Счётчики воды', 'Отопление',
+      'Металлопрокат', 'Пожаротушение (спринклер)', 'Пожарные шкафы и ВПВ'],
+    only: ['Металлопрокат', 'Пожаротушение (спринклер)', 'Пожарные шкафы и ВПВ'],  // из этих категорий — только трубы и арматура трубопровода
+    kinds: [  // [вид, позиция в справочнике, «Товары» поставщика]; порядок важен: хомут для трубы ПП — это хомут
+      ['Запорная арматура', /кран\S* шаров|задвижк|вентиль запор|затвор/i, /запорн|задвижк|шаров\S* кран|кран\S* шаров|затвор|вентил\S* запор/],
+      ['Счётчики воды', /счётчик|счетчик/i, /счетчик/],
+      ['Хомуты и крепления труб', /хомут|креплени\S* для трубопровод/i, /хомут|клипс/],
+      ['Фитинги', /фитинг|отвод|тройник|адаптер|фланец|крестовин|ревизи|прокладк|муфт|заглушк/i, /фитинг/],
+      ['Трубы канализационные', /^труба (?:канализ|гофр)/i, /канализ|нпвх/],
+      ['Трубы ПП (водопровод)', /^труба пп/i, seg => SUP_KINDS.pp.test(seg) && !/фитинг|канализ/.test(seg)],
+      ['Трубы ПНД / ПЭ', /^труба пнд|пэ100/i, seg => SUP_KINDS.pe.test(seg) && !/пленк/.test(seg) && !(/фитинг/.test(seg) && !/труб/.test(seg))],
+      ['Трубы стальные', /^труба (?:стальн|вгп|б\/ш|профил|электросвар)/i, /труб\S* (?:стальн|профил|вгп|б\/ш|э\/с|бесшов)|стальн\S* труб|профтруб|труба б\/ш/],
+    ] },
+  { name: 'Бетон и сыпучие материалы', cats: ['Бетон', 'Цемент', 'Сухие смеси', 'Инертные: шагал, ПГС, камень', 'Инертные'] },
   { name: 'Стены и перегородки', cats: ['Газоблок', 'Кирпич и блоки', 'Перегородки ГКЛ'] },
   { name: 'Кровля, изоляция, фасад', cats: ['Кровля', 'Гидроизоляция', 'Утеплитель', 'Фасад'] },
   { name: 'Окна и двери', cats: ['Окна', 'Двери', 'Двери и фурнитура'] },
-  { name: 'Вода, канализация, отопление', cats: ['Трубы ПП (водопровод)', 'Трубы ПНД (наружные сети)', 'Канализация', 'Ливнёвка ПНД', 'Фитинги и арматура', 'Счётчики воды', 'Отопление'] },
   { name: 'Пожарка и вентиляция', cats: ['Пожаротушение (спринклер)', 'Пожарные шкафы и ВПВ', 'Дымоудаление и вентиляция', 'Монтаж инженерных систем'] },
   { name: 'Электрика', cats: ['Электромонтаж', 'Кабель'] },
   { name: 'Опалубка и леса', cats: ['Опалубка и лес', 'Леса и подмости'] },
@@ -739,6 +751,11 @@ const KIND_RE = { 'Арматура': SUP_KINDS.rebar, 'Катанка и про
   'Двутавр (балка)': /двутавр|балк/, 'Лист': /(?<![а-я])лист/, 'Полоса': /полос/, 'Сетка': /сетк/,
   'Трубы стальные': /труб\S* (?:стальн|профил|вгп|б\/ш|э\/с|бесшов)|стальн\S* труб|профтруб|труба б\/ш/ };
 const itemKind = name => { const w = String(name).split(/\s+/)[0]; return KIND_LABEL[w] || w };
+const gKind = (g, name, cat) => {
+  if (!g.kinds) return itemKind(name);
+  const k = g.kinds.find(([, re]) => re.test(name));
+  return k ? k[0] : (g.only || []).includes(cat) ? null : cat;
+};
 function supGroups() {
   const all = categories().map(c => c.name), seen = new Set(SUP_GROUPS.flatMap(g => g.cats));
   const rest = all.filter(c => !seen.has(c));
@@ -746,20 +763,25 @@ function supGroups() {
     .filter(g => g.cats.length);
 }
 const findGroup = name => supGroups().find(g => g.name === name);
-function groupSuppliers(g) { const m = new Map(); for (const c of g.cats) for (const s of catSuppliers(c)) if (!m.has(s.name)) m.set(s.name, s); return [...m.values()] }
+function groupSuppliers(g) {
+  const m = new Map();
+  if (g.kinds) { for (const k of groupKinds(g)) for (const s of kindSuppliers(g, k)) if (!m.has(s.name)) m.set(s.name, s); return [...m.values()] }
+  for (const c of g.cats) for (const s of catSuppliers(c)) if (!m.has(s.name)) m.set(s.name, s); return [...m.values()] }
 function groupKinds(g) {
   const ks = [];
-  for (const p of S.data.positions) if (g.cats.includes(p.cat || 'Прочее')) { const k = itemKind(p.name); if (!ks.includes(k)) ks.push(k) }
-  return ks;
+  for (const p of S.data.positions) if (g.cats.includes(p.cat || 'Прочее')) { const k = gKind(g, p.name, p.cat || 'Прочее'); if (k && !ks.includes(k)) ks.push(k) }
+  return g.kinds ? [...g.kinds.map(x => x[0]).filter(k => ks.includes(k)), ...ks.filter(k => !g.kinds.some(x => x[0] === k))] : ks;
 }
 function kindSuppliers(g, k) {
-  const priced = new Set(S.data.prices.filter(p => g.cats.includes(p.cat || 'Прочее') && itemKind(p.item) === k).map(p => p.supplier));
-  const re = KIND_RE[k] || new RegExp(norm(k).slice(0, 5));
-  return S.data.suppliers.filter(s => priced.has(s.name) || (s.cats && norm(s.cats).split(/[;,]/).some(seg => re.test(seg))))
+  const priced = new Set(S.data.prices.filter(p => g.cats.includes(p.cat || 'Прочее') && gKind(g, p.item, p.cat || 'Прочее') === k).map(p => p.supplier));
+  const gk = (g.kinds || []).find(x => x[0] === k);
+  if (!gk && g.kinds) for (const s of catSuppliers(k)) priced.add(s.name);  // вид = целая категория (например «Отопление»)
+  const re = gk ? gk[2] : KIND_RE[k] || new RegExp(norm(k).slice(0, 5));
+  return S.data.suppliers.filter(s => priced.has(s.name) || (s.cats && norm(s.cats).split(/[;,]/).some(seg => typeof re === 'function' ? re(seg) : re.test(seg))))
     .map(s => ({ ...s, priced: priced.has(s.name) }))
     .sort((a, b) => (b.works === 'Да') - (a.works === 'Да') || b.priced - a.priced || isDirect(b.type) - isDirect(a.type) || !!b.phone - !!a.phone || a.name.localeCompare(b.name, 'ru'));
 }
-const kindCount = (name, g, k) => nomenclature(name).filter(p => g.cats.includes(p.cat || 'Прочее') && itemKind(p.item) === k).length;
+const kindCount = (name, g, k) => nomenclature(name).filter(p => g.cats.includes(p.cat || 'Прочее') && gKind(g, p.item, p.cat || 'Прочее') === k).length;
 function renderSuppliers() {
   const t = terms();
   const ours = S.data.suppliers.filter(s => s.works === 'Да');
