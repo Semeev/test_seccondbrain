@@ -283,10 +283,14 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none }
   .toggle { width: 100% }
   .kv { grid-template-columns: 1fr; gap: 0 }
   .kv dd { margin-bottom: 10px }
-  /* price tables become stacked rows: supplier + price on top, contact below */
+}
+/* price tables become stacked rows when their own box is narrow (phone, or the side drawer on a wide screen):
+   supplier + price on top, conditions and contact below */
+.tbl { container-type: inline-size }
+@container (max-width: 700px) {
   table.offers thead { display: none }
-  table.offers tr { display: grid; grid-template-columns: 1fr auto; border-top: 1px solid var(--line) }
-  table.offers td { border-top: 0; padding: 12px 16px 0 }
+  table.offers tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; border-top: 1px solid var(--line) }
+  table.offers td { border-top: 0; padding: 12px 16px 0; min-width: 0 }
   table.offers td.cond, table.offers td.date { grid-column: 1 / -1; padding-top: 6px }
   table.offers td.contact-cell { grid-column: 1 / -1; padding-bottom: 14px }
   table.offers td.date { display: none }
