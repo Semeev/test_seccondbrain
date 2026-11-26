@@ -37,7 +37,7 @@ R = [
  ("Арматура А500С d12", "MEGA METAL", 8900000, "т", None, "", "", "", SU, SZ+"armatura-12-mm-nlmk-a500s", "НЛМК"),
  ("Арматура А500С d14", "Неизвестный продавец (объявление)", 9500000, "т", None, "", "", "", U, "https://glotr.uz/armatura-14-a500s-rossiya-p-1095621/", "Россия, «оптовые цены»"),
  ("Арматура А500С d14", "STEEL METAL SERVICE", 9800000, "т", None, "", "", "", SU, "https://stroyka.uz", ""),
- ("Арматура А500С d16", "SOF METAL", 8150000, "т", None, "", "", "", SU, SZ+"armatura-a500s-razmer-16", ""),
+ ("Арматура А500С d16", "SOFT METAL", 8150000, "т", None, "", "", "", SU, SZ+"armatura-a500s-razmer-16", ""),
  ("Арматура А500С d18", "Неизвестный продавец (объявление)", 8150000, "т", None, "", "", "Есть", U, "https://glotr.uz/armatura-a500s-18-mm-balakova-p-1140521/", "Балаково"),
  ("Арматура А500С d20", "METAL TREND", 7800000, "т", None, "", "", "", SU, SZ+"armatura-a500s-20-mm-mecel", "Мечел"),
  ("Арматура А500С d20", "Tashsteel Trade", 8150000, "т", None, "", "", "", SU, SZ+"armatura-a500s-20-mm-balakova", "Балаково"),
