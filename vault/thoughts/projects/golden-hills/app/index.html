@@ -391,7 +391,7 @@ const catIcon = c => svg((CAT_ICONS.find(([re]) => re.test(c)) || [0, 'box'])[1]
 const typeIcon = t => !t || t === 'Не проверено' ? 'question' : t.startsWith('Завод') ? 'factory' : t.startsWith('Склад') ? 'warehouse' : t.startsWith('Магазин') ? 'shop' : 'trader';
 document.querySelectorAll('svg[data-i]').forEach(el => { el.outerHTML = svg(el.dataset.i) });
 
-const S = { data: null, tab: 'prices', dday: '', cat: '', catView: 'prices', grade: '', supCat: '', supGroup: '', q: '', direct: false, vat: false, history: false, stype: '', rfqItem: '', rfqQty: '', rfqSel: new Set() };
+const S = { data: null, tab: 'prices', dday: '', cat: '', catView: 'prices', grade: '', supCat: '', supGroup: '', catGroup: '', q: '', direct: false, vat: false, history: false, stype: '', rfqItem: '', rfqQty: '', rfqSel: new Set() };
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const fmt = n => Math.round(n).toLocaleString('ru-RU').replace(/\s/g, ' ');
@@ -547,17 +547,31 @@ function catSuppliers(cat) {
     .map(s => ({ ...s, priced: priced.has(s.name) }))
     .sort((a, b) => (b.works === 'Да') - (a.works === 'Да') || b.priced - a.priced || isDirect(b.type) - isDirect(a.type) || !!b.phone - !!a.phone || a.name.localeCompare(b.name, 'ru'));
 }
+const cntLine = (prices, sups) => `${prices ? `${prices} ${plural(prices, 'цена', 'цены', 'цен')}` : 'цен пока нет'} · ${sups} ${plural(sups, 'поставщик', 'поставщика', 'поставщиков')}`;
+const inGroup = (g, cat) => g.cats.includes(cat || 'Прочее');
+function groupPriceCount(g) { return offers().filter(r => inGroup(g, r.cat) && (!g.kinds || gKind(g, r.item, r.cat || 'Прочее'))).length }
 function renderPrices() {
   const t = terms();
+  if (S.cat.startsWith('g:') && !t.length) {
+    const g = findGroup(S.cat.slice(2));
+    if (g) {
+      const tiles = g.split
+        ? groupKinds(g).map(k => [k, offers().filter(r => inGroup(g, r.cat) && gKind(g, r.item, r.cat || 'Прочее') === k).length, kindSuppliers(g, k).length, 'k:' + g.name + '|' + k])
+        : g.cats.map(c => { const x = categories().find(y => y.name === c) || {}; return [c, x.prices || 0, x.suppliers || 0, c] });
+      return `<div class="cat-head"><button class="back" data-back>← Все категории</button><h2 class="cat-title"><span class="ic">${catIcon(g.cats[0])}</span>${esc(g.name)}</h2></div>
+        <div class="cats">${tiles.map(([name, pr, sp, key]) => `<button class="cat" data-cat="${esc(key)}"><span class="ic">${g.split && catIcon(name) !== catIcon('') ? catIcon(name) : catIcon(g.split ? g.cats[0] : name)}</span><b>${esc(name)}</b>
+          <span class="cnt">${cntLine(pr, sp)}</span></button>`).join('')}</div>`;
+    }
+  }
   if (S.cat) return renderCategory(t);
   if (t.length) {
     const rows = offers().filter(r => matches([r.item, r.cat, r.supplier, r.comment].join(' '), t));
     return priceFilters() + (rows.length ? priceBlocks(rows) : `<div class="empty">По запросу «${esc(S.q)}» цен нет.<br>Проверьте написание или уберите галочки выше.</div>`);
   }
-  const cats = categories();
   return `<p class="section-title">Категории материалов</p>
-    <div class="cats">${cats.map(c => `<button class="cat" data-cat="${esc(c.name)}"><span class="ic">${catIcon(c.name)}</span><b>${esc(c.name)}</b>
-      <span class="cnt">${c.prices ? `${c.prices} ${plural(c.prices, 'цена', 'цены', 'цен')}` : 'цен пока нет'} · ${c.suppliers} ${plural(c.suppliers, 'поставщик', 'поставщика', 'поставщиков')}</span></button>`).join('')}</div>`;
+    <div class="cats">${supGroups().map(g => { const one = g.cats.length === 1 && !g.split;
+      return `<button class="cat" data-cat="${esc(one ? g.cats[0] : 'g:' + g.name)}"><span class="ic">${catIcon(g.cats[0])}</span><b>${esc(g.name)}</b>
+      <span class="cnt">${cntLine(groupPriceCount(g), groupSuppliers(g).length)}</span></button>` }).join('')}</div>`;
 }
 const stripGrade = (name, g) => g ? name.replace(/\s*[АA]\s?\d{3}\s?[СC]?(?=\s|$)/, '').replace(/\s+/g, ' ').trim() : name;
 function itemTile(item, rs, badge = '', label = item) {
@@ -600,18 +614,24 @@ function relatedBlock(c) {
 }
 function renderCategory(t) {
   const c = S.cat;
-  const rows = offers().filter(r => (r.cat || 'Прочее') === c && (!t.length || matches([r.item, r.supplier, r.comment].join(' '), t)));
-  let sups = catSuppliers(c);
+  // c: категория, «k:группа|вид» (вид товара внутри группы) или «g:группа» (поиск внутри группы)
+  const kd = c.startsWith('k:') ? (([gn, k]) => ({ g: findGroup(gn), k }))(c.slice(2).split('|')) : null;
+  const grp = c.startsWith('g:') ? findGroup(c.slice(2)) : null;
+  const inSel = (item, cat) => kd && kd.g ? inGroup(kd.g, cat) && gKind(kd.g, item, cat || 'Прочее') === kd.k : grp ? inGroup(grp, cat) && (!grp.kinds || gKind(grp, item, cat || 'Прочее')) : (cat || 'Прочее') === c;
+  const label = kd ? kd.k : grp ? grp.name : c;
+  const rows = offers().filter(r => inSel(r.item, r.cat) && (!t.length || matches([r.item, r.supplier, r.comment].join(' '), t)));
+  let sups = kd && kd.g ? kindSuppliers(kd.g, kd.k) : grp ? groupSuppliers(grp) : catSuppliers(c);
   if (t.length) sups = sups.filter(s => matches([s.name, s.cats, s.person, s.comment].join(' '), t));
   const groups = new Map();
   for (const r of rows) { if (!groups.has(r.item)) groups.set(r.item, []); groups.get(r.item).push(r) }
-  const missing = t.length ? [] : S.data.positions.filter(p => (p.cat || 'Прочее') === c && !groups.has(p.name));
-  const head = `<div class="cat-head"><button class="back" data-back>← Все категории</button>
-    <h2 class="cat-title"><span class="ic">${catIcon(c)}</span>${esc(c)}</h2>
+  const missing = t.length ? [] : S.data.positions.filter(p => inSel(p.name, p.cat) && !groups.has(p.name));
+  const ic = kd && kd.g ? (catIcon(kd.k) !== catIcon('') ? catIcon(kd.k) : catIcon(kd.g.cats[0])) : grp ? catIcon(grp.cats[0]) : catIcon(c);
+  const head = `<div class="cat-head"><button class="back" data-back>${S.catGroup && c !== 'g:' + S.catGroup ? `← ${esc(S.catGroup)}` : '← Все категории'}</button>
+    <h2 class="cat-title"><span class="ic">${ic}</span>${esc(label)}</h2>${kd && kd.g ? `<span class="sub">${esc(kd.g.name)}</span>` : ''}
     <div class="seg"><button data-cv="prices" aria-pressed="${S.catView === 'prices'}">Материалы · ${groups.size}</button>
       <button data-cv="suppliers" aria-pressed="${S.catView === 'suppliers'}">Поставщики · ${sups.length}</button></div></div>`;
   if (S.catView === 'suppliers')
-    return head + (sups.length ? `<div class="gallery">${sups.map(s => supTile(s, c)).join('')}</div>` : '<div class="empty">Поставщиков этой категории пока нет в списке.</div>') + relatedBlock(c);
+    return head + (sups.length ? `<div class="gallery">${sups.map(s => kd && kd.g ? supTile(s, undefined, kindCount(s.name, kd.g, kd.k)) : supTile(s, kd || grp ? undefined : c)).join('')}</div>` : '<div class="empty">Поставщиков этой категории пока нет в списке.</div>') + (kd || grp ? '' : relatedBlock(c));
   const entries = [...[...groups.entries()].map(([item, rs]) => ({ item, rs })), ...missing.map(p => ({ item: p.name, rs: null }))]
     .sort((a, b) => !a.rs - !b.rs || itemRank(a.item) - itemRank(b.item));
   if (!entries.length) return head + priceFilters() + `<div class="empty">${t.length ? `По запросу «${esc(S.q)}» в этой категории ничего нет.` : 'Цен в этой категории пока нет.'}</div>`;
@@ -621,7 +641,7 @@ function renderCategory(t) {
   const order = steel ? gradeOrder(entries.map(e => gradeOf(e.item))) : [...new Set(entries.map(e => gradeOf(e.item)))].sort((a, b) => (!a) - (!b));
   const named = order.filter(Boolean);
   // group by grade only when the category really has several grades
-  if (named.length < 2) return head + priceFilters() + `<div class="gallery">${entries.map(e => tile(e, '')).join('')}</div>` + relatedBlock(c);
+  if (named.length < 2) return head + priceFilters() + `<div class="gallery">${entries.map(e => tile(e, '')).join('')}</div>` + (kd || grp ? '' : relatedBlock(c));
   if (S.grade && !order.includes(S.grade === '-' ? '' : S.grade)) S.grade = '';
   const count = g => entries.filter(e => gradeOf(e.item) === g).length;
   const chips = `<div class="grades" role="group" aria-label="Марка">
@@ -633,7 +653,7 @@ function renderCategory(t) {
     return `<section class="grade-sec"><h3 class="grade-head">${gradeBadge(g, order)}<span class="gh">${g ? 'Марка ' + esc(g) : 'Другое'}<small>${es.length} ${plural(es.length, 'позиция', 'позиции', 'позиций')}</small></span></h3>
       <div class="gallery">${es.map(e => tile(e, gradeBadge(g, order), g.startsWith('А') ? g : '')).join('')}</div></section>`;
   }).join('');
-  return head + priceFilters() + chips + secs + relatedBlock(c);
+  return head + priceFilters() + chips + secs + (kd || grp ? '' : relatedBlock(c));
 }
 function openItem(item) {
   const rs = offers().filter(r => r.item === item);
@@ -869,8 +889,13 @@ document.addEventListener('click', e => {
   if (e.target.closest('[data-rfqback]')) { S.tab = 'prices'; render(); return }
   if (e.target.closest('[data-close]')) { $('#drawer-root').innerHTML = ''; return }
   const q = e.target.closest('[data-q]'); if (q) { S.q = q.dataset.q; $('#q').value = S.q; render(); return }
-  const c = e.target.closest('[data-cat]'); if (c) { S.cat = c.dataset.cat; S.catView = 'prices'; S.grade = ''; clearQ(); render(); scrollTo(0, 0); return }
-  if (e.target.closest('[data-back]')) { S.cat = ''; clearQ(); render(); scrollTo(0, 0); return }
+  const c = e.target.closest('[data-cat]'); if (c) {
+    const k = c.dataset.cat;
+    if (k.startsWith('g:')) S.catGroup = k.slice(2); else if (!S.cat.startsWith('g:')) S.catGroup = '';
+    S.cat = k; S.catView = 'prices'; S.grade = ''; clearQ(); render(); scrollTo(0, 0); return }
+  if (e.target.closest('[data-back]')) {
+    S.cat = S.catGroup && S.cat !== 'g:' + S.catGroup ? 'g:' + S.catGroup : ''; if (!S.cat) S.catGroup = '';
+    clearQ(); render(); scrollTo(0, 0); return }
   const v = e.target.closest('[data-cv]'); if (v) { S.catView = v.dataset.cv; render(); return }
   const g = e.target.closest('[data-grade]'); if (g) { S.grade = g.dataset.grade; render(); return }
   const sc = e.target.closest('[data-supcat]'); if (sc) {
@@ -1210,7 +1235,7 @@ function renderRfq() {
 function clearQ() { S.q = ''; $('#q').value = '' }
 function render() {
   $('#clear').hidden = !S.q;
-  $('#q-label').textContent = S.tab === 'suppliers' ? (S.supCat && !S.supCat.startsWith('__') ? `Найти поставщика в разделе «${S.supCat.replace(/^g:/, '').replace(/^k:[^|]*\|/, '')}»` : 'Найти поставщика — напишите здесь') : S.cat ? `Найти в разделе «${S.cat}»` : 'Найти материал — напишите здесь';
+  $('#q-label').textContent = S.tab === 'suppliers' ? (S.supCat && !S.supCat.startsWith('__') ? `Найти поставщика в разделе «${S.supCat.replace(/^g:/, '').replace(/^k:[^|]*\|/, '')}»` : 'Найти поставщика — напишите здесь') : S.cat ? `Найти в разделе «${S.cat.replace(/^g:/, '').replace(/^k:[^|]*\|/, '')}»` : 'Найти материал — напишите здесь';
   $('#q').placeholder = S.tab === 'suppliers' ? 'например: Cubix' : S.cat ? 'например: d16' : 'например: бетон';
   document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === S.tab || (S.tab === 'rfq' && b.dataset.tab === 'prices')));
   $('#q').closest('.search').hidden = S.tab === 'rfq' || S.tab === 'digest' || S.tab === 'tasks' || S.tab === 'pay';
@@ -1231,14 +1256,14 @@ function bind() {
 let timer;
 $('#q').addEventListener('input', e => { clearTimeout(timer); timer = setTimeout(() => { S.q = e.target.value; render() }, 150) });
 $('#clear').addEventListener('click', () => { S.q = ''; $('#q').value = ''; render(); $('#q').focus() });
-document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => { if (b.dataset.tab !== S.tab || S.tab !== 'rfq') { S.cat = ''; S.supCat = ''; S.supGroup = ''; clearQ() } S.tab = b.dataset.tab; S.stype = ''; render() }));
+document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => { if (b.dataset.tab !== S.tab || S.tab !== 'rfq') { S.cat = ''; S.catGroup = ''; S.supCat = ''; S.supGroup = ''; clearQ() } S.tab = b.dataset.tab; S.stype = ''; render() }));
 
 fetch('data.json').then(r => r.json()).then(d => {
   d.supIdx = Object.fromEntries(d.suppliers.map(s => [s.name, s]));
   S.data = d;
   const last = d.prices.map(p => p.date).filter(Boolean).sort().pop();
   $('#meta').textContent = `Обновлено ${fdate(last)}.${last.slice(0, 4)}`;
-  $('#n-prices').textContent = `${new Set(d.positions.map(p => p.cat || 'Прочее')).size} разделов`;
+  { const n = supGroups().length; $('#n-prices').textContent = `${n} ${plural(n, 'раздел', 'раздела', 'разделов')}` }
   $('#n-sup').textContent = `${d.suppliers.length} шт.`;
   $('#n-dig').textContent = d.digests?.length ? `за ${fdate(d.digests[0].date)}` : '';
   render();
