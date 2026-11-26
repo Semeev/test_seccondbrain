@@ -36,7 +36,7 @@ def as_date(v):
 
 by = defaultdict(lambda: defaultdict(list))  # position -> date -> [(price, supplier)]
 for r in wb["Журнал цен"].iter_rows(min_row=2, values_only=True):
-    if r[1] and r[0] and isinstance(r[9], (int, float)) and r[9] > 0 and 'UZEX' not in str(r[4] or '').upper():  # UZEX excluded (user, 26.11.2026)
+    if r[1] and r[0] and isinstance(r[9], (int, float)) and r[9] > 0 and 'UZEX' not in str(r[4] or '').upper() and r[13] not in ('Сайт', 'Объявление', 'Биржа UZEX', 'Сайт завода/склада'):  # UZEX excluded (user, 26.11.2026)
         by[r[1]][as_date(r[0])].append((r[9], r[4]))
 all_dates = sorted({d for p in by.values() for d in p})
 D = datetime.strptime(a.date, "%Y-%m-%d").date() if a.date else all_dates[-1]

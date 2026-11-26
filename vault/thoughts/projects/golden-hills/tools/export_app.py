@@ -12,6 +12,7 @@ sh, sup = rows('Поставщики')
 def s(v): return None if v in (None, '') else str(v).strip()
 # Exchange UZEX data is not shown in the app (user decision 26.11.2026: inaccurate, confuses price comparison)
 EXCLUDED = lambda name: 'UZEX' in str(name or '').upper()
+INTERNET_SOURCES = {'Сайт', 'Объявление', 'Биржа UZEX', 'Сайт завода/склада'}
 suppliers = [dict(name=s(r[0]), type=s(r[1]), cats=s(r[2]), addr=s(r[3]), phone=s(r[4]), site=s(r[5]),
                   checked=s(r[6]), terms=s(r[7]), comment=s(r[8]), works=s(r[9]), person=s(r[10]), basis=s(r[11]))
              for r in sup if r[0] and not EXCLUDED(r[0])]
@@ -23,6 +24,7 @@ for r in jr:
     d = dict(zip(jh, r))
     if not d.get('Позиция') or d.get('Цена в прайсе, сум') in (None, ''): continue
     if EXCLUDED(d.get('Поставщик')): continue
+    if d.get('Источник') in INTERNET_SOURCES: continue  # only data given by the user (decision 26.11.2026)
     try: p = float(d['Цена в прайсе, сум'])
     except: continue
     k = d.get('Коэф. пересчёта (ед. прайса в 1 баз. ед.)')
