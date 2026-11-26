@@ -391,7 +391,7 @@ const catIcon = c => svg((CAT_ICONS.find(([re]) => re.test(c)) || [0, 'box'])[1]
 const typeIcon = t => !t || t === 'Не проверено' ? 'question' : t.startsWith('Завод') ? 'factory' : t.startsWith('Склад') ? 'warehouse' : t.startsWith('Магазин') ? 'shop' : 'trader';
 document.querySelectorAll('svg[data-i]').forEach(el => { el.outerHTML = svg(el.dataset.i) });
 
-const S = { data: null, tab: 'prices', dday: '', cat: '', catView: 'prices', grade: '', supCat: '', q: '', direct: false, vat: false, history: false, stype: '', rfqItem: '', rfqQty: '', rfqSel: new Set() };
+const S = { data: null, tab: 'prices', dday: '', cat: '', catView: 'prices', grade: '', supCat: '', supGroup: '', q: '', direct: false, vat: false, history: false, stype: '', rfqItem: '', rfqQty: '', rfqSel: new Set() };
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const fmt = n => Math.round(n).toLocaleString('ru-RU').replace(/\s/g, ' ');
@@ -570,8 +570,8 @@ function itemTile(item, rs, badge = '', label = item) {
     <span class="t-meta">${esc(best.supplier)}</span>
     <span class="t-more">${rs.length} ${plural(rs.length, 'предложение', 'предложения', 'предложений')}${spread} →</span></button>`;
 }
-function supTile(s, cat) {
-  const n = nomenclature(s.name, cat).length;
+function supTile(s, cat, count) {
+  const n = count ?? nomenclature(s.name, cat).length;
   return `<button class="tile" data-sup="${esc(s.name)}">
     <span class="ic">${svg(typeIcon(s.type))}</span>
     <span class="t-name">${esc(s.name)}</span>
@@ -716,6 +716,50 @@ function supFilters(shown) {
     <span class="count">Показано: ${shown}</span>
   </div>`;
 }
+/* «Поставщики»: группы → (категории или виды товара) → поставщики.
+   split: внутри группы — виды товара по первому слову позиции (уголок, лист, швеллер…), а не категории. */
+const SUP_GROUPS = [
+  { name: 'Чёрный металл', cats: ['Арматура', 'Металлопрокат', 'Сетки'], split: true },
+  { name: 'Бетон, цемент, смеси', cats: ['Бетон', 'Цемент', 'Сухие смеси'] },
+  { name: 'Инертные материалы', cats: ['Инертные: шагал, ПГС, камень', 'Инертные'] },
+  { name: 'Стены и перегородки', cats: ['Газоблок', 'Кирпич и блоки', 'Перегородки ГКЛ'] },
+  { name: 'Кровля, изоляция, фасад', cats: ['Кровля', 'Гидроизоляция', 'Утеплитель', 'Фасад'] },
+  { name: 'Окна и двери', cats: ['Окна', 'Двери', 'Двери и фурнитура'] },
+  { name: 'Вода, канализация, отопление', cats: ['Трубы ПП (водопровод)', 'Трубы ПНД (наружные сети)', 'Канализация', 'Ливнёвка ПНД', 'Фитинги и арматура', 'Счётчики воды', 'Отопление'] },
+  { name: 'Пожарка и вентиляция', cats: ['Пожаротушение (спринклер)', 'Пожарные шкафы и ВПВ', 'Дымоудаление и вентиляция', 'Монтаж инженерных систем'] },
+  { name: 'Электрика', cats: ['Электромонтаж', 'Кабель'] },
+  { name: 'Опалубка и леса', cats: ['Опалубка и лес', 'Леса и подмости'] },
+  { name: 'Метизы и расходники', cats: ['Метизы', 'Расходники', 'ЛКМ', 'ГСМ'] },
+  { name: 'Спецодежда и СИЗ', cats: ['Спецодежда и СИЗ'] },
+  { name: 'Благоустройство', cats: ['Благоустройство'] },
+];
+const KIND_LABEL = { 'Арматура': 'Арматура', 'Катанка': 'Катанка и проволока', 'Проволока': 'Катанка и проволока', 'Уголок': 'Уголок', 'Швеллер': 'Швеллер',
+  'Двутавр': 'Двутавр (балка)', 'Лист': 'Лист', 'Полоса': 'Полоса', 'Труба': 'Трубы стальные', 'Сетка': 'Сетка' };
+const KIND_RE = { 'Арматура': SUP_KINDS.rebar, 'Катанка и проволока': /катанк|проволок/, 'Уголок': /уголок|уголк/, 'Швеллер': /швеллер/,
+  'Двутавр (балка)': /двутавр|балк/, 'Лист': /(?<![а-я])лист/, 'Полоса': /полос/, 'Сетка': /сетк/,
+  'Трубы стальные': /труб\S* (?:стальн|профил|вгп|б\/ш|э\/с|бесшов)|стальн\S* труб|профтруб|труба б\/ш/ };
+const itemKind = name => { const w = String(name).split(/\s+/)[0]; return KIND_LABEL[w] || w };
+function supGroups() {
+  const all = categories().map(c => c.name), seen = new Set(SUP_GROUPS.flatMap(g => g.cats));
+  const rest = all.filter(c => !seen.has(c));
+  return SUP_GROUPS.map(g => ({ ...g, cats: g.cats.filter(c => all.includes(c)) })).concat(rest.length ? [{ name: 'Прочее', cats: rest }] : [])
+    .filter(g => g.cats.length);
+}
+const findGroup = name => supGroups().find(g => g.name === name);
+function groupSuppliers(g) { const m = new Map(); for (const c of g.cats) for (const s of catSuppliers(c)) if (!m.has(s.name)) m.set(s.name, s); return [...m.values()] }
+function groupKinds(g) {
+  const ks = [];
+  for (const p of S.data.positions) if (g.cats.includes(p.cat || 'Прочее')) { const k = itemKind(p.name); if (!ks.includes(k)) ks.push(k) }
+  return ks;
+}
+function kindSuppliers(g, k) {
+  const priced = new Set(S.data.prices.filter(p => g.cats.includes(p.cat || 'Прочее') && itemKind(p.item) === k).map(p => p.supplier));
+  const re = KIND_RE[k] || new RegExp(norm(k).slice(0, 5));
+  return S.data.suppliers.filter(s => priced.has(s.name) || (s.cats && norm(s.cats).split(/[;,]/).some(seg => re.test(seg))))
+    .map(s => ({ ...s, priced: priced.has(s.name) }))
+    .sort((a, b) => (b.works === 'Да') - (a.works === 'Да') || b.priced - a.priced || isDirect(b.type) - isDirect(a.type) || !!b.phone - !!a.phone || a.name.localeCompare(b.name, 'ru'));
+}
+const kindCount = (name, g, k) => nomenclature(name).filter(p => g.cats.includes(p.cat || 'Прочее') && itemKind(p.item) === k).length;
 function renderSuppliers() {
   const t = terms();
   const ours = S.data.suppliers.filter(s => s.works === 'Да');
@@ -724,22 +768,37 @@ function renderSuppliers() {
     const tileBtn = (key, icon, name, n) => `<button class="cat" data-supcat="${esc(key)}"><span class="ic">${icon}</span><b>${esc(name)}</b>
       <span class="cnt">${n} ${plural(n, 'поставщик', 'поставщика', 'поставщиков')}</span></button>`;
     return `<div class="cats" style="margin-bottom:22px">${tileBtn('__ours', svg('check'), 'Работаем', ours.length)}${tileBtn('__all', svg('people'), 'Все поставщики', S.data.suppliers.length)}</div>
-      <p class="section-title">Поставщики по категориям</p>
-      <div class="cats">${cats.map(c => tileBtn(c.name, catIcon(c.name), c.name, c.suppliers)).join('')}</div>`;
+      <p class="section-title">Поставщики по видам товара</p>
+      <div class="cats">${supGroups().map(g => { const n = groupSuppliers(g).length; return n ? tileBtn(g.cats.length > 1 || g.split ? 'g:' + g.name : g.cats[0], catIcon(g.cats[0]), g.name, n) : '' }).join('')}</div>`;
+  }
+  const backBtn = `<button class="back" data-supback>${S.supGroup && S.supCat !== 'g:' + S.supGroup ? `← ${esc(S.supGroup)}` : '← Все виды товара'}</button>`;
+  if (S.supCat.startsWith('g:') && !t.length) {
+    const g = findGroup(S.supCat.slice(2));
+    if (g) {
+      const tiles = g.split
+        ? groupKinds(g).map(k => [k, kindSuppliers(g, k).length, 'k:' + g.name + '|' + k, catIcon(k) === catIcon('') ? catIcon(g.cats[0]) : catIcon(k)])
+        : g.cats.map(c => [c, catSuppliers(c).length, c, catIcon(c)]);
+      return `<div class="cat-head">${backBtn}<h2 class="cat-title"><span class="ic">${catIcon(g.cats[0])}</span>${esc(g.name)}</h2></div>
+        <div class="cats">${tiles.filter(x => x[1]).map(([name, n, key, ic]) => `<button class="cat" data-supcat="${esc(key)}"><span class="ic">${ic}</span><b>${esc(name)}</b>
+        <span class="cnt">${n} ${plural(n, 'поставщик', 'поставщика', 'поставщиков')}</span></button>`).join('')}</div>`;
+    }
   }
   const key = S.supCat;
-  const cat = key && !key.startsWith('__') ? key : undefined;
-  let list = key === '__ours' ? ours : cat ? catSuppliers(cat) : [...S.data.suppliers];
+  const kind = key.startsWith('k:') ? (([gn, k]) => ({ g: findGroup(gn), k }))(key.slice(2).split('|')) : null;
+  const cat = key && !key.startsWith('__') && !kind && !key.startsWith('g:') ? key : undefined;
+  const grp = key.startsWith('g:') ? findGroup(key.slice(2)) : null;
+  let list = key === '__ours' ? ours : kind && kind.g ? kindSuppliers(kind.g, kind.k) : grp ? groupSuppliers(grp) : cat ? catSuppliers(cat) : [...S.data.suppliers];
   if (t.length) list = list.filter(s => matches([s.name, s.cats, s.addr, s.person, s.comment, s.type, nomenclature(s.name).map(p => p.item).join(' ')].join(' '), t));
   if (S.stype) list = list.filter(s => (s.type || '') === S.stype);
   if (S.direct) list = list.filter(s => isDirect(s.type));
-  const cnt = name => nomenclature(name, cat).length;
-  const rank = cat ? () => 0 : supRank;
+  const cnt = name => kind && kind.g ? kindCount(name, kind.g, kind.k) : nomenclature(name, cat).length;
+  const rank = cat || kind ? () => 0 : supRank;
   list.sort((a, b) => (b.works === 'Да') - (a.works === 'Да') || rank(a.name) - rank(b.name) || cnt(b.name) - cnt(a.name) || a.name.localeCompare(b.name, 'ru'));
-  const title = key === '__ours' ? ['check', 'Работаем'] : key === '__all' ? ['people', 'Все поставщики'] : cat ? [null, cat] : ['people', 'Результаты поиска'];
-  const head = `<div class="cat-head"><button class="back" data-supback>← Все категории</button>
-    <h2 class="cat-title"><span class="ic">${title[0] ? svg(title[0]) : catIcon(cat)}</span>${esc(title[1])}</h2></div>`;
+  const title = key === '__ours' ? ['check', 'Работаем'] : key === '__all' ? ['people', 'Все поставщики'] : kind ? [null, kind.k] : grp ? ['people', grp.name] : cat ? [null, cat] : ['people', 'Результаты поиска'];
+  const head = `<div class="cat-head">${backBtn}
+    <h2 class="cat-title"><span class="ic">${title[0] ? svg(title[0]) : catIcon(kind ? (kind.g && kind.g.cats[0]) || kind.k : cat)}</span>${esc(title[1])}</h2>${kind && kind.g ? `<span class="sub">${esc(kind.g.name)}</span>` : ''}</div>`;
   if (!list.length) return head + supFilters(0) + `<div class="empty">${t.length ? `Поставщиков по запросу «${esc(S.q)}» нет.` : 'Поставщиков с такими фильтрами нет.'}</div>`;
+  if (kind && kind.g) return head + supFilters(list.length) + `<div class="gallery">${list.map(s => supTile(s, undefined, kindCount(s.name, kind.g, kind.k))).join('')}</div>`;
   if (cat) return head + supFilters(list.length) + `<div class="gallery">${list.map(s => supTile(s, cat)).join('')}</div>`;
   // «Все», «Работаем», поиск — группами по номенклатуре; каждый поставщик один раз, в своей основной категории
   return head + supFilters(list.length) + groupByNomenclature(list).map(([g, ss]) =>
@@ -792,8 +851,13 @@ document.addEventListener('click', e => {
   if (e.target.closest('[data-back]')) { S.cat = ''; clearQ(); render(); scrollTo(0, 0); return }
   const v = e.target.closest('[data-cv]'); if (v) { S.catView = v.dataset.cv; render(); return }
   const g = e.target.closest('[data-grade]'); if (g) { S.grade = g.dataset.grade; render(); return }
-  const sc = e.target.closest('[data-supcat]'); if (sc) { S.supCat = sc.dataset.supcat; clearQ(); render(); scrollTo(0, 0); return }
-  if (e.target.closest('[data-supback]')) { S.supCat = ''; clearQ(); render(); scrollTo(0, 0) }
+  const sc = e.target.closest('[data-supcat]'); if (sc) {
+    const k = sc.dataset.supcat;
+    if (k.startsWith('g:')) S.supGroup = k.slice(2); else if (!S.supCat.startsWith('g:')) S.supGroup = '';
+    S.supCat = k; clearQ(); render(); scrollTo(0, 0); return }
+  if (e.target.closest('[data-supback]')) {
+    S.supCat = S.supGroup && S.supCat !== 'g:' + S.supGroup ? 'g:' + S.supGroup : ''; if (!S.supCat) S.supGroup = '';
+    clearQ(); render(); scrollTo(0, 0) }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#drawer-root').innerHTML = '' });
 
@@ -1124,7 +1188,7 @@ function renderRfq() {
 function clearQ() { S.q = ''; $('#q').value = '' }
 function render() {
   $('#clear').hidden = !S.q;
-  $('#q-label').textContent = S.tab === 'suppliers' ? (S.supCat && !S.supCat.startsWith('__') ? `Найти поставщика в разделе «${S.supCat}»` : 'Найти поставщика — напишите здесь') : S.cat ? `Найти в разделе «${S.cat}»` : 'Найти материал — напишите здесь';
+  $('#q-label').textContent = S.tab === 'suppliers' ? (S.supCat && !S.supCat.startsWith('__') ? `Найти поставщика в разделе «${S.supCat.replace(/^g:/, '').replace(/^k:[^|]*\|/, '')}»` : 'Найти поставщика — напишите здесь') : S.cat ? `Найти в разделе «${S.cat}»` : 'Найти материал — напишите здесь';
   $('#q').placeholder = S.tab === 'suppliers' ? 'например: Cubix' : S.cat ? 'например: d16' : 'например: бетон';
   document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === S.tab || (S.tab === 'rfq' && b.dataset.tab === 'prices')));
   $('#q').closest('.search').hidden = S.tab === 'rfq' || S.tab === 'digest' || S.tab === 'tasks' || S.tab === 'pay';
@@ -1145,7 +1209,7 @@ function bind() {
 let timer;
 $('#q').addEventListener('input', e => { clearTimeout(timer); timer = setTimeout(() => { S.q = e.target.value; render() }, 150) });
 $('#clear').addEventListener('click', () => { S.q = ''; $('#q').value = ''; render(); $('#q').focus() });
-document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => { if (b.dataset.tab !== S.tab || S.tab !== 'rfq') { S.cat = ''; S.supCat = ''; clearQ() } S.tab = b.dataset.tab; S.stype = ''; render() }));
+document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => { if (b.dataset.tab !== S.tab || S.tab !== 'rfq') { S.cat = ''; S.supCat = ''; S.supGroup = ''; clearQ() } S.tab = b.dataset.tab; S.stype = ''; render() }));
 
 fetch('data.json').then(r => r.json()).then(d => {
   d.supIdx = Object.fromEntries(d.suppliers.map(s => [s.name, s]));
