@@ -182,7 +182,7 @@ button.tile:hover { border-color: var(--accent) }
 .tdel.sure { border-color: var(--bad); color: var(--bad); font-weight: 600 }
 .note-box { padding: 16px 18px; border-radius: var(--radius); background: var(--warn-soft); color: var(--warn); font-size: 17px }
 /* Payments: invoices and contracts by status (waiting for a decision → queued for payment → paid) */
-.pay-sum { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 16px }
+.pay-sum { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px }
 .pay-sum button { text-align: left; min-height: 76px; border: 2px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 10px 14px; cursor: pointer; display: grid; gap: 2px; align-content: start }
 .pay-sum button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft) }
 .pay-sum b { font-size: 17px }
@@ -190,7 +190,8 @@ button.tile:hover { border-color: var(--accent) }
 .pay-sum .ps-s { font-size: 18px; font-weight: 700 }
 .pays { display: grid; gap: 12px }
 .pay { background: var(--surface); border: 2px solid var(--line); border-radius: var(--radius); padding: 14px 16px; display: grid; gap: 8px; min-width: 0 }
-.pay.paid { background: var(--bg) }
+.pay.paid, .pay.archive { background: var(--bg) }
+.pay.archive .pay-amt { color: var(--muted) }
 .pay-top { display: flex; justify-content: space-between; gap: 6px 16px; flex-wrap: wrap; align-items: baseline }
 .pay-sup { font-size: 19px; font-weight: 700; overflow-wrap: anywhere }
 .pay-amt { font-size: 22px; font-weight: 700; white-space: nowrap }
@@ -217,7 +218,7 @@ button.tile:hover { border-color: var(--accent) }
 .pay-add { display: grid; grid-template-columns: 2fr 2fr 1fr 1fr auto; gap: 8px; margin-top: 18px; align-items: end }
 .pay-add .field { font-size: 15px }
 .pay-add .field input { min-height: 48px; font-size: 16px }
-@media (max-width: 700px) { .pay-sum { grid-template-columns: 1fr } .pay-add { grid-template-columns: 1fr } }
+@media (max-width: 700px) { .pay-sum { grid-template-columns: 1fr 1fr } .pay-sum button:last-child { grid-column: 1 / -1 } .pay-add { grid-template-columns: 1fr } }
 @media (max-width: 700px) { .task { grid-template-columns: 52px 1fr; } .tdel { grid-column: 2; justify-self: start } }
 .drawer .gallery { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)) }
 .drawer .tile { min-height: 0 }
@@ -836,11 +837,11 @@ document.addEventListener('input', e => { if (e.target.id === 'task-new') T.draf
    Doc: supplier, doc, amount (сум с НДС), what, terms, due (YYYY-MM-DD or ""), dueNote, status: "wait" | "queue" | "paid",
    created, paidAt, order. Claude adds new invoices/contracts as "wait"; the person moves them to the queue and marks them paid. */
 const P = { list: [], state: 'loading', view: 'queue', sure: '', busy: false, add: false, open: new Set(), doc: '' };
-const PAY_VIEWS = [['queue', 'Ожидают оплаты'], ['paid', 'Оплачено']];  // everything the person sends needs paying; old 'wait' docs count as unpaid
-const payGroup = x => x.status === 'paid' ? 'paid' : 'queue';
+const PAY_VIEWS = [['queue', 'Ожидают оплаты'], ['paid', 'Оплачено'], ['archive', 'Архив']];  // everything the person sends needs paying; old 'wait' docs count as unpaid; archive = not needed now, can be returned
+const payGroup = x => x.status === 'paid' ? 'paid' : x.status === 'archive' ? 'archive' : 'queue';
 const money = n => fmt(n || 0) + ' сум';
 function payRender() {
-  const q = P.list.filter(x => x.status !== 'paid');
+  const q = P.list.filter(x => payGroup(x) === 'queue');
   const n = $('#n-pay'); if (n) n.textContent = P.state === 'ok' ? (q.length ? `к оплате ${q.length}` : 'очередь пуста') : P.state === 'off' ? 'нужен вход' : 'загрузка…';
   if (S.tab === 'pay') render();
 }
@@ -859,6 +860,7 @@ async function payInit() {
 payInit();
 function dueChip(x) {
   if (x.status === 'paid') return `<span class="due ok">${esc(['Оплачено' + (x.paidAt ? ' ' + fdate(x.paidAt.slice(0, 10)) + '.' + x.paidAt.slice(0, 4) : ''), x.paidNote].filter(Boolean).join(' · '))}</span>`;
+  if (x.status === 'archive') return `<span class="due">${esc(['В архиве' + (x.archivedAt ? ' с ' + fdate(x.archivedAt.slice(0, 10)) : ''), x.archiveNote].filter(Boolean).join(' · '))}</span>`;
   if (!x.due && !x.dueNote) return '';
   let cls = '', txt = x.dueNote || '';
   if (x.due) {
@@ -873,9 +875,11 @@ function payCard(x) {
   const ro = T.ro;
   const btn = (act, label, cls = '') => `<button class="${cls}" data-pay="${act}" data-id="${esc(x.id)}">${label}</button>`;
   const del = btn('del', P.sure === x.id ? 'Точно удалить?' : 'Удалить', P.sure === x.id ? 'sure' : '');
-  const acts = ro ? '' : x.status !== 'paid' ? btn('paid', 'Оплачено', 'main') + del
-    : btn('queue', 'Не оплачено — вернуть в ожидающие');
-  return `<article class="pay ${x.status === 'paid' ? 'paid' : ''}">
+  const g = payGroup(x);
+  const acts = ro ? '' : g === 'queue' ? btn('paid', 'Оплачено', 'main') + btn('archive', 'В архив')
+    : g === 'paid' ? btn('queue', 'Не оплачено — вернуть в ожидающие')
+    : btn('queue', 'Вернуть в ожидающие оплаты', 'main') + del;
+  return `<article class="pay ${payGroup(x)}">
     <div class="pay-top"><span class="pay-sup">${esc(x.supplier)}</span><span class="pay-amt">${money(x.amount)}</span></div>
     <span class="pay-doc">${esc(x.doc || '')}</span>
     ${x.what ? `<span class="pay-what">${esc(x.what)}</span>` : ''}
@@ -931,8 +935,9 @@ function renderPay() {
     return `<button data-payview="${k}" aria-pressed="${P.view === k}"><b>${l}</b><span class="ps-n">${xs.length} ${plural(xs.length, 'документ', 'документа', 'документов')}</span><span class="ps-s">${money(sum(xs))}</span></button>` }).join('')}</div>`;
   const xs = by(P.view).sort((a, b) => P.view === 'paid' ? (b.paidAt || '').localeCompare(a.paidAt || '')
     : P.view === 'queue' ? (a.due || '9999').localeCompare(b.due || '9999') || (a.order ?? 0) - (b.order ?? 0)
+    : P.view === 'archive' ? (b.archivedAt || '').localeCompare(a.archivedAt || '')
     : (b.created || '').localeCompare(a.created || ''));
-  const empty = { queue: 'Неоплаченных счетов и договоров нет. Пришлите новые Claude — они появятся здесь.', paid: 'Оплаченных пока нет.' }[P.view];
+  const empty = { queue: 'Неоплаченных счетов и договоров нет. Пришлите новые Claude — они появятся здесь.', paid: 'Оплаченных пока нет.', archive: 'В архиве пусто. Сюда кнопкой «В архив» уходят счета, которые пока не нужны, — их всегда можно вернуть.' }[P.view];
   const add = T.ro ? '' : P.add ? `<form class="pay-add" id="pay-form">
       <label class="field">Поставщик<input id="pay-sup" required autocomplete="off"></label>
       <label class="field">Документ<input id="pay-doc" placeholder="Счёт № … от …" autocomplete="off"></label>
@@ -954,7 +959,8 @@ document.addEventListener('click', e => {
   if (act === 'addopen') { P.add = true; render(); $('#pay-sup')?.focus(); return }
   if (act === 'del') { if (P.sure === id) { P.sure = ''; payWrite(() => ref.delete()) } else { P.sure = id; render() } return }
   if (act === 'paid') payWrite(() => ref.update({ status: 'paid', paidAt: new Date().toISOString() }));
-  if (act === 'queue') payWrite(() => ref.update({ status: 'queue', paidAt: null }));
+  if (act === 'queue') payWrite(() => ref.update({ status: 'queue', paidAt: null, archivedAt: null }));
+  if (act === 'archive') payWrite(() => ref.update({ status: 'archive', archivedAt: new Date().toISOString() }));
   if (act === 'wait') payWrite(() => ref.update({ status: 'wait' }));
 });
 document.addEventListener('submit', e => {
