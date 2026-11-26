@@ -437,14 +437,14 @@ function terms() { return norm(S.q).split(/\s+/).filter(Boolean) }
 function offers() {
   let rows = S.data.prices.map(p => ({ ...p, sup: S.data.supIdx[p.supplier] || {} }));
   if (!S.history) {
-    const m = new Map();
-    for (const r of rows) {
-      const k = r.item + '|' + r.supplier;
-      const prev = m.get(k);
-      if (!prev || (r.date || '') >= (prev.date || '')) m.set(k, { ...r, older: prev ? [...(prev.older || []), prev] : [] });
-      else prev.older = [...(prev.older || []), r];
-    }
-    rows = [...m.values()];
+    const m = new Map();  /* последняя дата по поставщику; строки одной даты (разные производители) — все */
+    for (const r of rows) { const k = r.item + '|' + r.supplier; if (!m.has(k)) m.set(k, []); m.get(k).push(r) }
+    rows = [...m.values()].flatMap(rs => {
+      const d = rs.reduce((x, r) => (r.date || '') > x ? r.date || '' : x, '');
+      const cur = rs.filter(r => (r.date || '') === d).map(r => ({ ...r, older: [] }));
+      cur[0].older = rs.filter(r => (r.date || '') !== d);
+      return cur;
+    });
   }
   if (S.direct) rows = rows.filter(r => isDirect(r.stype));
   if (S.vat) rows = rows.filter(r => r.vat === 'Да');
@@ -620,16 +620,18 @@ function offerRow(r, min, best) {
 
 /* ---------- suppliers ---------- */
 function nomenclature(name, cat) {
-  const m = new Map();
+  const m = new Map();  /* по каждой позиции — все строки последней даты (несколько производителей в одном прайсе) */
   for (const p of S.data.prices) if (p.supplier === name && (!cat || (p.cat || 'Прочее') === cat)) {
-    const prev = m.get(p.item); if (!prev || (p.date || '') >= (prev.date || '')) m.set(p.item, p);
+    const prev = m.get(p.item), d = p.date || '';
+    if (!prev || d > prev.d) m.set(p.item, { d, rows: [p] }); else if (d === prev.d) prev.rows.push(p);
   }
-  const list = [...m.values()], gr = new Map();
+  const list = [...m.values()].flatMap(x => x.rows), gr = new Map();
   for (const p of list) { const k = (p.cat || '') + '|' + kindOf(p.item); gr.set(k, Math.min(gr.get(k) ?? Infinity, itemRank(p.item))) }
   const key = p => (p.cat || '') + '|' + kindOf(p.item);
   return list.sort((a, b) => catRank(a.cat) - catRank(b.cat) || gr.get(key(a)) - gr.get(key(b)) || key(a).localeCompare(key(b), 'ru')
-    || variantOf(a.item).localeCompare(variantOf(b.item), 'ru') || a.item.localeCompare(b.item, 'ru', { numeric: true }));
+    || variantOf(a.item).localeCompare(variantOf(b.item), 'ru') || a.item.localeCompare(b.item, 'ru', { numeric: true }) || a.price - b.price);
 }
+const makerOf = p => ((p.comment || '').match(/(?:Производитель:|пр-во)\s*([^.;,]+)/) || [])[1] || '';
 /* подвид внутри вида: название без цифр и скобок — «Швеллер» / «Швеллер П» / «Швеллер У/П», «Бетон М» / «Бетон М ПБ» */
 const variantOf = name => String(name).replace(/\([^)]*\)/g, '').replace(/[\d.,×\-]+/g, '').replace(/\s+/g, ' ').trim();
 /* вид товара: слова названия до первого размера/марки — «Швеллер», «Труба б/ш круглая», «Арматура», «Лист ПВЛ» */
@@ -712,7 +714,7 @@ function openSupplier(name) {
         return `${catHead}<p class="nom-kind">${esc(g.kind)} <span>· ${g.items.length}</span></p>
       <div class="gallery">${g.items.map(p => `<div class="tile"><span class="t-name">${esc(p.item)}</span>
         <span class="t-price">${fmt(p.price)}</span><span class="t-unit">${unitLbl(p.unit)}</span>
-        <span class="t-meta">${esc([p.vat === 'Да' ? 'с НДС' : p.vat === 'Нет' ? 'без НДС' : '', fdate(p.date)].filter(Boolean).join(' · '))}</span></div>`).join('')}</div>` }).join('') })()}`
+        <span class="t-meta">${esc([makerOf(p), p.vat === 'Да' ? 'с НДС' : p.vat === 'Нет' ? 'без НДС' : '', fdate(p.date)].filter(Boolean).join(' · '))}</span></div>`).join('')}</div>` }).join('') })()}`
         : '<div class="empty">Цен от этого поставщика в базе пока нет.</div>'}
     </aside>`;
 }
