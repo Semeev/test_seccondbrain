@@ -20,6 +20,10 @@
   --bad: #7d4a42;
   --bad-soft: #f1e6e3;
   --chip: #e7e9e7;
+  --unpaid-bg: rgb(125 74 66 / 0.06);
+  --unpaid-line: rgb(125 74 66 / 0.28);
+  --paid-bg: rgb(61 102 80 / 0.07);
+  --paid-line: rgb(61 102 80 / 0.32);
   --font-ui: "Golos Text", system-ui, -apple-system, "Segoe UI", sans-serif;
   --tap: 56px;
   --radius: 12px;
@@ -190,7 +194,13 @@ button.tile:hover { border-color: var(--accent) }
 .pay-sum .ps-s { font-size: 18px; font-weight: 700 }
 .pays { display: grid; gap: 12px }
 .pay { background: var(--surface); border: 2px solid var(--line); border-radius: var(--radius); padding: 14px 16px; display: grid; gap: 8px; min-width: 0 }
-.pay.paid, .pay.archive { background: var(--bg) }
+.pay.queue { background: var(--unpaid-bg); border-color: var(--unpaid-line) }
+.pay.paid { background: var(--paid-bg); border-color: var(--paid-line) }
+.pay.archive { background: var(--bg) }
+.pay-sum button[data-payview="queue"] { background: var(--unpaid-bg); border-color: var(--unpaid-line) }
+.pay-sum button[data-payview="paid"] { background: var(--paid-bg); border-color: var(--paid-line) }
+.pay-sum button[data-payview="queue"][aria-pressed="true"] { border-color: var(--bad); box-shadow: 0 0 0 1px var(--bad) }
+.pay-sum button[data-payview="paid"][aria-pressed="true"] { border-color: var(--best); box-shadow: 0 0 0 1px var(--best) }
 .pay.archive .pay-amt { color: var(--muted) }
 .pay-top { display: flex; justify-content: space-between; gap: 6px 16px; flex-wrap: wrap; align-items: baseline }
 .pay-sup { font-size: 19px; font-weight: 700; overflow-wrap: anywhere }
