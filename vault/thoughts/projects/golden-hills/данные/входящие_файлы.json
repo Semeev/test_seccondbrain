@@ -156,6 +156,36 @@
    "upload": "bde26b1a-________________26.09.2026.doc",
    "saved": "исходники/входящие/2026-11-26_КП_EKO_BETON_26.09.2026.doc",
    "date": "2026-11-26"
+  },
+  {
+   "sha256": "b090389012f79659afa0a2d2b52283fb84140326a99665f49b1ae0a979a3de80",
+   "upload": "12ae9a05-List-riflenniy.pdf",
+   "saved": "исходники/входящие/2026-11-26_SOFT_METAL_List-riflenniy_2026-11-26.pdf",
+   "date": "2026-11-26"
+  },
+  {
+   "sha256": "ab5952cf101d41cd1a9b2e911b84c99ec95c3170fbdd9510df5612ba8433b32a",
+   "upload": "55b412a3-Shveller.pdf",
+   "saved": "исходники/входящие/2026-11-26_SOFT_METAL_Shveller_2026-11-26.pdf",
+   "date": "2026-11-26"
+  },
+  {
+   "sha256": "d754de769667017edd4a30663cea22a629493c610806dd30f0fae5590672f09b",
+   "upload": "6fb95761-Polosa.pdf",
+   "saved": "исходники/входящие/2026-11-26_SOFT_METAL_Polosa_2026-11-26.pdf",
+   "date": "2026-11-26"
+  },
+  {
+   "sha256": "b4c5632d8aff2ccdf180658642fcaa7d0ed29c726e8e271bacd16cee52f7b4f3",
+   "upload": "cc43ad64-List-pvl.pdf",
+   "saved": "исходники/входящие/2026-11-26_SOFT_METAL_List-pvl_2026-11-26.pdf",
+   "date": "2026-11-26"
+  },
+  {
+   "sha256": "a41378ac27fe54ac9e9ed010cd883d29e51a7424283ac585050548dc98fdd028",
+   "upload": "cd5a8162-Truba-besshovnaya.pdf",
+   "saved": "исходники/входящие/2026-11-26_SOFT_METAL_Truba-besshovnaya_2026-11-26.pdf",
+   "date": "2026-11-26"
   }
  ]
 }
