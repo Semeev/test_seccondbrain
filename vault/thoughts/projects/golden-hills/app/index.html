@@ -205,6 +205,15 @@ button.tile:hover { border-color: var(--accent) }
 .pay-act button { min-height: 48px; font-size: 16px; font-weight: 600; border-radius: 10px; padding: 6px 14px; cursor: pointer; border: 2px solid var(--line); background: var(--surface); color: var(--fg) }
 .pay-act button.main { background: var(--accent); border-color: var(--accent); color: var(--surface) }
 .pay-act button.sure { border-color: var(--bad); color: var(--bad) }
+.pay-items { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px }
+.pay-items table { font-size: 15px }
+.pay-items th { padding: 8px 10px }
+.pay-items td { padding: 8px 10px }
+.pay-items td.num { white-space: nowrap }
+.pay-items tfoot td { font-weight: 700; border-top: 2px solid var(--line) }
+.pay-note { font-size: 14px; color: var(--muted) }
+.pay-doc-view { display: grid; gap: 10px }
+.pay-doc-view canvas { width: 100%; height: auto; display: block; background: #fff; border: 1px solid var(--line); border-radius: 6px }
 .pay-add { display: grid; grid-template-columns: 2fr 2fr 1fr 1fr auto; gap: 8px; margin-top: 18px; align-items: end }
 .pay-add .field { font-size: 15px }
 .pay-add .field input { min-height: 48px; font-size: 16px }
@@ -745,18 +754,18 @@ async function showPdf(path) {
     pdfMsg('Не получилось показать сводку здесь. Нажмите «Скачать PDF» — файл откроется на устройстве.');
   }
 }
-async function savePdf(btn) {
+async function savePdf(btn, msg = pdfMsg) {
   const old = btn.textContent;
   try {
     const dl = await claude.use('downloads');
-    if (!dl) { pdfMsg('В этом окне скачивание недоступно. Откройте приложение в браузере на claude.ai или нажмите «Показать сводку целиком».'); return }
+    if (!dl) { msg('В этом окне скачивание недоступно. Откройте приложение в браузере на claude.ai или нажмите «Показать сводку целиком».'); return }
     btn.textContent = 'Готовлю файл…';
     const bytes = await pdfBytes(btn.dataset.pdf);
     const res = await dl.save({ filename: btn.dataset.name, data: new Blob([bytes], { type: 'application/pdf' }) });
-    pdfMsg(res.status === 'saved' ? 'Файл сохранён.' : '');
+    msg(res.status === 'saved' ? 'Файл сохранён.' : '');
   } catch (err) {
     const c = err && err.code;
-    pdfMsg(c === 'declined' ? '' : c === 'host_unavailable' ? 'Это приложение не умеет сохранять файлы. Откройте сводку в браузере или на компьютере, либо нажмите «Показать сводку целиком».'
+    msg(c === 'declined' ? '' : c === 'host_unavailable' ? 'Это приложение не умеет сохранять файлы. Откройте сводку в браузере или на компьютере, либо нажмите «Показать сводку целиком».'
       : c === 'rate_limited' ? 'Окно сохранения уже открыто — подтвердите его или попробуйте через минуту.' : 'Не получилось скачать. Нажмите «Показать сводку целиком».');
   } finally { btn.textContent = old }
 }
@@ -826,7 +835,7 @@ document.addEventListener('input', e => { if (e.target.id === 'task-new') T.draf
 /* ---------- payments (shared, stored in the artifact's db, collection "payments") ----------
    Doc: supplier, doc, amount (сум с НДС), what, terms, due (YYYY-MM-DD or ""), dueNote, status: "wait" | "queue" | "paid",
    created, paidAt, order. Claude adds new invoices/contracts as "wait"; the person moves them to the queue and marks them paid. */
-const P = { list: [], state: 'loading', view: 'queue', sure: '', busy: false, add: false };
+const P = { list: [], state: 'loading', view: 'queue', sure: '', busy: false, add: false, open: new Set(), doc: '' };
 const PAY_VIEWS = [['wait', 'Ожидают оплаты'], ['queue', 'В очереди на оплату'], ['paid', 'Оплачено']];
 const money = n => fmt(n || 0) + ' сум';
 function payRender() {
@@ -872,8 +881,44 @@ function payCard(x) {
     ${x.what ? `<span class="pay-what">${esc(x.what)}</span>` : ''}
     ${x.terms ? `<span class="pay-terms">${esc(x.terms)}</span>` : ''}
     ${dueChip(x)}
+    ${(x.items?.length || x.file) ? `<div class="pay-act">
+      ${x.items?.length ? `<button data-payitems="${esc(x.id)}" aria-expanded="${P.open.has(x.id)}">${P.open.has(x.id) ? 'Скрыть состав' : `Состав · ${x.items.length} ${plural(x.items.length, 'позиция', 'позиции', 'позиций')}`}</button>` : ''}
+      ${x.file ? `<button data-paydoc="${esc(x.id)}" data-file="${esc(x.file)}">${P.doc === x.id ? 'Скрыть договор' : 'Открыть договор'}</button>
+        <button data-paysave="${esc(x.file)}" data-id="${esc(x.id)}" data-name="${esc((x.doc || x.id).replace(/[^\p{L}\p{N}]+/gu, '_'))}.pdf">Скачать</button>` : ''}</div>` : ''}
+    ${P.open.has(x.id) && x.items?.length ? payItems(x) : ''}
+    <div class="pdf-status" id="paydoc-status-${esc(x.id)}" hidden></div>
+    <div class="pay-doc-view" id="paydoc-${esc(x.id)}" ${P.doc === x.id ? '' : 'hidden'}></div>
     ${acts ? `<div class="pay-act">${acts}</div>` : ''}
   </article>`;
+}
+function payItems(x) {
+  const num = v => v === '' || v == null ? '' : fmt(v);
+  const total = x.items.reduce((a, i) => a + (+i.sum || 0), 0);
+  return `<div class="pay-items"><table>
+    <thead><tr><th>Позиция</th><th class="num">Кол-во</th><th class="num">Цена с НДС</th><th class="num">Сумма</th></tr></thead>
+    <tbody>${x.items.map(i => `<tr><td>${esc(i.name)}</td><td class="num">${esc(String(i.qty ?? ''))} ${esc(i.unit || '')}</td><td class="num">${num(i.price)}</td><td class="num">${num(i.sum)}</td></tr>`).join('')}</tbody>
+    <tfoot><tr><td colspan="3">Итого</td><td class="num">${fmt(total)}</td></tr></tfoot></table></div>
+    ${x.itemsNote ? `<span class="pay-note">${esc(x.itemsNote)}</span>` : ''}`;
+}
+async function showPayDoc(id, file) {
+  const box = document.getElementById('paydoc-' + id), st = document.getElementById('paydoc-status-' + id);
+  if (!box) return;
+  const say = m => { if (st) { st.textContent = m; st.hidden = !m } };
+  box.hidden = false; box.textContent = ''; say('Открываю договор…');
+  try {
+    const lib = await pdfLib();
+    const doc = await lib.getDocument({ data: (await pdfBytes(file)).slice(0) }).promise;
+    const width = Math.min(box.clientWidth || 700, 1000), ratio = Math.min(window.devicePixelRatio || 1, 2);
+    for (let i = 1; i <= doc.numPages; i++) {
+      if (P.doc !== id) return;
+      const page = await doc.getPage(i);
+      const vp = page.getViewport({ scale: width / page.getViewport({ scale: 1 }).width * ratio });
+      const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height; c.setAttribute('aria-label', `Страница ${i}`);
+      box.append(c);
+      await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+    }
+    say('');
+  } catch (err) { say('Не получилось открыть договор здесь. Нажмите «Скачать» — файл откроется на устройстве.') }
 }
 function renderPay() {
   if (P.state === 'off') return `<div class="note-box">Счета и договоры хранятся в вашем аккаунте Claude. Откройте приложение, войдя в Claude, — тогда список появится.</div>`;
@@ -899,7 +944,11 @@ function renderPay() {
 }
 async function payWrite(fn) { if (P.busy) return; P.busy = true; try { await fn() } catch (e) { if (e?.code === 'invalid_argument') { T.ro = true; render() } } P.busy = false }
 document.addEventListener('click', e => {
-  const v = e.target.closest('[data-payview]'); if (v) { P.view = v.dataset.payview; P.sure = ''; render(); return }
+  const v = e.target.closest('[data-payview]'); if (v) { P.view = v.dataset.payview; P.sure = ''; P.doc = ''; render(); return }
+  const it = e.target.closest('[data-payitems]'); if (it) { const id = it.dataset.payitems; P.open.has(id) ? P.open.delete(id) : P.open.add(id); render(); if (P.doc) showPayDoc(P.doc, P.list.find(x => x.id === P.doc)?.file); return }
+  const dc = e.target.closest('[data-paydoc]'); if (dc) { const id = dc.dataset.paydoc; if (P.doc === id) { P.doc = ''; render() } else { P.doc = id; render(); showPayDoc(id, dc.dataset.file) } return }
+  const sv = e.target.closest('[data-paysave]'); if (sv) { sv.dataset.pdf = sv.dataset.paysave; const st = document.getElementById('paydoc-status-' + sv.dataset.id);
+    savePdf(sv, m => { if (st) { st.textContent = m.replace('«Показать сводку целиком»', '«Открыть договор»'); st.hidden = !m } }); return }
   const b = e.target.closest('[data-pay]'); if (!b) return;
   const act = b.dataset.pay, id = b.dataset.id, ref = id && P.db.collection('payments').doc(id);
   if (act === 'addopen') { P.add = true; render(); $('#pay-sup')?.focus(); return }
