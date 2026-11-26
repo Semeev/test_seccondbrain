@@ -836,20 +836,27 @@ document.addEventListener('input', e => { if (e.target.id === 'task-new') T.draf
 /* ---------- payments (shared, stored in the artifact's db, collection "payments") ----------
    Doc: supplier, doc, amount (сум с НДС), what, terms, due (YYYY-MM-DD or ""), dueNote, status: "wait" | "queue" | "paid",
    created, paidAt, order. Claude adds new invoices/contracts as "wait"; the person moves them to the queue and marks them paid. */
-const P = { list: [], state: 'loading', view: 'queue', sure: '', busy: false, add: false, open: new Set(), doc: '' };
+const P = { list: [], state: 'loading', view: 'queue', sure: '', busy: false, add: false, open: new Set(), doc: '', ro: true };  // ro until we know the viewer is the owner: only the owner changes payments (db rule payments: write owner)
 const PAY_VIEWS = [['queue', 'Ожидают оплаты'], ['paid', 'Оплачено'], ['archive', 'Архив']];  // everything the person sends needs paying; old 'wait' docs count as unpaid; archive = not needed now, can be returned
 const payGroup = x => x.status === 'paid' ? 'paid' : x.status === 'archive' ? 'archive' : 'queue';
 const money = n => fmt(n || 0) + ' сум';
 function payRender() {
   const q = P.list.filter(x => payGroup(x) === 'queue');
-  const n = $('#n-pay'); if (n) n.textContent = P.state === 'ok' ? (q.length ? `к оплате ${q.length}` : 'очередь пуста') : P.state === 'off' ? 'нужен вход' : 'загрузка…';
+  const n = $('#n-pay'); if (n) n.textContent = P.state === 'ok' ? (q.length ? `к оплате ${q.length}` : 'всё оплачено') : P.state === 'off' ? 'нет данных' : 'загрузка…';
   if (S.tab === 'pay') render();
 }
 async function payInit() {
   let db = null;
   try { db = window.claude?.use ? await window.claude.use('db') : null } catch (_) { db = null }
-  if (!db) { P.state = 'off'; payRender(); return }
+  if (!db) {  // signed-out viewer (no Claude account): read-only snapshot published with the page
+    try {
+      const s = await (await fetch('payments.json')).json();
+      P.list = s.payments || []; P.snapshot = s.snapshotAt || ''; P.ro = true; P.state = 'ok';
+    } catch (_) { P.state = 'off' }
+    payRender(); return
+  }
   P.db = db;
+  try { const u = await window.claude.use('user'); P.ro = !((await u?.isOwner()) ?? false) } catch (_) { P.ro = true }
   const timer = setTimeout(() => { if (P.state === 'loading') { P.state = 'slow'; payRender() } }, 10000);
   db.collection('payments').onSnapshot(snap => {
     if (!snap.metadata.fromCache) clearTimeout(timer);
@@ -872,7 +879,7 @@ function dueChip(x) {
   return `<span class="due ${cls}">${esc(txt)}</span>`;
 }
 function payCard(x) {
-  const ro = T.ro;
+  const ro = P.ro;
   const btn = (act, label, cls = '') => `<button class="${cls}" data-pay="${act}" data-id="${esc(x.id)}">${label}</button>`;
   const del = btn('del', P.sure === x.id ? 'Точно удалить?' : 'Удалить', P.sure === x.id ? 'sure' : '');
   const g = payGroup(x);
@@ -938,7 +945,7 @@ function renderPay() {
     : P.view === 'archive' ? (b.archivedAt || '').localeCompare(a.archivedAt || '')
     : (b.created || '').localeCompare(a.created || ''));
   const empty = { queue: 'Неоплаченных счетов и договоров нет. Пришлите новые Claude — они появятся здесь.', paid: 'Оплаченных пока нет.', archive: 'В архиве пусто. Сюда кнопкой «В архив» уходят счета, которые пока не нужны, — их всегда можно вернуть.' }[P.view];
-  const add = T.ro ? '' : P.add ? `<form class="pay-add" id="pay-form">
+  const add = P.ro ? `<p class="small" style="margin-top:16px">${P.snapshot ? `Только просмотр. Данные на ${esc(fdate(P.snapshot.slice(0, 10)))}.${esc(P.snapshot.slice(0, 4))} ${esc(P.snapshot.slice(11, 16))} — обновляются при каждом обновлении приложения.` : 'Только просмотр: отмечать оплату и добавлять счета может владелец приложения.'}</p>` : P.add ? `<form class="pay-add" id="pay-form">
       <label class="field">Поставщик<input id="pay-sup" required autocomplete="off"></label>
       <label class="field">Документ<input id="pay-doc" placeholder="Счёт № … от …" autocomplete="off"></label>
       <label class="field">Сумма с НДС<input id="pay-amt" inputmode="numeric" required autocomplete="off"></label>
@@ -947,7 +954,7 @@ function renderPay() {
     : `<div class="pay-act" style="margin-top:18px"><button data-pay="addopen">+ Добавить счёт или договор</button></div>`;
   return head + (xs.length ? `<div class="pays">${xs.map(payCard).join('')}</div>` : `<div class="empty">${empty}</div>`) + add;
 }
-async function payWrite(fn) { if (P.busy) return; P.busy = true; try { await fn() } catch (e) { if (e?.code === 'invalid_argument') { T.ro = true; render() } } P.busy = false }
+async function payWrite(fn) { if (P.busy || P.ro) return; P.busy = true; try { await fn() } catch (e) { if (e?.code === 'invalid_argument') { P.ro = true; render() } } P.busy = false }
 document.addEventListener('click', e => {
   const v = e.target.closest('[data-payview]'); if (v) { P.view = v.dataset.payview; P.sure = ''; P.doc = ''; render(); return }
   const it = e.target.closest('[data-payitems]'); if (it) { const id = it.dataset.payitems; P.open.has(id) ? P.open.delete(id) : P.open.add(id); render(); if (P.doc) showPayDoc(P.doc, P.list.find(x => x.id === P.doc)?.file); return }

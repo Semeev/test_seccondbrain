@@ -19,4 +19,6 @@ for k, src in m.items():
     shutil.copy(src, f"{sys.argv[1]}/docs/{k}.pdf")
 print("docs:", len(m))
 PY
+# read-only snapshot of the «Оплаты» tab for viewers without a Claude account
+[ -f данные/оплаты_снимок.json ] && cp данные/оплаты_снимок.json "$OUT/payments.json"
 ls "$OUT/svodki"
