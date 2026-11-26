@@ -10,9 +10,11 @@ positions = [dict(cat=r[0], name=r[1], unit=r[2], note=r[3], stage=r[4], freq=(r
 pmap = {p['name']: p for p in positions}
 sh, sup = rows('Поставщики')
 def s(v): return None if v in (None, '') else str(v).strip()
+# Exchange UZEX data is not shown in the app (user decision 26.11.2026: inaccurate, confuses price comparison)
+EXCLUDED = lambda name: 'UZEX' in str(name or '').upper()
 suppliers = [dict(name=s(r[0]), type=s(r[1]), cats=s(r[2]), addr=s(r[3]), phone=s(r[4]), site=s(r[5]),
                   checked=s(r[6]), terms=s(r[7]), comment=s(r[8]), works=s(r[9]), person=s(r[10]), basis=s(r[11]))
-             for r in sup if r[0]]
+             for r in sup if r[0] and not EXCLUDED(r[0])]
 smap = {x['name']: x for x in suppliers}
 jh, jr = rows('Журнал цен')
 print(jh, file=sys.stderr)
@@ -20,6 +22,7 @@ prices = []
 for r in jr:
     d = dict(zip(jh, r))
     if not d.get('Позиция') or d.get('Цена в прайсе, сум') in (None, ''): continue
+    if EXCLUDED(d.get('Поставщик')): continue
     try: p = float(d['Цена в прайсе, сум'])
     except: continue
     k = d.get('Коэф. пересчёта (ед. прайса в 1 баз. ед.)')
