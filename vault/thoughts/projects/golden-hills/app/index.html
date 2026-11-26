@@ -233,6 +233,9 @@ button.tile:hover { border-color: var(--accent) }
 .drawer .gallery { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)) }
 .drawer .tile { min-height: 0 }
 .section-title { font-size: 19px; color: var(--fg); margin: 8px 0 12px; font-weight: 600 }
+.nom-cat { font-size: 21px; font-weight: 700; color: var(--fg); margin: 22px 0 0; padding-top: 14px; border-top: 2px solid var(--line, #ddd) }
+.nom-kind { font-size: 17px; font-weight: 600; color: var(--fg); margin: 14px 0 8px }
+.nom-kind span { font-weight: 400; opacity: .6 }
 
 /* Supplier detail panel */
 .drawer-bg { position: fixed; inset: 0; background: rgb(0 0 0 / 0.4); z-index: 20 }
@@ -621,7 +624,24 @@ function nomenclature(name, cat) {
   for (const p of S.data.prices) if (p.supplier === name && (!cat || (p.cat || 'Прочее') === cat)) {
     const prev = m.get(p.item); if (!prev || (p.date || '') >= (prev.date || '')) m.set(p.item, p);
   }
-  return [...m.values()].sort((a, b) => catRank(a.cat) - catRank(b.cat) || itemRank(a.item) - itemRank(b.item));
+  const list = [...m.values()], gr = new Map();
+  for (const p of list) { const k = (p.cat || '') + '|' + kindOf(p.item); gr.set(k, Math.min(gr.get(k) ?? Infinity, itemRank(p.item))) }
+  const key = p => (p.cat || '') + '|' + kindOf(p.item);
+  return list.sort((a, b) => catRank(a.cat) - catRank(b.cat) || gr.get(key(a)) - gr.get(key(b)) || key(a).localeCompare(key(b), 'ru')
+    || variantOf(a.item).localeCompare(variantOf(b.item), 'ru') || a.item.localeCompare(b.item, 'ru', { numeric: true }));
+}
+/* подвид внутри вида: название без цифр и скобок — «Швеллер» / «Швеллер П» / «Швеллер У/П», «Бетон М» / «Бетон М ПБ» */
+const variantOf = name => String(name).replace(/\([^)]*\)/g, '').replace(/[\d.,×\-]+/g, '').replace(/\s+/g, ' ').trim();
+/* вид товара: слова названия до первого размера/марки — «Швеллер», «Труба б/ш круглая», «Арматура», «Лист ПВЛ» */
+function kindOf(name) {
+  const out = [];
+  for (const w of String(name).split(/\s+/)) { if (/\d|\(/.test(w) || /^[dDØ]/.test(w) && out.length) break; out.push(w) }
+  return out.join(' ') || String(name);
+}
+function groupByKind(ps) {
+  const g = [];
+  for (const p of ps) { const k = kindOf(p.item); const last = g[g.length - 1]; if (last && last.kind === k && last.cat === p.cat) last.items.push(p); else g.push({ kind: k, cat: p.cat, items: [p] }) }
+  return g;
 }
 function supplierCard(s, cat) {
   const nom = nomenclature(s.name, cat), all = cat ? nomenclature(s.name) : nom;
@@ -687,9 +707,12 @@ function openSupplier(name) {
       <section class="block card-body"><dl class="kv">${card.map(([k, v]) => `<dt>${k}</dt><dd>${k === 'Телефон' ? `<span class="phone">${esc(v)}</span>` : /^https?:/.test(v) ? `<a href="${esc(v)}" target="_blank" rel="noopener">${esc(v)}</a>` : esc(v)}</dd>`).join('')}</dl>
         ${s.phone ? `<div style="margin-top:12px">${copyBtn(contact, 'Скопировать контакт')}</div>` : ''}</section>
       ${ps.length ? `<p class="section-title" style="margin:6px 0 0">Номенклатура и цены · ${ps.length}</p>
-      <div class="gallery">${ps.map(p => `<div class="tile"><span class="t-name">${esc(p.item)}</span>
+      ${(() => { let lastCat; return groupByKind(ps).map(g => {
+        const catHead = g.cat !== lastCat && new Set(ps.map(p => p.cat)).size > 1 ? `<p class="nom-cat">${esc(g.cat || 'Прочее')}</p>` : ''; lastCat = g.cat;
+        return `${catHead}<p class="nom-kind">${esc(g.kind)} <span>· ${g.items.length}</span></p>
+      <div class="gallery">${g.items.map(p => `<div class="tile"><span class="t-name">${esc(p.item)}</span>
         <span class="t-price">${fmt(p.price)}</span><span class="t-unit">${unitLbl(p.unit)}</span>
-        <span class="t-meta">${esc([p.vat === 'Да' ? 'с НДС' : p.vat === 'Нет' ? 'без НДС' : '', fdate(p.date)].filter(Boolean).join(' · '))}</span></div>`).join('')}</div>`
+        <span class="t-meta">${esc([p.vat === 'Да' ? 'с НДС' : p.vat === 'Нет' ? 'без НДС' : '', fdate(p.date)].filter(Boolean).join(' · '))}</span></div>`).join('')}</div>` }).join('') })()}`
         : '<div class="empty">Цен от этого поставщика в базе пока нет.</div>'}
     </aside>`;
 }
