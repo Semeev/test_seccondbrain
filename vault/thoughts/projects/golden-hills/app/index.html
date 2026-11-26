@@ -47,7 +47,7 @@ header .wrap { display: grid; gap: 14px; padding-block: 18px }
 .search input::placeholder { color: var(--muted); opacity: 1 }
 .search input:focus { outline: none; box-shadow: 0 0 0 4px var(--accent-soft) }
 .search button { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; border: 0; background: var(--chip); color: var(--fg); font-size: 26px; line-height: 1; cursor: pointer; border-radius: 10px }
-.tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px }
+.tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px }
 .tabs button { min-height: var(--tap); font-size: 18px; font-weight: 600; border: 2px solid var(--line); background: var(--surface); color: var(--fg); padding: 8px 10px; border-radius: var(--radius); cursor: pointer; line-height: 1.2 }
 .tabs button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface) }
 .tabs .n { display: block; font-size: 14px; font-weight: 400; opacity: 0.85 }
@@ -181,6 +181,34 @@ button.tile:hover { border-color: var(--accent) }
 .tdel { min-height: 44px; font-size: 15px; border: 2px solid var(--line); background: var(--surface); border-radius: 10px; padding: 4px 12px; cursor: pointer; color: var(--muted) }
 .tdel.sure { border-color: var(--bad); color: var(--bad); font-weight: 600 }
 .note-box { padding: 16px 18px; border-radius: var(--radius); background: var(--warn-soft); color: var(--warn); font-size: 17px }
+/* Payments: invoices and contracts by status (waiting for a decision → queued for payment → paid) */
+.pay-sum { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px }
+.pay-sum button { text-align: left; min-height: 76px; border: 2px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 10px 14px; cursor: pointer; display: grid; gap: 2px; align-content: start }
+.pay-sum button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft) }
+.pay-sum b { font-size: 17px }
+.pay-sum .ps-n { font-size: 15px; color: var(--muted) }
+.pay-sum .ps-s { font-size: 18px; font-weight: 700 }
+.pays { display: grid; gap: 12px }
+.pay { background: var(--surface); border: 2px solid var(--line); border-radius: var(--radius); padding: 14px 16px; display: grid; gap: 8px; min-width: 0 }
+.pay.paid { background: var(--bg) }
+.pay-top { display: flex; justify-content: space-between; gap: 6px 16px; flex-wrap: wrap; align-items: baseline }
+.pay-sup { font-size: 19px; font-weight: 700; overflow-wrap: anywhere }
+.pay-amt { font-size: 22px; font-weight: 700; white-space: nowrap }
+.pay-doc { font-size: 16px; color: var(--muted) }
+.pay-what, .pay-terms { font-size: 16px; overflow-wrap: anywhere }
+.pay-terms { color: var(--muted) }
+.due { justify-self: start; font-size: 15px; font-weight: 600; padding: 3px 10px; border-radius: 8px; background: var(--chip); color: var(--muted) }
+.due.soon { background: var(--warn-soft); color: var(--warn) }
+.due.late { background: var(--bad-soft); color: var(--bad) }
+.due.ok { background: var(--best-soft); color: var(--best) }
+.pay-act { display: flex; gap: 8px; flex-wrap: wrap }
+.pay-act button { min-height: 48px; font-size: 16px; font-weight: 600; border-radius: 10px; padding: 6px 14px; cursor: pointer; border: 2px solid var(--line); background: var(--surface); color: var(--fg) }
+.pay-act button.main { background: var(--accent); border-color: var(--accent); color: var(--surface) }
+.pay-act button.sure { border-color: var(--bad); color: var(--bad) }
+.pay-add { display: grid; grid-template-columns: 2fr 2fr 1fr 1fr auto; gap: 8px; margin-top: 18px; align-items: end }
+.pay-add .field { font-size: 15px }
+.pay-add .field input { min-height: 48px; font-size: 16px }
+@media (max-width: 700px) { .pay-sum { grid-template-columns: 1fr } .pay-add { grid-template-columns: 1fr } }
 @media (max-width: 700px) { .task { grid-template-columns: 52px 1fr; } .tdel { grid-column: 2; justify-self: start } }
 .drawer .gallery { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)) }
 .drawer .tile { min-height: 0 }
@@ -227,7 +255,8 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none }
   .gallery, .drawer .gallery { grid-template-columns: 1fr 1fr; gap: 10px }
   .tile { padding: 12px; min-height: 0 }
   .tile .t-price { font-size: 20px }
-  .tabs { grid-template-columns: repeat(2, 1fr) }
+  .tabs { grid-template-columns: repeat(3, 1fr) }
+  .tabs button { padding: 8px 4px }
   .brand h1 { font-size: 23px }
   .tabs button { font-size: 17px }
   .rfq { grid-template-columns: 1fr }
@@ -264,6 +293,7 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none }
       <button role="tab" data-tab="suppliers" aria-selected="false"><svg data-i="people"></svg>Поставщики<span class="n" id="n-sup"></span></button>
       <button role="tab" data-tab="digest" aria-selected="false"><svg data-i="doc"></svg>Сводка<span class="n" id="n-dig"></span></button>
       <button role="tab" data-tab="tasks" aria-selected="false"><svg data-i="tasks"></svg>Задачи<span class="n" id="n-tasks">загрузка…</span></button>
+      <button role="tab" data-tab="pay" aria-selected="false"><svg data-i="wallet"></svg>Оплаты<span class="n" id="n-pay">загрузка…</span></button>
     </nav>
   </div>
 </header>
@@ -317,6 +347,7 @@ const I = {
   trader: '<path d="M4 8h13l-3-3M20 16H7l3 3"/>',
   tasks: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="m7 10 2 2 4-4M7 16h.01M11 16h6M15 10h2"/>',
   tick: '<path d="m5 12.5 4.5 4.5L19 7"/>',
+  wallet: '<rect x="3" y="6" width="18" height="14" rx="2"/><path d="M3 10h18M16 15h2M6 6l9-3 1 3"/>',
   check: '<circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.5 2.5L16 9.5"/>',
   question: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.7M12 17h.01"/>'
 };
@@ -792,6 +823,100 @@ document.addEventListener('submit', e => {
 });
 document.addEventListener('input', e => { if (e.target.id === 'task-new') T.draft = e.target.value });
 
+/* ---------- payments (shared, stored in the artifact's db, collection "payments") ----------
+   Doc: supplier, doc, amount (сум с НДС), what, terms, due (YYYY-MM-DD or ""), dueNote, status: "wait" | "queue" | "paid",
+   created, paidAt, order. Claude adds new invoices/contracts as "wait"; the person moves them to the queue and marks them paid. */
+const P = { list: [], state: 'loading', view: 'queue', sure: '', busy: false, add: false };
+const PAY_VIEWS = [['wait', 'Ожидают решения'], ['queue', 'В очереди на оплату'], ['paid', 'Оплачено']];
+const money = n => fmt(n || 0) + ' сум';
+function payRender() {
+  const q = P.list.filter(x => x.status === 'queue');
+  const n = $('#n-pay'); if (n) n.textContent = P.state === 'ok' ? (q.length ? `к оплате ${q.length}` : 'очередь пуста') : P.state === 'off' ? 'нужен вход' : 'загрузка…';
+  if (S.tab === 'pay') render();
+}
+async function payInit() {
+  let db = null;
+  try { db = window.claude?.use ? await window.claude.use('db') : null } catch (_) { db = null }
+  if (!db) { P.state = 'off'; payRender(); return }
+  P.db = db;
+  const timer = setTimeout(() => { if (P.state === 'loading') { P.state = 'slow'; payRender() } }, 10000);
+  db.collection('payments').onSnapshot(snap => {
+    if (!snap.metadata.fromCache) clearTimeout(timer);
+    P.list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    P.state = 'ok'; payRender();
+  }, () => { clearTimeout(timer); P.state = 'error'; payRender() });
+}
+payInit();
+function dueChip(x) {
+  if (x.status === 'paid') return `<span class="due ok">Оплачено ${x.paidAt ? fdate(x.paidAt.slice(0, 10)) + '.' + x.paidAt.slice(0, 4) : ''}</span>`;
+  if (!x.due && !x.dueNote) return '';
+  let cls = '', txt = x.dueNote || '';
+  if (x.due) {
+    const days = Math.round((new Date(x.due + 'T00:00:00') - new Date(new Date().toDateString())) / 864e5);
+    cls = days < 0 ? 'late' : days <= 3 ? 'soon' : '';
+    const when = `до ${fdate(x.due)}`;
+    txt = days < 0 ? `Срок прошёл (${when})` : days === 0 ? `Оплатить сегодня (${when})` : `Оплатить ${when} · осталось ${days} ${plural(days, 'день', 'дня', 'дней')}` + (x.dueNote ? ` · ${x.dueNote}` : '');
+  }
+  return `<span class="due ${cls}">${esc(txt)}</span>`;
+}
+function payCard(x) {
+  const ro = T.ro;
+  const btn = (act, label, cls = '') => `<button class="${cls}" data-pay="${act}" data-id="${esc(x.id)}">${label}</button>`;
+  const del = btn('del', P.sure === x.id ? 'Точно удалить?' : 'Удалить', P.sure === x.id ? 'sure' : '');
+  const acts = ro ? '' : x.status === 'wait' ? btn('queue', 'В очередь на оплату', 'main') + del
+    : x.status === 'queue' ? btn('paid', 'Оплачено', 'main') + btn('wait', 'Вернуть в ожидающие')
+    : btn('queue', 'Не оплачено — вернуть в очередь');
+  return `<article class="pay ${x.status === 'paid' ? 'paid' : ''}">
+    <div class="pay-top"><span class="pay-sup">${esc(x.supplier)}</span><span class="pay-amt">${money(x.amount)}</span></div>
+    <span class="pay-doc">${esc(x.doc || '')}</span>
+    ${x.what ? `<span class="pay-what">${esc(x.what)}</span>` : ''}
+    ${x.terms ? `<span class="pay-terms">${esc(x.terms)}</span>` : ''}
+    ${dueChip(x)}
+    ${acts ? `<div class="pay-act">${acts}</div>` : ''}
+  </article>`;
+}
+function renderPay() {
+  if (P.state === 'off') return `<div class="note-box">Счета и договоры хранятся в вашем аккаунте Claude. Откройте приложение, войдя в Claude, — тогда список появится.</div>`;
+  if (P.state === 'loading') return '<div class="empty">Загружаю счета и договоры…</div>';
+  if (P.state === 'slow') return '<div class="empty">Список пока не загрузился. Проверьте интернет — он появится сам.</div>';
+  if (P.state === 'error') return '<div class="note-box">Не получилось загрузить счета. Обновите страницу.</div>';
+  const by = s => P.list.filter(x => x.status === s);
+  const sum = xs => xs.reduce((a, x) => a + (+x.amount || 0), 0);
+  const head = `<div class="pay-sum" role="group" aria-label="Статус">${PAY_VIEWS.map(([k, l]) => { const xs = by(k);
+    return `<button data-payview="${k}" aria-pressed="${P.view === k}"><b>${l}</b><span class="ps-n">${xs.length} ${plural(xs.length, 'документ', 'документа', 'документов')}</span><span class="ps-s">${money(sum(xs))}</span></button>` }).join('')}</div>`;
+  const xs = by(P.view).sort((a, b) => P.view === 'paid' ? (b.paidAt || '').localeCompare(a.paidAt || '')
+    : P.view === 'queue' ? (a.due || '9999').localeCompare(b.due || '9999') || (a.order ?? 0) - (b.order ?? 0)
+    : (b.created || '').localeCompare(a.created || ''));
+  const empty = { wait: 'Новых счетов и договоров нет. Пришлите их Claude — они появятся здесь.', queue: 'Очередь на оплату пуста.', paid: 'Оплаченных пока нет.' }[P.view];
+  const add = T.ro ? '' : P.add ? `<form class="pay-add" id="pay-form">
+      <label class="field">Поставщик<input id="pay-sup" required autocomplete="off"></label>
+      <label class="field">Документ<input id="pay-doc" placeholder="Счёт № … от …" autocomplete="off"></label>
+      <label class="field">Сумма с НДС<input id="pay-amt" inputmode="numeric" required autocomplete="off"></label>
+      <label class="field">Оплатить до<input id="pay-due" type="date"></label>
+      <button class="btn" type="submit">Добавить</button></form>`
+    : `<div class="pay-act" style="margin-top:18px"><button data-pay="addopen">+ Добавить счёт или договор</button></div>`;
+  return head + (xs.length ? `<div class="pays">${xs.map(payCard).join('')}</div>` : `<div class="empty">${empty}</div>`) + add;
+}
+async function payWrite(fn) { if (P.busy) return; P.busy = true; try { await fn() } catch (e) { if (e?.code === 'invalid_argument') { T.ro = true; render() } } P.busy = false }
+document.addEventListener('click', e => {
+  const v = e.target.closest('[data-payview]'); if (v) { P.view = v.dataset.payview; P.sure = ''; render(); return }
+  const b = e.target.closest('[data-pay]'); if (!b) return;
+  const act = b.dataset.pay, id = b.dataset.id, ref = id && P.db.collection('payments').doc(id);
+  if (act === 'addopen') { P.add = true; render(); $('#pay-sup')?.focus(); return }
+  if (act === 'del') { if (P.sure === id) { P.sure = ''; payWrite(() => ref.delete()) } else { P.sure = id; render() } return }
+  if (act === 'paid') payWrite(() => ref.update({ status: 'paid', paidAt: new Date().toISOString() }));
+  if (act === 'queue') payWrite(() => ref.update({ status: 'queue', paidAt: null }));
+  if (act === 'wait') payWrite(() => ref.update({ status: 'wait' }));
+});
+document.addEventListener('submit', e => {
+  if (e.target.id !== 'pay-form') return; e.preventDefault();
+  const supplier = $('#pay-sup').value.trim(), amount = +$('#pay-amt').value.replace(/[^\d.,]/g, '').replace(',', '.');
+  if (!supplier || !amount) return;
+  const doc = { supplier, doc: $('#pay-doc').value.trim(), amount, due: $('#pay-due').value || '', status: 'wait', created: new Date().toISOString(), order: Date.now() };
+  P.add = false; P.view = 'wait';
+  payWrite(() => P.db.collection('payments').add(doc));
+});
+
 /* ---------- RFQ ---------- */
 function rfqCandidates(item) {
   const pos = S.data.positions.find(p => p.name === item);
@@ -840,8 +965,8 @@ function render() {
   $('#q-label').textContent = S.tab === 'suppliers' ? (S.supCat && !S.supCat.startsWith('__') ? `Найти поставщика в разделе «${S.supCat}»` : 'Найти поставщика — напишите здесь') : S.cat ? `Найти в разделе «${S.cat}»` : 'Найти материал — напишите здесь';
   $('#q').placeholder = S.tab === 'suppliers' ? 'например: Cubix' : S.cat ? 'например: d16' : 'например: бетон';
   document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === S.tab || (S.tab === 'rfq' && b.dataset.tab === 'prices')));
-  $('#q').closest('.search').hidden = S.tab === 'rfq' || S.tab === 'digest' || S.tab === 'tasks';
-  $('#view').innerHTML = S.tab === 'prices' ? renderPrices() : S.tab === 'suppliers' ? renderSuppliers() : S.tab === 'digest' ? renderDigest() : S.tab === 'tasks' ? renderTasks() : renderRfq();
+  $('#q').closest('.search').hidden = S.tab === 'rfq' || S.tab === 'digest' || S.tab === 'tasks' || S.tab === 'pay';
+  $('#view').innerHTML = S.tab === 'prices' ? renderPrices() : S.tab === 'suppliers' ? renderSuppliers() : S.tab === 'digest' ? renderDigest() : S.tab === 'tasks' ? renderTasks() : S.tab === 'pay' ? renderPay() : renderRfq();
   bind();
 }
 function bind() {
