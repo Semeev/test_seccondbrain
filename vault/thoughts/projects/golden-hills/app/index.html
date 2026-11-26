@@ -827,7 +827,7 @@ document.addEventListener('input', e => { if (e.target.id === 'task-new') T.draf
    Doc: supplier, doc, amount (сум с НДС), what, terms, due (YYYY-MM-DD or ""), dueNote, status: "wait" | "queue" | "paid",
    created, paidAt, order. Claude adds new invoices/contracts as "wait"; the person moves them to the queue and marks them paid. */
 const P = { list: [], state: 'loading', view: 'queue', sure: '', busy: false, add: false };
-const PAY_VIEWS = [['wait', 'Ожидают решения'], ['queue', 'В очереди на оплату'], ['paid', 'Оплачено']];
+const PAY_VIEWS = [['wait', 'Ожидают оплаты'], ['queue', 'В очереди на оплату'], ['paid', 'Оплачено']];
 const money = n => fmt(n || 0) + ' сум';
 function payRender() {
   const q = P.list.filter(x => x.status === 'queue');
