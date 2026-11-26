@@ -491,11 +491,51 @@ function categories() {
   for (const c of m.values()) c.suppliers = catSuppliers(c.name).length;
   return [...m.values()].sort((a, b) => catRank(a.name) - catRank(b.name) || a.name.localeCompare(b.name, 'ru'));
 }
+/* Supplier «Товары» ↔ category by kind of product, not by word stem:
+   «запорная арматура» is valves, not rebar «Арматура»; «трубы стальные» is not «Трубы ПП». */
+const L = '[а-яa-z0-9]';
+const SUP_KINDS = {
+  rebar: new RegExp(`(?<!(?:запорн|трубопроводн|сантехническ|регулирующ)${L}*\\s)арматур`),
+  valve: /запорн|задвижк|шаров\S* кран|кран\S* шаров|затвор/,
+  meter: /счетчик/,
+  fitting: /фитинг/,
+  metal: new RegExp(`металлопрокат|(?<!${L})металл(?!${L})|уголок|швеллер|двутавр|труб${L}* стальн|стальн${L}* труб|труба б/ш`),
+  pp: new RegExp(`(?<!${L})пп(?!${L})|полипропилен`),
+  pe: new RegExp(`пнд|(?<!${L})пэ(?!${L})|полиэтилен`),
+  sewer: /канализ|нпвх/,
+  firecab: /пожарн\S* (?:шкаф|рукав|кран|ствол)|огнетуш|(?<![а-я])впв/,
+  engmount: /монтаж\S* (?:инженерн|сантех|отоплен|вентиляц|пожаротуш|спринкл)/,
+};
+const CAT_KINDS = {
+  'Арматура': ['rebar'], 'Фитинги и арматура': ['fitting', 'valve'], 'Металлопрокат': ['metal'],
+  'Трубы ПП (водопровод)': ['pp'], 'Трубы ПНД (наружные сети)': ['pe'], 'Счётчики воды': ['meter'],
+  'Канализация': ['sewer'], 'Пожарные шкафы и ВПВ': ['firecab'], 'Монтаж инженерных систем': ['engmount'],
+};
+const kindsCache = new Map();
+function supKinds(cats) {
+  if (kindsCache.has(cats)) return kindsCache.get(cats);
+  const ks = new Set();
+  for (const seg of norm(cats).split(/[;,]/)) {
+    for (const [k, re] of Object.entries(SUP_KINDS)) if (re.test(seg)) ks.add(k);
+    if (/фитинг/.test(seg) && !/труб/.test(seg)) { ks.delete('pp'); ks.delete('pe') }  // «ПП фитинги» are fittings, not pipes
+    if (/канализ/.test(seg)) ks.delete('pp');  // «Канализация ПП» is sewer pipe, not water supply
+    if (/пленк/.test(seg)) ks.delete('pe');    // polyethylene film
+  }
+  kindsCache.set(cats, ks);
+  return ks;
+}
+function supInCat(s, cat) {
+  if (!s.cats) return false;
+  const kinds = CAT_KINDS[cat];
+  if (kinds) { const ks = supKinds(s.cats); return kinds.some(k => ks.has(k)) }
+  // other categories: word stems, but never through «запорная арматура»-type phrases
+  const words = norm(cat).split(/[\s,:()/]+/).filter(w => w.length > 3).map(w => w.slice(0, 6));
+  const c = norm(s.cats).replace(/(?:запорн|трубопроводн)\S*\s+арматур\S*/g, 'запорка');
+  return words.some(w => c.includes(w));
+}
 function catSuppliers(cat) {
   const priced = new Set(S.data.prices.filter(p => (p.cat || 'Прочее') === cat).map(p => p.supplier));
-  const words = norm(cat).split(/[\s,:()/]+/).filter(w => w.length > 3).map(w => w.slice(0, 6));
-  const inCat = s => { const c = norm(s.cats); return c && words.some(w => c.includes(w)) };
-  return S.data.suppliers.filter(s => priced.has(s.name) || inCat(s))
+  return S.data.suppliers.filter(s => priced.has(s.name) || supInCat(s, cat))
     .map(s => ({ ...s, priced: priced.has(s.name) }))
     .sort((a, b) => (b.works === 'Да') - (a.works === 'Да') || b.priced - a.priced || isDirect(b.type) - isDirect(a.type) || !!b.phone - !!a.phone || a.name.localeCompare(b.name, 'ru'));
 }
@@ -1023,10 +1063,8 @@ function rfqCandidates(item) {
   const pos = S.data.positions.find(p => p.name === item);
   if (!pos) return [];
   const priced = new Set(S.data.prices.filter(p => p.item === item).map(p => p.supplier));
-  const catWords = norm(pos.cat).split(/[\s,:]+/).filter(w => w.length > 3).map(w => w.slice(0, 6));
-  const inCat = s => { const c = norm(s.cats); return catWords.some(w => c.includes(w)) };
   return S.data.suppliers
-    .filter(s => priced.has(s.name) || inCat(s))
+    .filter(s => priced.has(s.name) || supInCat(s, pos.cat || 'Прочее'))
     .map(s => ({ ...s, priced: priced.has(s.name) }))
     .sort((a, b) => b.priced - a.priced || isDirect(b.type) - isDirect(a.type) || !!b.phone - !!a.phone);
 }
