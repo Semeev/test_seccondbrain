@@ -858,7 +858,7 @@ async function payInit() {
 }
 payInit();
 function dueChip(x) {
-  if (x.status === 'paid') return `<span class="due ok">Оплачено ${x.paidAt ? fdate(x.paidAt.slice(0, 10)) + '.' + x.paidAt.slice(0, 4) : ''}</span>`;
+  if (x.status === 'paid') return `<span class="due ok">${esc(['Оплачено' + (x.paidAt ? ' ' + fdate(x.paidAt.slice(0, 10)) + '.' + x.paidAt.slice(0, 4) : ''), x.paidNote].filter(Boolean).join(' · '))}</span>`;
   if (!x.due && !x.dueNote) return '';
   let cls = '', txt = x.dueNote || '';
   if (x.due) {
