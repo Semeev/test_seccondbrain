@@ -233,6 +233,9 @@ button.tile:hover { border-color: var(--accent) }
 .drawer .gallery { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)) }
 .drawer .tile { min-height: 0 }
 .section-title { font-size: 19px; color: var(--fg); margin: 8px 0 12px; font-weight: 600 }
+.sup-group { display: flex; align-items: center; gap: 10px; margin: 26px 0 10px }
+.sup-group .ic { width: 34px; height: 34px; border-radius: 9px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; flex: none }
+.sup-group .ic svg { width: 20px; height: 20px }
 .nom-cat { font-size: 21px; font-weight: 700; color: var(--fg); margin: 22px 0 0; padding-top: 14px; border-top: 2px solid var(--line, #ddd) }
 .nom-kind { font-size: 17px; font-weight: 600; color: var(--fg); margin: 14px 0 8px }
 .nom-kind span { font-weight: 400; opacity: .6 }
@@ -505,11 +508,16 @@ const SUP_KINDS = {
   sewer: /канализ|нпвх/,
   firecab: /пожарн\S* (?:шкаф|рукав|кран|ствол)|огнетуш|(?<![а-я])впв/,
   engmount: /монтаж\S* (?:инженерн|сантех|отоплен|вентиляц|пожаротуш|спринкл)/,
+  insul: /утепл|пеноплекс|пеноплэкс|(?<![a-z])xps|минват|минерал\S* ват|базальт\S* ват/,
+  doorhw: /двер|фурнитур|доводчик|(?<![а-я])замк|(?<![а-я])замок/,
+  door: /двер/,
+  waterproof: /гидроизол|пленк|мастик|праймер|геотекстил/,
 };
 const CAT_KINDS = {
   'Арматура': ['rebar'], 'Фитинги и арматура': ['fitting', 'valve'], 'Металлопрокат': ['metal'],
   'Трубы ПП (водопровод)': ['pp'], 'Трубы ПНД (наружные сети)': ['pe'], 'Счётчики воды': ['meter'],
   'Канализация': ['sewer'], 'Пожарные шкафы и ВПВ': ['firecab'], 'Монтаж инженерных систем': ['engmount'],
+  'Утеплитель': ['insul'], 'Двери и фурнитура': ['doorhw'], 'Двери': ['door'], 'Гидроизоляция': ['waterproof'],
 };
 const kindsCache = new Map();
 function supKinds(cats) {
@@ -731,8 +739,23 @@ function renderSuppliers() {
   const title = key === '__ours' ? ['check', 'Работаем'] : key === '__all' ? ['people', 'Все поставщики'] : cat ? [null, cat] : ['people', 'Результаты поиска'];
   const head = `<div class="cat-head"><button class="back" data-supback>← Все категории</button>
     <h2 class="cat-title"><span class="ic">${title[0] ? svg(title[0]) : catIcon(cat)}</span>${esc(title[1])}</h2></div>`;
-  return head + supFilters(list.length) + (list.length ? `<div class="gallery">${list.map(s => supTile(s, cat)).join('')}</div>`
-    : `<div class="empty">${t.length ? `Поставщиков по запросу «${esc(S.q)}» нет.` : 'Поставщиков с такими фильтрами нет.'}</div>`);
+  if (!list.length) return head + supFilters(0) + `<div class="empty">${t.length ? `Поставщиков по запросу «${esc(S.q)}» нет.` : 'Поставщиков с такими фильтрами нет.'}</div>`;
+  if (cat) return head + supFilters(list.length) + `<div class="gallery">${list.map(s => supTile(s, cat)).join('')}</div>`;
+  // «Все», «Работаем», поиск — группами по номенклатуре; каждый поставщик один раз, в своей основной категории
+  return head + supFilters(list.length) + groupByNomenclature(list).map(([g, ss]) =>
+    `<p class="section-title sup-group">${g ? `<span class="ic">${catIcon(g)}</span>` : ''}${esc(g || 'Другие')} · ${ss.length}</p>
+    <div class="gallery">${ss.map(s => supTile(s, g || undefined)).join('')}</div>`).join('');
+}
+/* Main category of a supplier: the category with most of its prices, else the first one (by priority) its «Товары» match */
+function groupByNomenclature(list) {
+  const cats = categories().map(c => [c.name, new Set(catSuppliers(c.name).map(s => s.name))]);
+  const groups = new Map(cats.map(([c]) => [c, []])); groups.set('', []);
+  for (const s of list) {
+    let best = '', bestN = -1;
+    for (const [c, set] of cats) if (set.has(s.name)) { const n = nomenclature(s.name, c).length; if (n > bestN) { best = c; bestN = n } }
+    groups.get(best).push(s);
+  }
+  return [...groups].filter(([, ss]) => ss.length);
 }
 function openSupplier(name) {
   const s = S.data.supIdx[name] || { name };
