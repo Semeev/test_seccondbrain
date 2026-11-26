@@ -43,7 +43,7 @@ Curated knowledge that persists across sessions. Layer 2 of Clawdbot memory arch
 - [ ] Запустить второй мозг и убедиться что он реально работает — отправить первые заметки и получить результат
 
 ### Hot Projects
-0. **Голден Хилс** — снабжение ЖК: мониторинг цен, поставщики, КП → [[thoughts/projects/golden-hills/golden-hills]]
+0. **Голден Хилс** — снабжение ЖК: мониторинг цен, поставщики, КП → [[thoughts/projects/golden-hills/golden-hills]]. Приложение «Снабжение Golden Hills», пользователь зовёт его **«300 снабженцев»** — https://claude.ai/artifact/ULPEFRmFtMLX8oHpDWP9r4; восстановление → [[thoughts/projects/golden-hills/восстановление]]
 1. **Второй мозг** — запущен, W8, тестирование бота
 2. **Telegram-канал Евгений Семеев** — не создан, Must Do W8
 3. **Первый контракт в Ташкенте** — поиск клиентов, 5 предложений

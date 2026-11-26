@@ -42,3 +42,6 @@ tags: [project/golden-hills, topic/снабжение, topic/стройка]
 
 - [[MEMORY]]
 - [[daily/2026-11-23]]
+
+## Приложение «300 снабженцев»
+«Снабжение Golden Hills» — https://claude.ai/artifact/ULPEFRmFtMLX8oHpDWP9r4 (значок «300 снабженцев»). Как восстановить — [[восстановление]].
