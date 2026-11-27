@@ -224,6 +224,14 @@ button.tile:hover { border-color: var(--accent) }
 .pay-items td { padding: 8px 10px }
 .pay-items td.num { white-space: nowrap }
 .pay-items tfoot td { font-weight: 700; border-top: 2px solid var(--line) }
+/* состав — сетка как в Excel (решение пользователя 27.11.2026) */
+.pay-items { border: 1.5px solid #9aa39e; background: #fff }
+.pay-items table { border-collapse: collapse; width: 100% }
+.pay-items th, .pay-items td { border: 1px solid #b9c0bc }
+.pay-items thead th { background: #dfe6e2; color: var(--fg); font-weight: 700; border-bottom: 2px solid #8e9893 }
+.pay-items tbody tr:nth-child(even) td { background: #f3f6f4 }
+.pay-items tbody tr:nth-child(odd) td { background: #fff }
+.pay-items tfoot td { background: #e8eeea; border-top: 2px solid #8e9893 }
 /* состав на телефоне — одна строка на позицию, компактно, без прокрутки вбок (решение пользователя 27.11.2026) */
 @media (max-width: 700px) {
   .pay-items { overflow-x: visible }
