@@ -634,7 +634,8 @@ function renderCategory(t) {
   if (S.catView === 'suppliers')
     return head + (sups.length ? `<div class="gallery">${sups.map(s => kd && kd.g ? supTile(s, undefined, kindCount(s.name, kd.g, kd.k)) : supTile(s, kd || grp ? undefined : c)).join('')}</div>` : '<div class="empty">Поставщиков этой категории пока нет в списке.</div>') + (kd || grp ? '' : relatedBlock(c));
   const entries = [...[...groups.entries()].map(([item, rs]) => ({ item, rs })), ...missing.map(p => ({ item: p.name, rs: null }))]
-    .sort((a, b) => !a.rs - !b.rs || itemRank(a.item) - itemRank(b.item));
+    .sort((a, b) => !a.rs - !b.rs);
+  sizeSort(entries);  // по виду товара, внутри — по размеру по возрастанию (решение пользователя 27.11.2026)
   if (!entries.length) return head + priceFilters() + `<div class="empty">${t.length ? `По запросу «${esc(S.q)}» в этой категории ничего нет.` : 'Цен в этой категории пока нет.'}</div>`;
   const tile = (e, badge, g = '') => e.rs ? itemTile(e.item, e.rs, badge, stripGrade(e.item, g)) : `<div class="tile off">${badge}<span class="t-name">${esc(stripGrade(e.item, g))}</span><span class="t-price">цен пока нет</span></div>`;
   // steel grades: А500С → А400 → А240; other grades (cement): by their most important item
@@ -702,6 +703,14 @@ function nomenclature(name, cat) {
 }
 const makerOf = p => ((p.comment || '').match(/(?:Производитель:|пр-во)\s*([^.;,]+)/) || [])[1] || '';
 /* подвид внутри вида: название без цифр и скобок — «Швеллер» / «Швеллер П» / «Швеллер У/П», «Бетон М» / «Бетон М ПБ» */
+function sizeSort(entries) {
+  const first = n => (S.data.itemsFirst || []).indexOf(n), kr = new Map();
+  for (const e of entries) { const k = kindOf(e.item); kr.set(k, Math.min(kr.get(k) ?? Infinity, itemRank(e.item))) }
+  return entries.sort((a, b) => { const fa = first(a.item), fb = first(b.item);
+    return (fa >= 0 || fb >= 0 ? (fa < 0) - (fb < 0) || fa - fb : 0)
+      || kr.get(kindOf(a.item)) - kr.get(kindOf(b.item)) || kindOf(a.item).localeCompare(kindOf(b.item), 'ru')
+      || variantOf(a.item).localeCompare(variantOf(b.item), 'ru') || a.item.localeCompare(b.item, 'ru', { numeric: true }) });
+}
 const variantOf = name => String(name).replace(/\([^)]*\)/g, '').replace(/[\d.,×\-]+/g, '').replace(/\s+/g, ' ').trim();
 /* вид товара: слова названия до первого размера/марки — «Швеллер», «Труба б/ш круглая», «Арматура», «Лист ПВЛ» */
 function kindOf(name) {
