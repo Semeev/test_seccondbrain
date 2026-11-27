@@ -569,7 +569,7 @@ function renderPrices() {
     return priceFilters() + (rows.length ? priceBlocks(rows) : `<div class="empty">По запросу «${esc(S.q)}» цен нет.<br>Проверьте написание или уберите галочки выше.</div>`);
   }
   return `<p class="section-title">Категории материалов</p>
-    <div class="cats">${supGroups().map(g => { const one = g.cats.length === 1 && !g.split;
+    <div class="cats">${mainGroups().map(g => { const one = g.cats.length === 1 && !g.split;
       return `<button class="cat" data-cat="${esc(one ? g.cats[0] : 'g:' + g.name)}"><span class="ic">${catIcon(g.cats[0])}</span><b>${esc(g.name)}</b>
       <span class="cnt">${cntLine(groupPriceCount(g), groupSuppliers(g).length)}</span></button>` }).join('')}</div>`;
 }
@@ -782,7 +782,18 @@ function supGroups() {
   return SUP_GROUPS.map(g => ({ ...g, cats: g.cats.filter(c => all.includes(c)) })).concat(rest.length ? [{ name: 'Прочее', cats: rest }] : [])
     .filter(g => g.cats.length);
 }
-const findGroup = name => supGroups().find(g => g.name === name);
+// Главный экран «Категории»: Бетон и Газоблок — отдельными карточками, остальное — группами как в «Поставщиках»
+const MAIN_SOLO = ['Бетон', 'Газоблок'], MAIN_RENAME = { 'Бетон и сыпучие материалы': 'Цемент, смеси, инертные' };
+function mainGroups() {
+  const out = [];
+  for (const g of supGroups()) {
+    for (const c of MAIN_SOLO) if (g.cats.includes(c) && !g.split) out.push({ name: c, cats: [c] });
+    const cats = g.split ? g.cats : g.cats.filter(c => !MAIN_SOLO.includes(c));
+    if (cats.length) out.push({ ...g, name: cats.length < g.cats.length ? MAIN_RENAME[g.name] || g.name : g.name, cats });
+  }
+  return out;
+}
+const findGroup = name => (S.tab === 'prices' && mainGroups().find(g => g.name === name)) || supGroups().find(g => g.name === name);
 function groupSuppliers(g) {
   const m = new Map();
   if (g.kinds) { for (const k of groupKinds(g)) for (const s of kindSuppliers(g, k)) if (!m.has(s.name)) m.set(s.name, s); return [...m.values()] }
@@ -1263,7 +1274,7 @@ fetch('data.json').then(r => r.json()).then(d => {
   S.data = d;
   const last = d.prices.map(p => p.date).filter(Boolean).sort().pop();
   $('#meta').textContent = `Обновлено ${fdate(last)}.${last.slice(0, 4)}`;
-  { const n = supGroups().length; $('#n-prices').textContent = `${n} ${plural(n, 'раздел', 'раздела', 'разделов')}` }
+  { const n = mainGroups().length; $('#n-prices').textContent = `${n} ${plural(n, 'раздел', 'раздела', 'разделов')}` }
   $('#n-sup').textContent = `${d.suppliers.length} шт.`;
   $('#n-dig').textContent = d.digests?.length ? `за ${fdate(d.digests[0].date)}` : '';
   render();
