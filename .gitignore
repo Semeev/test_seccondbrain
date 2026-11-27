@@ -25,3 +25,4 @@ node_modules/
 .DS_Store
 Thumbs.db
 scripts/vault-sync.log
+.claude/settings.local.json
