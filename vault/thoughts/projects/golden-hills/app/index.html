@@ -791,8 +791,8 @@ function mainGroups() {
     const cats = g.split ? g.cats : g.cats.filter(c => !MAIN_SOLO.includes(c));
     if (cats.length) out.push({ ...g, name: cats.length < g.cats.length ? MAIN_RENAME[g.name] || g.name : g.name, cats });
   }
-  // порядок на главной (решение пользователя 27.11.2026): чёрный металл → бетон → газоблок → сыпучка → запорка, остальное как было
-  const top = ['Чёрный металл', 'Бетон', 'Газоблок', 'Цемент, смеси, инертные', 'Трубы и запорная арматура'];
+  // порядок на главной (решение пользователя 27.11.2026): чёрный металл → бетон → газоблок → сыпучка → электрика → запорка, остальное как было
+  const top = ['Чёрный металл', 'Бетон', 'Газоблок', 'Цемент, смеси, инертные', 'Электрика', 'Трубы и запорная арматура'];
   const rank = g => { const i = top.indexOf(g.name); return i < 0 ? top.length : i };
   return out.map((g, i) => [g, i]).sort((a, b) => rank(a[0]) - rank(b[0]) || a[1] - b[1]).map(([g]) => g);
 }
