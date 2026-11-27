@@ -124,6 +124,7 @@ tr.best td.num strong { color: var(--best) }
 .tabs svg { width: 24px; height: 24px }
 .chip svg { width: 15px; height: 15px; vertical-align: -2px; margin-right: 4px }
 .cat b { font-weight: 600 }
+.cat.cat-all { border-color: var(--accent) }
 .cat .cnt { color: var(--muted); font-size: 15px }
 .cat-head { display: grid; gap: 14px; margin-bottom: 18px }
 .cat-title { margin: 0; font-size: 26px; line-height: 1.25; text-wrap: balance }
@@ -816,6 +817,13 @@ function kindSuppliers(g, k) {
     .map(s => ({ ...s, priced: priced.has(s.name) }))
     .sort((a, b) => (b.works === 'Да') - (a.works === 'Да') || b.priced - a.priced || isDirect(b.type) - isDirect(a.type) || !!b.phone - !!a.phone || a.name.localeCompare(b.name, 'ru'));
 }
+// «Показать всех» в группе (решение пользователя 27.11.2026): все поставщики группы одним списком, независимо от товара
+function groupAllSuppliers(g) {
+  const m = new Map(groupSuppliers(g).map(s => [s.name, s]));
+  for (const c of g.cats) if (!(g.only || []).includes(c)) for (const s of catSuppliers(c)) if (!m.has(s.name)) m.set(s.name, s);
+  const n = s => nomenclature(s.name).filter(p => g.cats.includes(p.cat || 'Прочее')).length;
+  return [...m.values()].sort((a, b) => (b.works === 'Да') - (a.works === 'Да') || n(b) - n(a) || !!b.phone - !!a.phone || a.name.localeCompare(b.name, 'ru'));
+}
 const kindCount = (name, g, k) => nomenclature(name).filter(p => g.cats.includes(p.cat || 'Прочее') && gKind(g, p.item, p.cat || 'Прочее') === k).length;
 function renderSuppliers() {
   const t = terms();
@@ -835,26 +843,32 @@ function renderSuppliers() {
       const tiles = g.split
         ? groupKinds(g).map(k => [k, kindSuppliers(g, k).length, 'k:' + g.name + '|' + k, catIcon(k) === catIcon('') ? catIcon(g.cats[0]) : catIcon(k)])
         : g.cats.map(c => [c, catSuppliers(c).length, c, catIcon(c)]);
+      const nAll = groupAllSuppliers(g).length;
       return `<div class="cat-head">${backBtn}<h2 class="cat-title"><span class="ic">${catIcon(g.cats[0])}</span>${esc(g.name)}</h2></div>
+        <div class="cats" style="margin-bottom:14px"><button class="cat cat-all" data-supcat="${esc('a:' + g.name)}"><span class="ic">${svg('people')}</span><b>Показать всех</b>
+        <span class="cnt">${nAll} ${plural(nAll, 'поставщик', 'поставщика', 'поставщиков')} · ${esc(g.name.toLowerCase())}</span></button></div>
         <div class="cats">${tiles.filter(x => x[1]).map(([name, n, key, ic]) => `<button class="cat" data-supcat="${esc(key)}"><span class="ic">${ic}</span><b>${esc(name)}</b>
         <span class="cnt">${n} ${plural(n, 'поставщик', 'поставщика', 'поставщиков')}</span></button>`).join('')}</div>`;
     }
   }
   const key = S.supCat;
   const kind = key.startsWith('k:') ? (([gn, k]) => ({ g: findGroup(gn), k }))(key.slice(2).split('|')) : null;
-  const cat = key && !key.startsWith('__') && !kind && !key.startsWith('g:') ? key : undefined;
+  const allG = key.startsWith('a:') ? findGroup(key.slice(2)) : null;
+  const cat = key && !key.startsWith('__') && !kind && !key.startsWith('g:') && !key.startsWith('a:') ? key : undefined;
   const grp = key.startsWith('g:') ? findGroup(key.slice(2)) : null;
-  let list = key === '__ours' ? ours : kind && kind.g ? kindSuppliers(kind.g, kind.k) : grp ? groupSuppliers(grp) : cat ? catSuppliers(cat) : [...S.data.suppliers];
+  let list = allG ? groupAllSuppliers(allG) : key === '__ours' ? ours : kind && kind.g ? kindSuppliers(kind.g, kind.k) : grp ? groupSuppliers(grp) : cat ? catSuppliers(cat) : [...S.data.suppliers];
   if (t.length) list = list.filter(s => matches([s.name, s.cats, s.addr, s.person, s.comment, s.type, nomenclature(s.name).map(p => p.item).join(' ')].join(' '), t));
   if (S.stype) list = list.filter(s => (s.type || '') === S.stype);
   if (S.direct) list = list.filter(s => isDirect(s.type));
   const cnt = name => kind && kind.g ? kindCount(name, kind.g, kind.k) : nomenclature(name, cat).length;
   const rank = cat || kind ? () => 0 : supRank;
   list.sort((a, b) => (b.works === 'Да') - (a.works === 'Да') || rank(a.name) - rank(b.name) || cnt(b.name) - cnt(a.name) || a.name.localeCompare(b.name, 'ru'));
-  const title = key === '__ours' ? ['check', 'Работаем'] : key === '__all' ? ['people', 'Все поставщики'] : kind ? [null, kind.k] : grp ? ['people', grp.name] : cat ? [null, cat] : ['people', 'Результаты поиска'];
+  const title = allG ? ['people', 'Все поставщики · ' + allG.name] : key === '__ours' ? ['check', 'Работаем'] : key === '__all' ? ['people', 'Все поставщики'] : kind ? [null, kind.k] : grp ? ['people', grp.name] : cat ? [null, cat] : ['people', 'Результаты поиска'];
   const head = `<div class="cat-head">${backBtn}
     <h2 class="cat-title"><span class="ic">${title[0] ? svg(title[0]) : catIcon(kind ? (kind.g && kind.g.cats[0]) || kind.k : cat)}</span>${esc(title[1])}</h2>${kind && kind.g ? `<span class="sub">${esc(kind.g.name)}</span>` : ''}</div>`;
   if (!list.length) return head + supFilters(0) + `<div class="empty">${t.length ? `Поставщиков по запросу «${esc(S.q)}» нет.` : 'Поставщиков с такими фильтрами нет.'}</div>`;
+  if (allG) { const n = s => nomenclature(s.name).filter(p => allG.cats.includes(p.cat || 'Прочее')).length;
+    return head + supFilters(list.length) + `<div class="gallery">${list.map(s => supTile(s, undefined, n(s))).join('')}</div>` }
   if (kind && kind.g) return head + supFilters(list.length) + `<div class="gallery">${list.map(s => supTile(s, undefined, kindCount(s.name, kind.g, kind.k))).join('')}</div>`;
   if (cat) return head + supFilters(list.length) + `<div class="gallery">${list.map(s => supTile(s, cat)).join('')}</div>`;
   // «Все», «Работаем», поиск — группами по номенклатуре; каждый поставщик один раз, в своей основной категории
@@ -1250,7 +1264,7 @@ function renderRfq() {
 function clearQ() { S.q = ''; $('#q').value = '' }
 function render() {
   $('#clear').hidden = !S.q;
-  $('#q-label').textContent = S.tab === 'suppliers' ? (S.supCat && !S.supCat.startsWith('__') ? `Найти поставщика в разделе «${S.supCat.replace(/^g:/, '').replace(/^k:[^|]*\|/, '')}»` : 'Найти поставщика — напишите здесь') : S.cat ? `Найти в разделе «${S.cat.replace(/^g:/, '').replace(/^k:[^|]*\|/, '')}»` : 'Найти материал — напишите здесь';
+  $('#q-label').textContent = S.tab === 'suppliers' ? (S.supCat && !S.supCat.startsWith('__') ? `Найти поставщика в разделе «${S.supCat.replace(/^[ga]:/, '').replace(/^k:[^|]*\|/, '')}»` : 'Найти поставщика — напишите здесь') : S.cat ? `Найти в разделе «${S.cat.replace(/^g:/, '').replace(/^k:[^|]*\|/, '')}»` : 'Найти материал — напишите здесь';
   $('#q').placeholder = S.tab === 'suppliers' ? 'например: Cubix' : S.cat ? 'например: d16' : 'например: бетон';
   document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === S.tab || (S.tab === 'rfq' && b.dataset.tab === 'prices')));
   $('#q').closest('.search').hidden = S.tab === 'rfq' || S.tab === 'digest' || S.tab === 'tasks' || S.tab === 'pay';
