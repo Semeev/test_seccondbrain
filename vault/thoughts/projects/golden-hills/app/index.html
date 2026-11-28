@@ -865,10 +865,10 @@ function renderSuppliers() {
   if (!S.supCat && !t.length) {
     const cats = categories().filter(c => c.suppliers);
     const tileBtn = (key, icon, name, n) => `<button class="cat" data-supcat="${esc(key)}"><span class="ic">${icon}</span><b>${esc(name)}</b>
-      <span class="cnt">${n} ${plural(n, 'поставщик', 'поставщика', 'поставщиков')}</span></button>`;
+      <span class="cnt">${n ? `${n} ${plural(n, 'поставщик', 'поставщика', 'поставщиков')}` : 'поставщиков пока нет'}</span></button>`;
     return `<div class="cats" style="margin-bottom:22px">${tileBtn('__ours', svg('check'), 'Работаем', ours.length)}${tileBtn('__all', svg('people'), 'Все поставщики', S.data.suppliers.length)}</div>
       <p class="section-title">Поставщики по видам товара</p>
-      <div class="cats">${supGroups().map(g => { const n = groupSuppliers(g).length; return n ? tileBtn(g.cats.length > 1 || g.split ? 'g:' + g.name : g.cats[0], catIcon(g.cats[0]), g.name, n) : '' }).join('')}</div>`;
+      <div class="cats">${supGroups().map(g => { const n = groupSuppliers(g).length; return n || !g.split ? tileBtn(g.cats.length > 1 || g.split ? 'g:' + g.name : g.cats[0], catIcon(g.cats[0]), g.name, n) : '' }).join('')}</div>`;
   }
   const backBtn = `<button class="back" data-supback>${S.supGroup && S.supCat !== 'g:' + S.supGroup ? `← ${esc(S.supGroup)}` : '← Все виды товара'}</button>`;
   if (S.supCat.startsWith('g:') && !t.length) {
@@ -900,7 +900,7 @@ function renderSuppliers() {
   const title = allG ? ['people', 'Все поставщики · ' + allG.name] : key === '__ours' ? ['check', 'Работаем'] : key === '__all' ? ['people', 'Все поставщики'] : kind ? [null, kind.k] : grp ? ['people', grp.name] : cat ? [null, cat] : ['people', 'Результаты поиска'];
   const head = `<div class="cat-head">${backBtn}
     <h2 class="cat-title"><span class="ic">${title[0] ? svg(title[0]) : catIcon(kind ? (kind.g && kind.g.cats[0]) || kind.k : cat)}</span>${esc(title[1])}</h2>${kind && kind.g ? `<span class="sub">${esc(kind.g.name)}</span>` : ''}</div>`;
-  if (!list.length) return head + supFilters(0) + `<div class="empty">${t.length ? `Поставщиков по запросу «${esc(S.q)}» нет.` : 'Поставщиков с такими фильтрами нет.'}</div>`;
+  if (!list.length) return head + supFilters(0) + `<div class="empty">${t.length ? `Поставщиков по запросу «${esc(S.q)}» нет.` : S.stype || S.direct ? 'Поставщиков с такими фильтрами нет.' : 'Поставщиков пока нет в списке.'}</div>`;
   if (allG) { const n = s => nomenclature(s.name).filter(p => allG.cats.includes(p.cat || 'Прочее')).length;
     return head + supFilters(list.length) + `<div class="gallery">${list.map(s => supTile(s, undefined, n(s))).join('')}</div>` }
   if (kind && kind.g) return head + supFilters(list.length) + `<div class="gallery">${list.map(s => supTile(s, undefined, kindCount(s.name, kind.g, kind.k))).join('')}</div>`;
